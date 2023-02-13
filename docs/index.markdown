@@ -40,6 +40,7 @@ and Thank you O'Reilly Media!</p><br>
 Traducteur : <strong>Serafim Dos Santos</strong></p>
 </center>
 
+---
 ## Feuille de route
 
 * Traduction
