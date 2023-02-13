@@ -40,46 +40,54 @@ and Thank you O'Reilly Media!</p><br>
 Traducteur : <strong>Serafim Dos Santos</strong></p>
 </center>
 
+## Feuille de route
+
+* Traduction
+  - [ ] Phase de traduction (DONE1) : en cours...
+  - [ ] Phase de révision (DONE2) :
+  - [ ] Phase de conclusion (DONEF) :
+* Révision
+  - [ ] Phase de révision externe
 ---
 
-[Préface](html/for_translation_mastering-the-lightning-network_00_preface_fr_CA.html)
+[Préface](html/for_translation_mastering-the-lightning-network_00_preface_fr_CA.html) ❌❌❌
 
 ## Partie I
 
-- [Chapitre 1 - Présentation](html/for_translation_mastering-the-lightning-network_ch_01_introduction_fr_CA.html)
-- [Chapitre 2 - Mise en route](html/for_translation_mastering-the-lightning-network_ch_02_getting_started_fr_CA.html)
-- [Chapitre 3 - Comment fonctionne le réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_03_how_ln_works_fr_CA.html)
-- [Chapitre 4 - Logiciel de noeud Lightning](html/for_translation_mastering-the-lightning-network_ch_04_node_client_fr_CA.html)
-- [Chapitre 5 - Exploitation d'un nœud du réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_05_node_operations_fr_CA.html)
+- [Chapitre 1 - Présentation](html/for_translation_mastering-the-lightning-network_ch_01_introduction_fr_CA.html) ❌❌❌
+- [Chapitre 2 - Mise en route](html/for_translation_mastering-the-lightning-network_ch_02_getting_started_fr_CA.html) ❌❌❌
+- [Chapitre 3 - Comment fonctionne le réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_03_how_ln_works_fr_CA.html) ❌
+- [Chapitre 4 - Logiciel de noeud Lightning](html/for_translation_mastering-the-lightning-network_ch_04_node_client_fr_CA.html) ❌❌❌
+- [Chapitre 5 - Exploitation d'un nœud du réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_05_node_operations_fr_CA.html) ❌❌❌
 
 ## Partie II
 
-- [Chapitre 6 - Architecture du réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_06_lightning_architecture_fr_CA.html)
-- [Chapitre 7 - Canaux de paiement](html/for_translation_mastering-the-lightning-network_ch_07_payment_channels_fr_CA.html)
-- [Chapitre 8 - Routage sur un réseau de canaux de paiement](html/for_translation_mastering-the-lightning-network_ch_08_routing_htlcs_fr_CA.html)
-- [Chapitre 9 - Opération de canal et transfert de paiement](html/for_translation_mastering-the-lightning-network_ch_09_channel_operation_fr_CA.html)
-- [Chapitre 10 - Routage par oignonage](html/for_translation_mastering-the-lightning-network_ch_10_onion_routing_fr_CA.html)
-- [Chapitre 11 - Gossip et le Channel Graph](html/for_translation_mastering-the-lightning-network_ch_11_gossip_channel_graph_fr_CA.html)
-- [Chapitre 12 - Recherche de chemin et livraison de paiement](html/for_translation_mastering-the-lightning-network_ch_12_path_finding_fr_CA.html)
-- [Chapitre 13 - Protocole de transfert : cadrage (???) et extensibilité](html/for_translation_mastering-the-lightning-network_ch_13_wire_protocol_fr_CA.html)
-- [Chapitre 14 - Transport de messages cryptés de Lightning](html/for_translation_mastering-the-lightning-network_ch_14_encrypted_transport_fr_CA.html)
-- [Chapitre 15 - Demandes de paiement Lightning](html/for_translation_mastering-the-lightning-network_ch_15_payment_requests_fr_CA.html)
-- [Chapitre 16 - Sécurité et confidentialité du réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_16_security_privacy_ln_fr_CA.html)
-- [Chapitre 17 - Conclusion](html/for_translation_mastering-the-lightning-network_ch_17_conclusion_fr_CA.html)
+- [Chapitre 6 - Architecture du réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_06_lightning_architecture_fr_CA.html) ❌
+- [Chapitre 7 - Canaux de paiement](html/for_translation_mastering-the-lightning-network_ch_07_payment_channels_fr_CA.html) ❌❌❌
+- [Chapitre 8 - Routage sur un réseau de canaux de paiement](html/for_translation_mastering-the-lightning-network_ch_08_routing_htlcs_fr_CA.html) ❌❌❌
+- [Chapitre 9 - Opération de canal et transfert de paiement](html/for_translation_mastering-the-lightning-network_ch_09_channel_operation_fr_CA.html) ❌❌❌
+- [Chapitre 10 - Routage par oignonage](html/for_translation_mastering-the-lightning-network_ch_10_onion_routing_fr_CA.html) ❌❌❌
+- [Chapitre 11 - Gossip et le Channel Graph](html/for_translation_mastering-the-lightning-network_ch_11_gossip_channel_graph_fr_CA.html) ❌❌❌
+- [Chapitre 12 - Recherche de chemin et livraison de paiement](html/for_translation_mastering-the-lightning-network_ch_12_path_finding_fr_CA.html) ❌❌❌
+- [Chapitre 13 - Protocole de transfert : cadrage (???) et extensibilité](html/for_translation_mastering-the-lightning-network_ch_13_wire_protocol_fr_CA.html) ❌❌❌
+- [Chapitre 14 - Transport de messages cryptés de Lightning](html/for_translation_mastering-the-lightning-network_ch_14_encrypted_transport_fr_CA.html) ❌❌❌
+- [Chapitre 15 - Demandes de paiement Lightning](html/for_translation_mastering-the-lightning-network_ch_15_payment_requests_fr_CA.html) ❌❌❌
+- [Chapitre 16 - Sécurité et confidentialité du réseau Lightning](html/for_translation_mastering-the-lightning-network_ch_16_security_privacy_ln_fr_CA.html) ❌❌❌
+- [Chapitre 17 - Conclusion](html/for_translation_mastering-the-lightning-network_ch_17_conclusion_fr_CA.html) ❌❌❌
 
 ## Annexes
 
-- [Annexe A - Révision des principes fondamentaux de Bitcoin](html/for_translation_mastering-the-lightning-network_appendix_bitcoin_fundamentals_review_fr_CA.html)
-- [Annexe B - Installation et utilisation de base de Docker](html/for_translation_mastering-the-lightning-network_appendix_docker_basics_fr_CA.html)
-- [Annexe C - Protocole de transfert de messages](html/for_translation_mastering-the-lightning-network_appendix_protocol_messages_fr_CA.html)
+- [Annexe A - Révision des principes fondamentaux de Bitcoin](html/for_translation_mastering-the-lightning-network_appendix_bitcoin_fundamentals_review_fr_CA.html) ❌❌❌
+- [Annexe B - Installation et utilisation de base de Docker](html/for_translation_mastering-the-lightning-network_appendix_docker_basics_fr_CA.html) ❌❌❌
+- [Annexe C - Protocole de transfert de messages](html/for_translation_mastering-the-lightning-network_appendix_protocol_messages_fr_CA.html) ❌❌❌
 
 ---
 
-- [Glossaire](html/for_translation_mastering-the-lightning-network_00_glossary_fr_CA.html)
+- [Glossaire](html/for_translation_mastering-the-lightning-network_00_glossary_fr_CA.html) ❌❌❌
 
 ---
 
-[Sources et avis de licence](html/for_translation_mastering-the-lightning-network_appendix_license_notices_fr_CA.html)
+[Sources et avis de licence](html/for_translation_mastering-the-lightning-network_appendix_license_notices_fr_CA.html) ❌❌❌
 
 ---
 
@@ -128,7 +136,7 @@ Amazon FR
 
   <div style="width:65%;">
   <p>bitcoin:bc1qgal2khvhktyqaj99etxmtd6m6xhv72ht0zvhtx</p>
-  <p>$ETH : </p>
+  <p>$ETH : 0x75D7c98d1c568ba968Cc8eaC65C12C7D3f3e5F2B</p>
   </div>
 </div>
 
