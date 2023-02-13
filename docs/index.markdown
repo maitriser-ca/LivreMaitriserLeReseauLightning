@@ -48,6 +48,7 @@ Traducteur : <strong>Serafim Dos Santos</strong></p>
   - [ ] Phase de conclusion (DONEF) :
 * Révision
   - [ ] Phase de révision externe
+
 ---
 
 [Préface](html/for_translation_mastering-the-lightning-network_00_preface_fr_CA.html) ❌❌❌
