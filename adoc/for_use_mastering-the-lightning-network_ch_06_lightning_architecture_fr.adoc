@@ -1,0 +1,55 @@
+== Architecture de Lightning Network
+
+((("architecture, Lightning Network", id="ix_06_lightning_architecture-asciidoc0", range="startofrange")))Dans la première partie de ce livre, nous avons présenté les principaux concepts du Lightning Network et travaillé sur un exemple complet de routage d'un paiement et la mise en place des outils que nous pouvons utiliser pour explorer davantage. Dans la deuxième partie du livre, nous explorerons le Lightning Network avec beaucoup plus de détails techniques, en disséquant chacun des éléments constitutifs.
+
+Dans cette section, nous décrirons plus en détail les composants du Lightning Network et fournirons une vue d'ensemble pour vous guider dans les chapitres suivants.
+
+=== La suite de protocoles du Lightning Network
+
+((("architecture, Lightning Network","protocol suite")))((("protocol stack")))Le Lightning Network est composé d'un ensemble complexe de protocoles qui s'exécutent sur Internet. Nous pouvons globalement classer ces protocoles en cinq couches distinctes qui constituent une _pile de protocoles_, où chaque couche s'appuie sur et utilise les protocoles de la couche inférieure. De plus, chaque couche de protocole fait abstraction des couches sous-jacentes et "cache" une partie de la complexité.
+
+Le diagramme d'architecture présenté dans <<lightning_network_protocol_suite>> donne un aperçu de ces couches et des protocoles qui les composent.
+
+[[lightning_network_protocol_suite]]
+.La suite de protocoles du Lightning Network
+image::images/mtln_0601.png[]
+
+((("architecture, Lightning Network","layers")))Les cinq couches du Lightning Network, de bas en haut, sont :
+
+Couche de connexion réseau:: Elle contient les protocoles qui interagissent directement avec les protocoles de base d'Internet (TCP/IP), les protocoles de superposition (Tor v2/v3) et les services Internet (DNS). Cette couche contient également les protocoles de transport cryptographiques qui protègent les pass:[<span class="keep-together">messages</span>] Lightning.
+
+Couche de messagerie:: Cette couche contient les protocoles que les nœuds utilisent pour négocier les fonctionnalités, formater les messages et encoder les champs de messages.
+
+Couche pair-à-pair (P2P):: Cette couche est la couche de protocole principale pour la communication entre les nœuds Lightning et contient tous les différents messages échangés entre les nœuds.
+
+Couche de routage:: Cette couche contient les protocoles utilisés pour router les paiements entre les nœuds, de bout en bout et de manière atomique. Cette couche contient la fonctionnalité principale du Lightning Network : les paiements routés.
+
+Couche de paiement:: La couche la plus élevée du réseau, qui présente une interface de paiement fiable aux applications.
+
+=== Lightning en détails
+
+((("architecture, Lightning Network","outline of details")))Au cours des 10 prochains chapitres, nous disséquerons la suite de protocoles et examinerons en détail chaque composant du Lightning Network.
+
+Nous avons passé pas mal de temps à essayer de déterminer le meilleur ordre de présentation de ces détails. Ce n'est pas un choix facile car il y a beaucoup d'interdépendance entre les différents composants : lorsque vous commencez à expliquer l'un d'entre eux, vous vous apercevez qu'il fait appel à un grand nombre d'autres composants. Au lieu d'une approche descendante ou ascendante, nous avons fini par choisir un chemin plus sinueux qui commence par les blocs de construction les plus fondamentaux qui sont uniques aux canaux de paiement du Lightning Network et se déplace vers l'extérieur à partir de là. Mais comme ce chemin n'est pas évident, nous utiliserons la suite de protocoles Lightning présentée dans <<lightning_network_protocol_suite>> comme carte. Dans chaque chapitre, nous nous concentrerons sur un ou plusieurs composants connexes, et vous les verrez mis en évidence dans la suite de protocoles. C'est un peu comme un marqueur cartographique qui dirait "Vous êtes ici !".
+
+Voici ce que nous allons couvrir :
+
+pass:[<a data-type="xref" href="payment_channels" data-xrefstyle="chap-num-title">#payment_channels</a>]:: Dans ce chapitre, nous allons étudier le fonctionnement des canaux de paiement, de manière beaucoup plus approfondie que dans les premières parties du livre. Nous examinerons la structure et le Bitcoin Script des transactions de financement et d'engagement, ainsi que le processus utilisé par les nœuds pour négocier chaque étape du protocole.
+
+pass:[<a data-type="xref" href="#routing" data-xrefstyle="chap-num-title">#routing</a>]:: Ensuite, nous mettrons en place plusieurs canaux de paiement dans un réseau et nous acheminerons un paiement d'un bout à l'autre. Au cours de ce processus, nous nous pencherons sur les contrats intelligents HTLC (Hash Time-Locked Contract) et sur le Bitcoin Script que nous utilisons pour les construire.
+
+pass:[<a data-type="xref" href="#channel_operation" data-xrefstyle="chap-num-title">#channel_operation</a>]:: En réunissant les concepts d'un canal de paiement simple et d'un paiement acheminé à l'aide des HTLC, nous allons maintenant examiner comment les HTLC font partie de la transaction d'engagement de chaque canal. Nous examinerons également le protocole d'ajout, de règlement, d'échec et de suppression des HTLC depuis les engagements.
+
+pass:[<a data-type="xref" href="#onion_routing" data-xrefstyle="chap-num-title">#onion_routing</a>]:: Ensuite, nous verrons comment les informations HTLC sont propagées sur le réseau dans le cadre du protocole de routage en oignon. Nous examinerons le mécanisme de cryptage et de décryptage en couches qui confère au Lightning Network certaines de ses caractéristiques en matière de confidentialité.
+
+pass:[<a data-type="xref" href="#gossip" data-xrefstyle="chap-num-title">#gossip</a>]:: Dans ce chapitre, nous verrons comment les nœuds du Lightning Network se trouvent les uns les autres et se renseignent sur les canaux publiés afin de construire un graphe des canaux qu'ils peuvent utiliser pour trouver des chemins au travers du réseau.
+
+pass:[<a data-type="xref" href="#path_finding" data-xrefstyle="chap-num-title">#path_finding</a>]:: Ensuite, nous verrons comment les informations issues du protocole de bavardage sont utilisées par chaque nœud pour construire une "carte" de l'ensemble du réseau, qu'il peut utiliser pour trouver des chemins d'un point à un autre afin d'acheminer les paiements. Nous nous pencherons également sur les dernières innovations en matière de pathfinding, telles que les paiements en plusieurs parties.
+
+pass:[<a data-type="xref" href="#wire_protocol" data-xrefstyle="chap-num-title">#wire_protocol</a>]:: Le protocole pair-à-pair utilisé par les nœuds pour échanger des messages sur le réseau et sur leurs canaux est à la base du Lightning Network. Dans ce chapitre, nous examinons la manière dont ces messages sont construits et les possibilités d'extension intégrées dans les messages avec les bits de caractéristiques et le codage des valeurs de longueur de type ("Type-Length-Value" ou "TLV" en anglais).
+
+pass:[<a data-type="xref" href="#encrypted_message_transport" data-xrefstyle="chap-num-title">#encrypted_message_transport</a>]:: En descendant au bas niveau du réseau, nous examinerons le système de transport encrypté sous-jacent qui garantit le secret et l'intégrité de toutes les communications entre les nœuds.(((range="endofrange", startref="ix_06_lightning_architecture-asciidoc0")))
+
+pass:[<a data-type="xref" href="#invoices" data-xrefstyle="chap-num-title">#invoices</a>]:: Les demandes de paiement, également appelées factures Lightning, constituent un élément clé du Lightning Network. Dans ce chapitre, nous décortiquons la structure et l'encodage d'une facture.
+
+Jetons-nous à l'eau !
