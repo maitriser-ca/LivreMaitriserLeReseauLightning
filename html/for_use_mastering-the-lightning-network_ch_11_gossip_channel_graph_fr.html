@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.17">
+<title>Bavardage et le graphe des canaux</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<style>
+/*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+/* Uncomment the following line when using as a custom stylesheet */
+/* @import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700"; */
+html{font-family:sans-serif;-webkit-text-size-adjust:100%}
+a{background:none}
+a:focus{outline:thin dotted}
+a:active,a:hover{outline:0}
+h1{font-size:2em;margin:.67em 0}
+b,strong{font-weight:bold}
+abbr{font-size:.9em}
+abbr[title]{cursor:help;border-bottom:1px dotted #dddddf;text-decoration:none}
+dfn{font-style:italic}
+hr{height:0}
+mark{background:#ff0;color:#000}
+code,kbd,pre,samp{font-family:monospace;font-size:1em}
+pre{white-space:pre-wrap}
+q{quotes:"\201C" "\201D" "\2018" "\2019"}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sup{top:-.5em}
+sub{bottom:-.25em}
+img{border:0}
+svg:not(:root){overflow:hidden}
+figure{margin:0}
+audio,video{display:inline-block}
+audio:not([controls]){display:none;height:0}
+fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}
+legend{border:0;padding:0}
+button,input,select,textarea{font-family:inherit;font-size:100%;margin:0}
+button,input{line-height:normal}
+button,select{text-transform:none}
+button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}
+button[disabled],html input[disabled]{cursor:default}
+input[type=checkbox],input[type=radio]{padding:0}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
+textarea{overflow:auto;vertical-align:top}
+table{border-collapse:collapse;border-spacing:0}
+*,::before,::after{box-sizing:border-box}
+html,body{font-size:100%}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;line-height:1;position:relative;cursor:auto;-moz-tab-size:4;-o-tab-size:4;tab-size:4;word-wrap:anywhere;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+a:hover{cursor:pointer}
+img,object,embed{max-width:100%;height:auto}
+object,embed{height:100%}
+img{-ms-interpolation-mode:bicubic}
+.left{float:left!important}
+.right{float:right!important}
+.text-left{text-align:left!important}
+.text-right{text-align:right!important}
+.text-center{text-align:center!important}
+.text-justify{text-align:justify!important}
+.hide{display:none}
+img,object,svg{display:inline-block;vertical-align:middle}
+textarea{height:auto;min-height:50px}
+select{width:100%}
+.subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0}
+a{color:#2156a5;text-decoration:underline;line-height:inherit}
+a:hover,a:focus{color:#1d4b8f}
+a img{border:0}
+p{line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
+p aside{font-size:.875em;line-height:1.35;font-style:italic}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
+h1 small,h2 small,h3 small,#toctitle small,.sidebarblock>.content>.title small,h4 small,h5 small,h6 small{font-size:60%;color:#e99b8f;line-height:0}
+h1{font-size:2.125em}
+h2{font-size:1.6875em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
+h4,h5{font-size:1.125em}
+h6{font-size:1em}
+hr{border:solid #dddddf;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em}
+em,i{font-style:italic;line-height:inherit}
+strong,b{font-weight:bold;line-height:inherit}
+small{font-size:60%;line-height:inherit}
+code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
+ul,ol,dl{line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
+ul,ol{margin-left:1.5em}
+ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0}
+ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
+ul.square{list-style-type:square}
+ul.circle{list-style-type:circle}
+ul.disc{list-style-type:disc}
+ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
+dl dt{margin-bottom:.3125em;font-weight:bold}
+dl dd{margin-bottom:1.25em}
+blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
+blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
+@media screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+h1{font-size:2.75em}
+h2{font-size:2.3125em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
+h4{font-size:1.4375em}}
+table{background:#fff;margin-bottom:1.25em;border:1px solid #dedede;word-wrap:normal}
+table thead,table tfoot{background:#f7f8f7}
+table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
+table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
+table tr.even,table tr.alt{background:#f8f8f7}
+table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{line-height:1.6}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
+h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
+.center{margin-left:auto;margin-right:auto}
+.stretch{width:100%}
+.clearfix::before,.clearfix::after,.float-group::before,.float-group::after{content:" ";display:table}
+.clearfix::after,.float-group::after{clear:both}
+:not(pre).nobreak{word-wrap:normal}
+:not(pre).nowrap{white-space:nowrap}
+:not(pre).pre-wrap{white-space:pre-wrap}
+:not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
+pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
+pre>code{display:block}
+pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
+em em{font-style:normal}
+strong strong{font-weight:400}
+.keyseq{color:rgba(51,51,51,.8)}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background:#f7f7f7;border:1px solid #ccc;border-radius:3px;box-shadow:0 1px 0 rgba(0,0,0,.2),inset 0 0 0 .1em #fff;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+.keyseq kbd:first-child{margin-left:0}
+.keyseq kbd:last-child{margin-right:0}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
+b.button::before,b.button::after{position:relative;top:-1px;font-weight:400}
+b.button::before{content:"[";padding:0 3px 0 2px}
+b.button::after{content:"]";padding:0 2px 0 3px}
+p a>code:hover{color:rgba(0,0,0,.9)}
+#header,#content,#footnotes,#footer{width:100%;margin:0 auto;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
+#header::before,#header::after,#content::before,#content::after,#footnotes::before,#footnotes::after,#footer::before,#footer::after{content:" ";display:table}
+#header::after,#content::after,#footnotes::after,#footer::after{clear:both}
+#content{margin-top:1.25em}
+#content::before{content:none}
+#header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
+#header .details span:first-child{margin-left:-.125em}
+#header .details span.email a{color:rgba(0,0,0,.85)}
+#header .details br{display:none}
+#header .details br+span::before{content:"\00a0\2013\00a0"}
+#header .details br+span.author::before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark::before{content:"\00a0|\00a0"}
+#header #revnumber{text-transform:capitalize}
+#header #revnumber::after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #dddddf;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #e7e7e9;padding-bottom:.5em}
+#toc>ul{margin-left:.125em}
+#toc ul.sectlevel0>li>a{font-style:italic}
+#toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
+#toc ul{font-family:"Open Sans","DejaVu Sans",sans-serif;list-style-type:none}
+#toc li{line-height:1.3334;margin-top:.3334em}
+#toc a{text-decoration:none}
+#toc a:active{text-decoration:underline}
+#toctitle{color:#7a2518;font-size:1.2em}
+@media screen and (min-width:768px){#toctitle{font-size:1.375em}
+body.toc2{padding-left:15em;padding-right:0}
+#toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
+#toc.toc2>ul{font-size:.9em;margin-bottom:0}
+#toc.toc2 ul ul{margin-left:0;padding-left:1em}
+#toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
+body.toc2.toc-right{padding-left:0;padding-right:15em}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #e7e7e9;left:auto;right:0}}
+@media screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+#toc.toc2{width:20em}
+#toc.toc2 #toctitle{font-size:1.375em}
+#toc.toc2>ul{font-size:.95em}
+#toc.toc2 ul ul{padding-left:1.25em}
+body.toc2.toc-right{padding-left:0;padding-right:20em}}
+#content #toc{border:1px solid #e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;border-radius:4px}
+#content #toc>:first-child{margin-top:0}
+#content #toc>:last-child{margin-bottom:0}
+#footer{max-width:none;background:rgba(0,0,0,.8);padding:1.25em}
+#footer-text{color:hsla(0,0%,100%,.8);line-height:1.44}
+#content{margin-bottom:.625em}
+.sect1{padding-bottom:.625em}
+@media screen and (min-width:768px){#content{margin-bottom:1.25em}
+.sect1{padding-bottom:1.25em}}
+.sect1:last-child{padding-bottom:0}
+.sect1+.sect1{border-top:1px solid #e7e7e9}
+#content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
+#content h1>a.anchor::before,h2>a.anchor::before,h3>a.anchor::before,#toctitle>a.anchor::before,.sidebarblock>.content>.title>a.anchor::before,h4>a.anchor::before,h5>a.anchor::before,h6>a.anchor::before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
+#content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
+#content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
+details,.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+details{margin-left:1.25rem}
+details>summary{cursor:pointer;display:block;position:relative;line-height:1.6;margin-bottom:.625rem;outline:none;-webkit-tap-highlight-color:transparent}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";border:solid transparent;border-left:solid;border-width:.3em 0 .3em .5em;position:absolute;top:.5em;left:-1.25rem;transform:translateX(15%)}
+details[open]>summary::before{border:solid transparent;border-top:solid;border-width:.5em .3em 0;transform:translateY(15%)}
+details>summary::after{content:"";width:1.25rem;height:1em;position:absolute;top:.3em;left:-1.25rem}
+.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
+table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
+.paragraph.lead>p,#preamble>.sectionbody>[class=paragraph]:first-of-type p{font-size:1.21875em;line-height:1.6;color:rgba(0,0,0,.85)}
+.admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
+.admonitionblock>table td.icon{text-align:center;width:80px}
+.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(0,0,0,.6);word-wrap:anywhere}
+.admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content{border:1px solid #e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;border-radius:4px}
+.exampleblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child{margin-bottom:0}
+.sidebarblock{border:1px solid #dbdbd6;margin-bottom:1.25em;padding:1.25em;background:#f3f3f2;border-radius:4px}
+.sidebarblock>:first-child{margin-top:0}
+.sidebarblock>:last-child{margin-bottom:0}
+.sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
+.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.literalblock pre,.listingblock>.content>pre{border-radius:4px;overflow-x:auto;padding:1em;font-size:.8125em}
+@media screen and (min-width:768px){.literalblock pre,.listingblock>.content>pre{font-size:.90625em}}
+@media screen and (min-width:1280px){.literalblock pre,.listingblock>.content>pre{font-size:1em}}
+.literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
+.literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
+.listingblock>.content{position:relative}
+.listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
+.listingblock:hover code[data-lang]::before{display:block}
+.listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
+.listingblock.terminal pre .command:not([data-prompt])::before{content:"$"}
+.listingblock pre.highlightjs{padding:0}
+.listingblock pre.highlightjs>code{padding:1em;border-radius:4px}
+.listingblock pre.prettyprint{border-width:0}
+.prettyprint{background:#f7f7f8}
+pre.prettyprint .linenums{line-height:1.45;margin-left:2em}
+pre.prettyprint li{background:none;list-style-type:inherit;padding-left:0}
+pre.prettyprint li code[data-lang]::before{opacity:1}
+pre.prettyprint li:not(:first-child) code[data-lang]::before{display:none}
+table.linenotable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.linenotable td[class]{color:inherit;vertical-align:top;padding:0;line-height:inherit;white-space:normal}
+table.linenotable td.code{padding-left:.75em}
+table.linenotable td.linenos,pre.pygments .linenos{border-right:1px solid;opacity:.35;padding-right:.5em;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+pre.pygments span.linenos{display:inline-block;margin-right:.75em}
+.quoteblock{margin:0 1em 1.25em 1.5em;display:table}
+.quoteblock:not(.excerpt)>.title{margin-left:-1.5em;margin-bottom:.75em}
+.quoteblock blockquote,.quoteblock p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote{margin:0;padding:0;border:0}
+.quoteblock blockquote::before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
+.quoteblock .attribution{margin-top:.75em;margin-right:.5ex;text-align:right}
+.verseblock{margin:0 1em 1.25em}
+.verseblock pre{font-family:"Open Sans","DejaVu Sans",sans-serif;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
+.verseblock pre strong{font-weight:400}
+.verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
+.quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
+.quoteblock .attribution br,.verseblock .attribution br{display:none}
+.quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
+.quoteblock.abstract blockquote::before,.quoteblock.excerpt blockquote::before,.quoteblock .quoteblock blockquote::before{display:none}
+.quoteblock.abstract blockquote,.quoteblock.abstract p,.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{line-height:1.6;word-spacing:0}
+.quoteblock.abstract{margin:0 1em 1.25em;display:block}
+.quoteblock.abstract>.title{margin:0 0 .375em;font-size:1.15em;text-align:center}
+.quoteblock.excerpt>blockquote,.quoteblock .quoteblock{padding:0 0 .25em 1em;border-left:.25em solid #dddddf}
+.quoteblock.excerpt,.quoteblock .quoteblock{margin-left:0}
+.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{color:inherit;font-size:1.0625rem}
+.quoteblock.excerpt .attribution,.quoteblock .quoteblock .attribution{color:inherit;font-size:.85rem;text-align:left;margin-right:0}
+p.tableblock:last-child{margin-bottom:0}
+td.tableblock>.content{margin-bottom:1.25em;word-wrap:anywhere}
+td.tableblock>.content>:last-child{margin-bottom:-1.25em}
+table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
+table.grid-all>*>tr>*{border-width:1px}
+table.grid-cols>*>tr>*{border-width:0 1px}
+table.grid-rows>*>tr>*{border-width:1px 0}
+table.frame-all{border-width:1px}
+table.frame-ends{border-width:1px 0}
+table.frame-sides{border-width:0 1px}
+table.frame-none>colgroup+*>:first-child>*,table.frame-sides>colgroup+*>:first-child>*{border-top-width:0}
+table.frame-none>:last-child>:last-child>*,table.frame-sides>:last-child>:last-child>*{border-bottom-width:0}
+table.frame-none>*>tr>:first-child,table.frame-ends>*>tr>:first-child{border-left-width:0}
+table.frame-none>*>tr>:last-child,table.frame-ends>*>tr>:last-child{border-right-width:0}
+table.stripes-all>*>tr,table.stripes-odd>*>tr:nth-of-type(odd),table.stripes-even>*>tr:nth-of-type(even),table.stripes-hover>*>tr:hover{background:#f8f8f7}
+th.halign-left,td.halign-left{text-align:left}
+th.halign-right,td.halign-right{text-align:right}
+th.halign-center,td.halign-center{text-align:center}
+th.valign-top,td.valign-top{vertical-align:top}
+th.valign-bottom,td.valign-bottom{vertical-align:bottom}
+th.valign-middle,td.valign-middle{vertical-align:middle}
+table thead th,table tfoot th{font-weight:bold}
+tbody tr th{background:#f7f8f7}
+tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
+p.tableblock>code:only-child{background:none;padding:0}
+p.tableblock{font-size:1em}
+ol{margin-left:1.75em}
+ul li ol{margin-left:1.5em}
+dl dd{margin-left:1.125em}
+dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
+li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+li>p:empty:only-child::before{content:"";display:inline-block}
+ul.checklist>li>p:first-child{margin-left:-1em}
+ul.checklist>li>p:first-child>.fa-square-o:first-child,ul.checklist>li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist>li>p:first-child>input[type=checkbox]:first-child{margin-right:.25em}
+ul.inline{display:flex;flex-flow:row wrap;list-style:none;margin:0 0 .625em -1.25em}
+ul.inline>li{margin-left:1.25em}
+.unstyled dl dt{font-weight:400;font-style:normal}
+ol.arabic{list-style-type:decimal}
+ol.decimal{list-style-type:decimal-leading-zero}
+ol.loweralpha{list-style-type:lower-alpha}
+ol.upperalpha{list-style-type:upper-alpha}
+ol.lowerroman{list-style-type:lower-roman}
+ol.upperroman{list-style-type:upper-roman}
+ol.lowergreek{list-style-type:lower-greek}
+.hdlist>table,.colist>table{border:0;background:none}
+.hdlist>table>tbody>tr,.colist>table>tbody>tr{background:none}
+td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
+td.hdlist1{font-weight:bold;padding-bottom:1.25em}
+td.hdlist2{word-wrap:anywhere}
+.literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
+.colist td:not([class]):first-child{padding:.4em .75em 0;line-height:1;vertical-align:top}
+.colist td:not([class]):first-child img{max-width:none}
+.colist td:not([class]):last-child{padding:.25em 0}
+.thumb,.th{line-height:0;display:inline-block;border:4px solid #fff;box-shadow:0 0 0 1px #ddd}
+.imageblock.left{margin:.25em .625em 1.25em 0}
+.imageblock.right{margin:.25em 0 1.25em .625em}
+.imageblock>.title{margin-bottom:0}
+.imageblock.thumb,.imageblock.th{border-width:6px}
+.imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
+.image.left,.image.right{margin-top:.25em;margin-bottom:.25em;display:inline-block;line-height:0}
+.image.left{margin-right:.625em}
+.image.right{margin-left:.625em}
+a.image{text-decoration:none;display:inline-block}
+a.image object{pointer-events:none}
+sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
+sup.footnote a,sup.footnoteref a{text-decoration:none}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
+#footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none;margin-left:-1.05em}
+#footnotes .footnote:last-of-type{margin-bottom:0}
+#content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
+div.unbreakable{page-break-inside:avoid}
+.big{font-size:larger}
+.small{font-size:smaller}
+.underline{text-decoration:underline}
+.overline{text-decoration:overline}
+.line-through{text-decoration:line-through}
+.aqua{color:#00bfbf}
+.aqua-background{background:#00fafa}
+.black{color:#000}
+.black-background{background:#000}
+.blue{color:#0000bf}
+.blue-background{background:#0000fa}
+.fuchsia{color:#bf00bf}
+.fuchsia-background{background:#fa00fa}
+.gray{color:#606060}
+.gray-background{background:#7d7d7d}
+.green{color:#006000}
+.green-background{background:#007d00}
+.lime{color:#00bf00}
+.lime-background{background:#00fa00}
+.maroon{color:#600000}
+.maroon-background{background:#7d0000}
+.navy{color:#000060}
+.navy-background{background:#00007d}
+.olive{color:#606000}
+.olive-background{background:#7d7d00}
+.purple{color:#600060}
+.purple-background{background:#7d007d}
+.red{color:#bf0000}
+.red-background{background:#fa0000}
+.silver{color:#909090}
+.silver-background{background:#bcbcbc}
+.teal{color:#006060}
+.teal-background{background:#007d7d}
+.white{color:#bfbfbf}
+.white-background{background:#fafafa}
+.yellow{color:#bfbf00}
+.yellow-background{background:#fafa00}
+span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note::before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning::before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important::before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background:rgba(0,0,0,.8);border-radius:50%;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:#fff!important}
+.conum[data-value]+b{display:none}
+.conum[data-value]::after{content:attr(data-value)}
+pre .conum[data-value]{position:relative;top:-.125em}
+b.conum *{color:inherit!important}
+.conum:not([data-value]):empty{display:none}
+dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
+h1,h2,p,td.content,span.alt,summary{letter-spacing:-.01em}
+p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
+p,blockquote,dt,td.content,span.alt,summary{font-size:1.0625rem}
+p{margin-bottom:1.25rem}
+.sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
+.exampleblock>.content{background:#fffef7;border-color:#e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.print-only{display:none!important}
+@page{margin:1.25cm .75cm}
+@media print{*{box-shadow:none!important;text-shadow:none!important}
+html{font-size:80%}
+a{color:inherit!important;text-decoration:underline!important}
+a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
+a[href^="http:"]:not(.bare)::after,a[href^="https:"]:not(.bare)::after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]{border-bottom:1px dotted}
+abbr[title]::after{content:" (" attr(title) ")"}
+pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
+thead{display:table-header-group}
+svg{max-width:100%}
+p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
+h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
+#header,#content,#footnotes,#footer{max-width:none}
+#toc,.sidebarblock,.exampleblock>.content{background:none!important}
+#toc{border-bottom:1px solid #dddddf!important;padding-bottom:0!important}
+body.book #header{text-align:center}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em}
+body.book #header .details{border:0!important;display:block;padding:0!important}
+body.book #header .details span:first-child{margin-left:0!important}
+body.book #header .details br{display:block}
+body.book #header .details br+span::before{content:none!important}
+body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
+body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
+.listingblock code[data-lang]::before{display:block}
+#footer{padding:0 .9375em}
+.hide-on-print{display:none!important}
+.print-only{display:block!important}
+.hide-for-print{display:none!important}
+.show-for-print{display:inherit!important}}
+@media amzn-kf8,print{#header>h1:first-child{margin-top:1.25rem}
+.sect1{padding:0!important}
+.sect1+.sect1{border:0}
+#footer{background:none}
+#footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
+@media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
+</style>
+</head>
+<body class="article data-line-1">
+<div id="header">
+</div>
+<div id="content">
+<div class="sect1 data-line-2">
+<h2 id="gossip">Bavardage et le graphe des canaux</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-4">
+<p>Dans ce chapitre, nous décrirons le protocole de bavardage ("gossip" en anglais) du Lightning Network et comment il est utilisé par les nœuds pour construire et maintenir un graphe des canaux. Nous passerons également en revue le mécanisme d&#8217;amorçage DNS utilisé pour trouver des pairs avec lesquels "bavarder".</p>
+</div>
+<div class="paragraph data-line-6">
+<p>La section "Routing fees and Gossip relaying" (traduit en "Relayage des frais de routage et des bavardages") est mise en évidence par un contour épais recouvrant la couche de routage et la couche pair-à-pair dans <a href="#LN_protocol_gossip_highlight">Le protocole de bavardage dans la suite de protocoles Lightning</a>.</p>
+</div>
+<div id="LN_protocol_gossip_highlight" class="imageblock data-line-10">
+<div class="content">
+<img src="images/mtln_1101.png" alt="Le protocole de bavardage dans la suite de protocoles Lightning">
+</div>
+<div class="title">Figure 1. Le protocole de bavardage dans la suite de protocoles Lightning</div>
+</div>
+<div class="paragraph data-line-12">
+<p>Comme nous l&#8217;avons déjà appris, le Lightning Network utilise un protocole de routage en oignon basé sur la source pour envoyer un paiement de l&#8217;expéditeur au destinataire.
+Pour cela, le nœud émetteur doit pouvoir construire un chemin de canaux de paiement qui le relie au destinataire, comme nous le verrons dans <a href="#path_finding">[path_finding]</a>.
+Ainsi, l&#8217;expéditeur doit être en mesure de cartographier le Lightning Network en construisant un graphe des canaux.
+Le <em>graphe des canaux</em> est l&#8217;ensemble interconnecté de canaux annoncés publiquement et les nœuds que ces canaux relient entre eux.</p>
+</div>
+<div class="paragraph data-line-17">
+<p>Comme les canaux sont adossés par une transaction de financement qui est sur la chaîne, on pourrait croire à tort que les nœuds Lightning pourraient simplement extraire les canaux existants de la blockchain Bitcoin.
+Cependant, cela n&#8217;est possible que dans une certaine mesure.
+Les transactions de financement sont des adresses Pay-to-Witness-Script-Hash (P2WSH) et la nature du script (un multisig 2-de-2) ne sera révélée qu&#8217;une fois la sortie de la transaction de financement dépensée.
+Même si la nature du script était connue, il est important de se rappeler que tous les scripts multisig 2-de-2 ne correspondent pas à des canaux de paiement.</p>
+</div>
+<div class="paragraph data-line-22">
+<p>Il y a encore d&#8217;autres raisons pour lesquelles il n&#8217;est pas forcément utile de consulter la blockchain Bitcoin.
+Par exemple, sur le Lightning Network, les clés Bitcoin utilisées pour signer font l&#8217;objet d&#8217;une rotation par les nœuds pour chaque canal et chaque mise à jour.
+Ainsi, même si nous pouvions détecter de manière fiable les transactions de financement sur la blockchain Bitcoin, nous ne saurions pas quels deux nœuds du Lightning Network possèdent un canal en particulier.</p>
+</div>
+<div class="paragraph data-line-26">
+<p>Le Lightning Network résout ce problème en implémentant un <em>protocole de bavardage</em>.
+Les protocoles de bavardage sont typiques des réseaux pair-à-pair (P2P) et permettent aux nœuds de partager des informations avec l&#8217;ensemble du réseau avec seulement quelques connexions directes à des pairs.
+Les nœuds Lightning ouvrent des connexions pair-à-pair encryptées entre eux et partagent les informations (bavardages) qu&#8217;ils ont reçues d&#8217;autres pairs.
+Dès qu&#8217;un nœud souhaite partager des informations, par exemple sur un canal nouvellement créé, il envoie un message à tous ses pairs.
+Lors de la réception d&#8217;un message, un nœud décide si le message reçu était nouveau et, si tel est le cas, transmet les informations à ses pairs.
+Ainsi, si le réseau pair-à-pair est bien connecté, toutes les nouvelles informations nécessaires au fonctionnement du réseau seront éventuellement propagées à tous les autres pairs.</p>
+</div>
+<div class="paragraph data-line-33">
+<p>De toute évidence, si un nouveau pair rejoint le réseau pour la première fois, il doit connaître d&#8217;autres pairs sur le réseau, afin de pouvoir se connecter aux autres et participer au réseau.</p>
+</div>
+<div class="paragraph data-line-35">
+<p>Dans ce chapitre, nous allons explorer exactement <em>comment</em> les nœuds Lightning se découvrent entre eux, découvrent et mettent à jour leur statut de nœud et communiquent entre eux.</p>
+</div>
+<div class="paragraph data-line-37">
+<p>Lorsque la plupart font référence à la partie <em>réseau</em> du Lightning Network, ils font référence au <em>graphe des canaux</em> qui est lui-même une structure de données authentifiée unique <em>ancrée</em> dans la blockchain Bitcoin
+de base.</p>
+</div>
+<div class="paragraph data-line-40">
+<p>Cependant, le Lightning Network est également un réseau pair-à-pair de nœuds qui diffusent des informations sur les canaux de paiement et les nœuds. Habituellement, pour que deux pairs maintiennent un canal de paiement, ils doivent se parler directement, ce qui signifie qu&#8217;il y aura une connexion entre eux.
+Cela suggère que le graphe des canaux est un sous-réseau du réseau pair-à-pair.
+Cependant, ce n&#8217;est pas vrai car les canaux de paiement peuvent rester ouverts même si l&#8217;un ou les deux pairs se déconnectent temporairement.</p>
+</div>
+<div class="paragraph data-line-44">
+<p>Revenons sur certaines des terminologies que nous avons utilisées tout au long du livre, en examinant spécifiquement ce qu&#8217;elles signifient en termes de graphe des canaux et de réseau pair-à-pair (voir <a href="#network_terminology">Terminologie des différents réseaux</a>).</p>
+</div>
+<table id="network_terminology" class="tableblock frame-all grid-all stretch data-line-49">
+<caption class="title">Table 1. Terminologie des différents réseaux</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Graphe des canaux</th>
+<th class="tableblock halign-left valign-top">Réseau pair-à-pair</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">canal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">connexion</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ouvrir</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">connecter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fermer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">déconnecter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">transaction de financement</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">connexion TCP/IP encryptée</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">envoyer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">transmettre</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">paiement</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">message</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-59">
+<p>Étant donné que le Lightning Network est un réseau pair-à-pair, un amorçage initial est nécessaire pour que les pairs se découvrent. Dans ce chapitre, nous suivrons l&#8217;histoire d&#8217;un nouveau pair se connectant au réseau pour la première fois et examinerons chaque étape du processus d&#8217;amorçage, de la découverte initiale des pairs à la synchronisation et à la validation du graphe des canaux.</p>
+</div>
+<div class="paragraph data-line-61">
+<p>Dans un premier temps, notre nouveau nœud doit en quelque sorte <em>découvrir</em> au moins <em>un</em> pair qui est déjà connecté au réseau et qui a un graphe des canaux complet (comme nous le verrons plus tard, il n&#8217;y a pas de version canonique du graphe des canaux). En utilisant l&#8217;un des nombreux protocoles d&#8217;amorçage initiaux pour trouver ce premier pair, une fois la connexion établie, notre nouveau
+le pair doit maintenant <em>télécharger</em> et <em>valider</em> le graphe des canaux. Une fois le graphe des canaux entièrement validé, notre nouveau pair est prêt à commencer à ouvrir des canaux et à envoyer des paiements sur le réseau.</p>
+</div>
+<div class="paragraph data-line-64">
+<p>Après l&#8217;amorçage initial, un nœud du réseau doit continuer à conserver sa vue du graphe des canaux en traitant les nouvelles mises à jour de la politique de routage des canaux, en découvrant et en validant de nouveaux canaux, en supprimant les canaux qui ont été fermés sur la chaîne et enfin en élaguant les canaux qui n&#8217;ont pas envoyé un "battement de cœur" approprié <span class="keep-together">environ</span> toutes les deux semaines.</p>
+</div>
+<div class="paragraph data-line-66">
+<p>À la fin de ce chapitre, vous comprendrez un élément clé de
+du réseau pair-à-pair Lightning Network : à savoir, comment les pairs se découvrent et maintiennent une copie locale (perspective) du graphe des canaux. Nous commencerons par explorer l&#8217;histoire d&#8217;un nouveau nœud qui vient de démarrer et qui a besoin de trouver d&#8217;autres pairs auxquels se connecter sur le réseau.</p>
+</div>
+<div class="sect2 pagebreak-before less_space data-line-70">
+<h3 id="_découverte_de_pairs">Découverte de pairs</h3>
+<div class="paragraph data-line-72">
+<p>Dans cette section, nous allons commencer à suivre un nouveau nœud Lightning qui souhaite rejoindre le réseau en trois étapes :</p>
+</div>
+<div class="olist arabic data-line-74">
+<ol class="arabic">
+<li class="data-line-74">
+<p>Découvrir un ensemble de pairs d&#8217;amorçage</p>
+</li>
+<li class="data-line-75">
+<p>Télécharger et valider le graphe des canaux</p>
+</li>
+<li class="data-line-76">
+<p>Commencer le processus de maintenance continue du graphe des canaux</p>
+</li>
+</ol>
+</div>
+<div class="sect3 data-line-79">
+<h4 id="_amorçage_p2p">Amorçage P2P</h4>
+<div class="paragraph data-line-81">
+<p>Avant faire quoi que ce soit d&#8217;autre, notre nouveau nœud doit d&#8217;abord découvrir un ensemble de pairs qui font déjà partie du réseau. Nous appelons ce processus l&#8217;amorçage initial des pairs, et c&#8217;est quelque chose que chaque réseau pair-à-pair doit mettre en œuvre correctement pour garantir un réseau robuste et sain.</p>
+</div>
+<div class="paragraph data-line-83">
+<p>L&#8217;amorçage de nouveaux pairs sur des réseaux pair-à-pair existants est un problème très bien étudié avec plusieurs solutions connues, chacune avec ses propres compromis distincts. La solution la plus simple à ce problème consiste simplement à embarquer un ensemble de pairs d&#8217;amorçage codés en dur dans le logiciel de nœud P2P. C&#8217;est simple dans la mesure où chaque nouveau nœud a une liste de pairs d&#8217;amorçage dans le logiciel qu&#8217;il exécute, mais plutôt fragile étant donné que si l&#8217;ensemble de pairs d&#8217;amorçage se déconnectent, aucun nouveau nœud ne pourra rejoindre le réseau. En raison de cette fragilité, cette
+option est généralement utilisée comme solution de secours au cas où aucun des autres mécanismes d&#8217;amorçage P2P ne fonctionnerait correctement.</p>
+</div>
+<div class="paragraph data-line-86">
+<p>Plutôt que de coder en dur l&#8217;ensemble de pairs d&#8217;amorçage ("bootstrap" en anglais) dans le logiciel/exécutable lui-même, nous pouvons à la place permettre aux pairs d&#8217;obtenir dynamiquement un nouvel ensemble de pairs d&#8217;amorçage qu&#8217;ils peuvent utiliser pour rejoindre le réseau. Nous appellerons ce processus <em>découverte initiale de pairs</em>. En règle générale, nous tirerons parti
+de protocoles Internet existants pour maintenir et distribuer un ensemble de pairs d&#8217;amorçage. Une liste non exhaustive de protocoles qui ont été utilisés dans le passé pour accomplir la découverte initiale des pairs comprend :</p>
+</div>
+<div class="ulist data-line-89">
+<ul>
+<li class="data-line-89">
+<p>Domain Name Service (DNS)</p>
+</li>
+<li class="data-line-90">
+<p>Internet Relay Chat (IRC)</p>
+</li>
+<li class="data-line-91">
+<p>Hypertext Transfer Protocol (HTTP)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-93">
+<p>Semblable au protocole Bitcoin, le principal mécanisme initial de découverte des pairs utilisé dans le Lightning Network se fait via DNS. Étant donné que la découverte initiale des pairs est une tâche critique et universelle pour le réseau, le processus a été <em>standardisé</em> dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md">BOLT #10: DNS Bootstrap</a>.</p>
+</div>
+</div>
+<div class="sect3 data-line-95">
+<h4 id="_amorçage_dns">Amorçage DNS</h4>
+<div class="paragraph data-line-97">
+<p>Le <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md">BOLT #10</a> décrit une manière standardisée la découverte
+de pairs à l&#8217;aide de DNS. La version Lightning de l&#8217;amorçage basé sur DNS utilise jusqu&#8217;à trois types d&#8217;enregistrements distincts :</p>
+</div>
+<div class="ulist data-line-100">
+<ul>
+<li class="data-line-100">
+<p>Enregistrements SRV pour découvrir un ensemble de <em>clés publiques de nœud</em>.</p>
+</li>
+<li class="data-line-101">
+<p>Enregistrements A pour mapper la clé publique d&#8217;un nœud à son adresse IPv4 actuelle.</p>
+</li>
+<li class="data-line-102">
+<p>Enregistrements AAA pour mapper la clé publique d&#8217;un nœud à son adresse IPv6 actuelle.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-104">
+<p>Ceux qui connaissent un peu le protocole DNS connaissent peut-être déjà les types d&#8217;enregistrement A (nom vers adresse IPv4) et AAA (nom vers adresse IPv6), mais pas le type SRV. Le type d&#8217;enregistrement SRV est utilisé par les protocoles construits au-dessus du DNS pour déterminer <em>l&#8217;emplacement</em> d&#8217;un service spécifié. Dans notre contexte, le service en question est un nœud Lightning donné, et l&#8217;emplacement est son adresse IP. Nous devons utiliser ce type d&#8217;enregistrement supplémentaire car, contrairement aux nœuds du protocole Bitcoin, nous avons besoin à la fois d&#8217;une clé publique <em>et</em> d&#8217;une adresse IP pour se connecter à un nœud. Comme on le voit dans <a href="#wire_protocol">[wire_protocol]</a>, le protocole d&#8217;encryptage de transport utilisé dans le Lightning Network nécessite la connaissance de la clé publique d&#8217;un nœud avant de se connecter afin de mettre en œuvre la dissimulation d&#8217;identité pour les nœuds du réseau.</p>
+</div>
+<div class="sect4 data-line-106">
+<h5 id="_flux_de_travail_damorçage_dun_nouveau_pair">Flux de travail d&#8217;amorçage d&#8217;un nouveau pair</h5>
+<div class="paragraph data-line-108">
+<p>Avant de se lancer dans les détails de <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md">BOLT #10</a>, nous allons d&#8217;abord décrire le flux de haut niveau d&#8217;un nouveau nœud qui souhaite utiliser le BOLT #10 pour rejoindre le réseau.</p>
+</div>
+<div class="paragraph data-line-110">
+<p>Tout d&#8217;abord, un nœud doit identifier un serveur DNS unique ou un ensemble de serveurs DNS qui comprennent le BOLT #10 afin qu&#8217;ils puissent être utilisés pour l&#8217;amorçage P2P.</p>
+</div>
+<div class="paragraph data-line-112">
+<p>Alors que BOLT # 10 utilise <em>lseed.bitcoinstats.com</em> comme serveur de départ, "seed" en anglais, il n&#8217;existe pas d&#8217;ensemble "officiel" de seeds DNS à cette fin, mais chacune des principales implémentations conserve son propre seed DNS et interrogent mutuellement les seeds à des fins de redondance. Dans <a href="#dns_seeds">Tableau des serveurs seed DNS connus pour Lightning</a> vous verrez une liste non exhaustive de certains serveurs seed DNS populaires.</p>
+</div>
+<table id="dns_seeds" class="tableblock frame-all grid-all stretch data-line-117">
+<caption class="title">Table 2. Tableau des serveurs seed DNS connus pour Lightning</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Serveur DNS</th>
+<th class="tableblock halign-left valign-top">Gestionnaire</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>lseed.bitcoinstats.com</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Christian Decker</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>nodes.lightning.directory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lightning Labs (Olaoluwa Osuntokun)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>soa.nodes.lightning.directory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lightning Labs (Olaoluwa Osuntokun)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>lseed.darosior.ninja</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Antoine Poinsot</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-126">
+<p>Les seeds DNS existent à la fois pour le réseau principal et le réseau de test de Bitcoin. Pour notre
+exemple, nous supposerons l&#8217;existence d&#8217;un seed DNS BOLT #10 valide sur <em>nodes.lightning.directory</em>.</p>
+</div>
+<div class="paragraph data-line-129">
+<p>Ensuite, notre nouveau nœud émettra une requête SRV pour obtenir un ensemble de <em>pairs d&#8217;amorçage candidats</em>. La réponse à notre requête sera une série de clés publiques encodées au format bech32. Étant donné que DNS est un protocole basé sur le texte, nous ne pouvons pas envoyer de données binaires brutes, un schéma de codage est donc requis. BOLT #10 spécifie un encodage bech32 en raison de son utilisation dans l&#8217;écosystème Bitcoin en général. Le nombre de clés publiques encodées renvoyées dépend du serveur renvoyant la requête, ainsi que de tous les résolveurs qui se situent entre le client et le serveur faisant autorité.</p>
+</div>
+<div class="paragraph data-line-131">
+<p>À l&#8217;aide de l&#8217;outil de ligne de commande largement disponible dig, nous pouvons interroger la version <em>testnet</em> du seed DNS mentionné précédemment avec la commande suivante :</p>
+</div>
+<div class="listingblock data-line-133">
+<div class="content">
+<pre>$ dig @8.8.8.8 test.nodes.lightning.directory SRV</pre>
+</div>
+</div>
+<div class="paragraph data-line-137">
+<p>Nous utilisons l&#8217;argument @ pour forcer la résolution via le serveur de noms de Google (avec l&#8217;adresse IP 8.8.8.8) car il ne filtre pas les réponses de requêtes SRV volumineuses. À la fin de la commande, nous spécifions que nous souhaitons uniquement renvoyer les enregistrements SRV. Un exemple de réponse ressemble à quelque chose comme <a href="#ex1101">Interroger le seed DNS pour les nœuds accessibles</a>.</p>
+</div>
+<div id="ex1101" class="exampleblock data-line-141">
+<div class="title">Example 1. Interroger le seed DNS pour les nœuds accessibles</div>
+<div class="content">
+<div class="listingblock data-line-142">
+<div class="content">
+<pre>$ dig @8.8.8.8 test.nodes.lightning.directory SRV
+
+; &lt;&lt;&gt;&gt; DiG 9.10.6 &lt;&lt;&gt;&gt; @8.8.8.8 test.nodes.lightning.directory SRV
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 43610
+;; flags: qr rd ra; QUERY: 1, ANSWER: 25, AUTHORITY: 0, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;test.nodes.lightning.directory.	IN	SRV
+
+;; ANSWER SECTION:
+test.nodes.lightning.directory.	59 IN	SRV	10 10 9735 <b class="conum">(1)</b>
+ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory. <b class="conum">(2)</b>
+test.nodes.lightning.directory.	59 IN	SRV	10 10 15735 ln1qtgsl3efj8verd4z27k44xu0a59kncvsarxatahm334exgnuvwhnz8dkhx8.test.nodes.lightning.directory.
+
+ [...]
+
+;; Query time: 89 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8)
+;; WHEN: Thu Dec 31 16:41:07 PST 2020</pre>
+</div>
+</div>
+<div class="colist arabic data-line-167">
+<ol>
+<li>
+<p>Numéro de port TCP sur lequel le nœud LN est joignable.</p>
+</li>
+<li>
+<p>Clé publique (ID) encodée de nœud sous la forme d&#8217;un nom de domaine virtuel.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="paragraph data-line-170">
+<p>Nous avons tronqué la réponse par souci de brièveté et n&#8217;affichons que deux des réponses renvoyées. Les réponses contiennent un nom de domaine "virtuel" pour un nœud cible, puis à gauche nous avons le <em>port TCP</em> sur lequel ce nœud peut être atteint. La première réponse utilise le port TCP standard pour le Lightning Network : 9735. La deuxième réponse utilise un port personnalisé, qui est permis par le protocole.</p>
+</div>
+<div class="paragraph data-line-172">
+<p>Ensuite, nous tenterons d&#8217;obtenir l&#8217;autre information dont nous avons besoin pour nous connecter à un nœud : son adresse IP. Cependant, avant de pouvoir faire cette requête, nous allons d&#8217;abord <em>décoder</em> l&#8217;encodage bech32 de la clé publique à partir du nom de domaine virtuel :</p>
+</div>
+<div class="listingblock data-line-174">
+<div class="content">
+<pre>ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7</pre>
+</div>
+</div>
+<div class="paragraph data-line-178">
+<p>En décodant cette chaîne bech32, nous obtenons la clé publique
+secp256k1 valide suivante :</p>
+</div>
+<div class="listingblock data-line-181">
+<div class="content">
+<pre>026c64f5a7f24c6f7f0e1d6ec877f23b2f672fb48967c2545f227d70636395eaf3</pre>
+</div>
+</div>
+<div class="paragraph data-line-185">
+<p>Maintenant que nous avons la clé publique brute, nous allons demander au serveur DNS de <em>résoudre</em> l&#8217;hôte virtuel donné afin que nous puissions obtenir les informations IP (enregistrement A) pour le nœud, comme illustré dans <a href="#ex1102">[ex1102]</a>.</p>
+</div>
+<div id="ex1102" data-type="example">
+<h5>Obtention de la dernière adresse IP d'un nœud</h5>
+
+<pre data-type="programlisting">$ dig ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory A
+
+; &lt;&lt;&gt;&gt; DiG 9.10.6 &lt;&lt;&gt;&gt; ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory A
+;; global options: +cmd
+;; Got answer:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 41934
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory. IN A
+
+;; ANSWER SECTION:
+ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory. 60 IN A <em>X.X.X.X</em> <a class="co" id="comarker1" href="#c01"><img src="callouts/1.png" alt="1"/></a>
+
+;; Query time: 83 msec
+;; SERVER: 2600:1700:6971:6dd0::1#53(2600:1700:6971:6dd0::1)
+;; WHEN: Thu Dec 31 16:59:22 PST 2020
+;; MSG SIZE  rcvd: 138</pre>
+
+<dl class="calloutlist">
+<dt><a class="co" id="c01" href="#comarker1"><img src="callouts/1.png" alt="1"/></a></dt>
+<dd><p>Le serveur DNS renvoie une adresse IP <code><em>X.X.X.X</em></code> . Nous l'avons remplacé par des X dans le texte ici afin d'éviter de présenter une véritable adresse IP.</p></dd>
+</dl></div>
+<div class="paragraph data-line-218">
+<p>Dans la commande précédente, nous avons interrogé le serveur afin d&#8217;obtenir une adresse IPv4 <span class="keep-together">(enregistrement <code>A</code>)</span> pour notre nœud cible (remplacé par __X.X.X.X__ dans l&#8217;exemple précédent). Maintenant que nous avons la clé publique brute, l&#8217;adresse IP et le port TCP, nous pouvons nous connecter au protocole de transport des nœuds sur :</p>
+</div>
+<div class="listingblock data-line-220">
+<div class="content">
+<pre>026c64f5a7f24c6f7f0e1d6ec877f23b2f672fb48967c2545f227d70636395eaf3@X.X.X.X:9735</pre>
+</div>
+</div>
+<div class="paragraph data-line-224">
+<p>L&#8217;interrogation de l&#8217;enregistrement DNS A actuel pour un nœud donné peut également être utilisée pour rechercher le <em>dernier</em> ensemble d&#8217;adresses. De telles requêtes peuvent être utilisées pour synchroniser plus rapidement les dernières informations d&#8217;adressage d&#8217;un nœud, par rapport à l&#8217;attente des mises à jour d&#8217;adresse sur le réseau de bavardage (voir <a href="#node_announcement">Le message node_announcement</a>).</p>
+</div>
+<div class="paragraph data-line-226">
+<p>À ce stade de notre parcours, notre nouveau nœud Lightning a trouvé son premier
+pair et établit sa première connexion ! Nous pouvons maintenant commencer la deuxième phase du nouvel amorçage de nœud : la synchronisation et la validation du graphe des canaux.</p>
+</div>
+<div class="paragraph data-line-229">
+<p>Tout d&#8217;abord, nous allons explorer davantage les subtilités de BOLT #10 pour approfondir la façon dont les choses fonctionnent sous le capot.</p>
+</div>
+</div>
+</div>
+<div class="sect3 data-line-231">
+<h4 id="_options_de_requête_srv">Options de requête SRV</h4>
+<div class="paragraph data-line-233">
+<p>Le standard <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md">BOLT #10</a> est hautement extensible en raison de son utilisation des
+sous-domaines imbriqués comme couche de communication pour des options de requête supplémentaires. Le
+protocole d&#8217;amorçage permet aux clients de spécifier davantage le <em>type</em> de nœuds qu&#8217;ils tentent de récupérer par rapport aux valeurs par défaut récupérant un sous-ensemble aléatoire de nœuds dans les réponses à la requête.</p>
+</div>
+<div class="paragraph data-line-237">
+<p>Le schéma de sous-domaine des options de requête utilise une série de paires clé-valeur où la clé est une <em>lettre unique</em> et l&#8217;ensemble de texte restant est la valeur. Les types de requêtes suivants existent dans la version actuelle du document de standard <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md">BOLT #10</a> :</p>
+</div>
+<div class="dlist data-line-239">
+<dl>
+<dt class="hdlist1">r</dt>
+<dd>
+<p>L&#8217;octet <em>royaume</em> ("realm" en anglais) qui est utilisé pour déterminer pour quelles requêtes de chaîne ou de royaume doivent être renvoyées. En l&#8217;état, la seule valeur de cette clé est 0 qui désigne "Bitcoin".</p>
+</dd>
+<dt class="hdlist1">a</dt>
+<dd>
+<p>Permet aux clients de filtrer les nœuds renvoyés en fonction des <em>types</em> d&#8217;adresses qu&#8217;ils annoncent. Par exemple, cela peut être utilisé pour obtenir uniquement des nœuds qui annoncent une adresse IPv6 valide. La valeur qui suit ce type est basée sur un champ de bits qui <em>indexe</em> dans l&#8217;ensemble des <em>types</em> d&#8217;adresses spécifiés qui sont définis dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md">BOLT #7</a>. La valeur par défaut de ce champ est 6, qui représente à la fois IPv4 et IPv6 (les bits 1 et 2 sont définis).</p>
+</dd>
+<dt class="hdlist1">l</dt>
+<dd>
+<p>Une clé publique de nœud valide sérialisée au format compressé. Cela permet à un client d&#8217;interroger un nœud spécifié plutôt que de recevoir un ensemble de nœuds aléatoires.</p>
+</dd>
+<dt class="hdlist1">n</dt>
+<dd>
+<p>Le nombre d&#8217;enregistrements à renvoyer. La valeur par défaut de ce champ est 25.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-247">
+<p>Un exemple de requête avec des options de requête supplémentaires ressemble à ceci :</p>
+</div>
+<div class="listingblock data-line-249">
+<div class="content">
+<pre>r0.a2.n10.nodes.lightning.directory</pre>
+</div>
+</div>
+<div class="paragraph data-line-253">
+<p>En décomposant la requête une paire clé-valeur à la fois, nous obtenons les
+informations suivantes :</p>
+</div>
+<div class="dlist data-line-256">
+<dl>
+<dt class="hdlist1">r0</dt>
+<dd>
+<p>La requête cible le domaine Bitcoin</p>
+</dd>
+<dt class="hdlist1">a2</dt>
+<dd>
+<p>La requête veut que seules les adresses IPv4 soient renvoyées</p>
+</dd>
+<dt class="hdlist1">n10</dt>
+<dd>
+<p>La requête demande que 10 enregistrements soient retournés</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-260">
+<p>Essayez vous-même quelques combinaisons des différentes options à l&#8217;aide de l&#8217;outil de ligne de commande DNS dig :</p>
+</div>
+<div class="listingblock data-line-262">
+<div class="content">
+<pre>dig @8.8.8.8 r0.a6.nodes.lightning.directory SRV</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-266">
+<h3 id="_le_graphe_des_canaux">Le graphe des canaux</h3>
+<div class="paragraph data-line-268">
+<p>Maintenant que notre nouveau nœud est capable d&#8217;utiliser le protocole d&#8217;amorçage DNS pour se connecter à son tout premier pair, il peut commencer à synchroniser le graphe des canaux ! Cependant, avant de synchroniser le graphe des canaux, nous devrons savoir exactement <em>ce</em> que nous entendons par graphe des canaux. Dans cette section, nous explorerons la <em>structure</em> précise du graphe des canaux et examinerons les aspects uniques du graphe des canaux par rapport à la structure de données "graphe" abstraite typique qui est bien connue/utilisée dans le domaine de l&#8217;informatique.</p>
+</div>
+<div class="sect3 data-line-270">
+<h4 id="_un_graphe_orienté">Un graphe orienté</h4>
+<div class="paragraph data-line-272">
+<p>Un <em>graphe</em> en informatique est une structure de données spéciale composée de sommets (généralement appelés nœuds) et d&#8217;arêtes (également appelées sous forme de liens). Deux nœuds peuvent être reliés par une ou plusieurs arêtes. Le graphe des canaux est également <em>dirigé</em> étant donné qu&#8217;un paiement peut circuler dans les deux sens sur une arête donnée (un canal). Un exemple de <em>graphe orienté</em> est illustré dans <a href="#directed_graph">Un graphe orienté</a>.</p>
+</div>
+<div id="directed_graph" class="imageblock data-line-276">
+<div class="content">
+<img src="images/mtln_1102.png" alt="Un graphe orienté">
+</div>
+<div class="title">Figure 2. Un graphe orienté</div>
+</div>
+<div class="paragraph data-line-278">
+<p>Dans le contexte du Lightning Network, nos sommets sont les nœuds Lightning, nos arêtes étant les canaux de paiement reliant ces nœuds. Comme nous nous intéressons au <em>routage de paiements</em>, dans notre modèle, un nœud sans arête (pas de canal de paiement) n&#8217;est pas considéré comme faisant partie du graphe car il n&#8217;est pas utile.</p>
+</div>
+<div class="paragraph data-line-280">
+<p>Étant donné que les canaux eux-mêmes sont des UTXO (adresses financées multisig 2-de-2), nous pouvons voir le graphe des canaux comme un sous-ensemble spécial de l&#8217;ensemble d&#8217;UTXO de Bitcoin, auquel nous pouvons ajouter des informations supplémentaires (les nœuds, etc.) pour arriver à la structure de superposition finale, qui est le graphe des canaux. Cet ancrage des composants fondamentaux du graphe des canaux dans la
+blockchain Bitcoin de base signifie qu&#8217;il est impossible de <em>falsifier</em> un graphe des canaux valide, cela a des propriétés utiles en matière de prévention du spam comme nous le verrons plus tard.</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-283">
+<h3 id="_messages_du_protocole_de_bavardage">Messages du protocole de bavardage</h3>
+<div class="paragraph data-line-285">
+<p>Les informations du graphe des canaux sont propagées sur le Lightning Network P2P sous la forme de trois messages, qui sont décrits dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md">BOLT #7</a> :</p>
+</div>
+<div class="dlist data-line-287">
+<dl>
+<dt class="hdlist1">node_announcement</dt>
+<dd>
+<p>Le sommet de notre graphe qui communique la clé publique d&#8217;un nœud, ainsi que la façon d&#8217;atteindre le nœud par Internet et quelques métadonnées supplémentaires décrivant l&#8217;ensemble des <em>fonctionnalités</em> prises en charge par le nœud.</p>
+</dd>
+<dt class="hdlist1">channel_announcement</dt>
+<dd>
+<p>Une preuve ancrée dans la blockchain de l&#8217;existence d&#8217;un canal entre deux nœuds individuels. N&#8217;importe quel tiers peut vérifier cette preuve pour s&#8217;assurer qu&#8217;un canal <em>réel</em> est effectivement annoncé. Semblable à node_announcement, ce message contient également des informations décrivant les <em>capacités</em> du canal, ce qui est utile lors d&#8217;une tentative d&#8217;acheminement d&#8217;un paiement.</p>
+</dd>
+<dt class="hdlist1">channel_update</dt>
+<dd>
+<p>Une <em>paire</em> de structures qui décrit l&#8217;ensemble des politiques de routage pour un canal donné. Les messages channel_update arrivent en tant qu&#8217;une <em>paire</em> car un canal est une arête dirigée, de sorte que chaque côté du canal peut spécifier sa propre politique de routage personnalisée.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-293">
+<p>Il est important de noter que chaque composant du graphe des canaux est <em>authentifié</em>, ce qui permet à un tiers de s&#8217;assurer que le propriétaire d&#8217;un canal/mise à jour/nœud est bien celui qui envoie une mise à jour. Cela fait effectivement du graphe des canaux un type unique de <em>structure de données authentifiée</em> qui ne peut pas être contrefaite. Pour l&#8217;authentification, nous utilisons une signature numérique secp256k1 ECDSA (ou une série de signatures) sur le digest sérialisé du message lui-même. Nous n&#8217;entrerons pas dans les détails du framing/de la sérialisation du système de messagerie utilisés dans le Lightning Network dans ce chapitre, car nous couvrirons ces informations dans <a href="#wire_protocol">[wire_protocol]</a>.</p>
+</div>
+<div class="paragraph data-line-295">
+<p>Avec la structure de haut niveau du graphe des canaux établie, nous allons maintenant plonger dans la structure précise de chacun des trois messages utilisés pour bavarder au sujet du graphe des canaux. Nous expliquerons également comment on peut également vérifier chaque message et composant du graphe des canaux.</p>
+</div>
+<div class="sect3 data-line-298">
+<h4 id="node_announcement">Le message node_announcement</h4>
+<div class="paragraph data-line-300">
+<p>Premièrement, nous avons le message node_announcement, qui sert deux principaux
+buts :</p>
+</div>
+<div class="olist arabic data-line-303">
+<ol class="arabic">
+<li class="data-line-303">
+<p>Annoncer les informations de connexion afin que d&#8217;autres nœuds puissent se connecter à un nœud soit pour amorcer le réseau, soit pour tenter d&#8217;établir un nouveau canal de paiement avec ce nœud.</p>
+</li>
+<li class="data-line-305">
+<p>Communiquer l&#8217;ensemble des caractéristiques (capacités) au niveau du protocole qu&#8217;un nœud comprend/prend en charge. La négociation des fonctionnalités entre les nœuds permet aux développeurs d&#8217;ajouter de nouvelles fonctionnalités de manière indépendante et de les prendre en charge avec n&#8217;importe quel autre nœud sur une base d&#8217;une participation volontaire ("opt-in" en anglais).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-307">
+<p>Contrairement aux annonces de canaux, les annonces de nœuds ne sont pas ancrées dans
+la blockchain de base. Par conséquent, les annonces de nœud sont
+considérées comme valides uniquement si elles se sont propagées avec une annonce de canal correspondante. En d&#8217;autres termes, nous rejetons toujours les nœuds sans canaux de paiement pour nous assurer qu&#8217;un pair malveillant ne peut pas inonder le réseau avec de faux nœuds qui ne font pas partie du graphe des canaux.</p>
+</div>
+<div class="sect4 data-line-311">
+<h5 id="_la_structure_du_message_node_announcement">La structure du message node_announcement</h5>
+<div class="paragraph data-line-313">
+<p>Le message  node_announcement est composé des
+champs suivants :</p>
+</div>
+<div class="dlist data-line-316">
+<dl>
+<dt class="hdlist1">signature</dt>
+<dd>
+<p>Une signature ECDSA valide qui couvre le digest sérialisé de tous les champs répertoriés ci-dessous. Cette signature doit correspondre à la clé publique du nœud annoncé.</p>
+</dd>
+<dt class="hdlist1">features</dt>
+<dd>
+<p>Un vecteur de bits qui décrit l&#8217;ensemble des fonctionnalités de protocole que ce nœud comprend. Nous couvrirons ce champ plus en détail dans <a href="#feature_bits">[feature_bits]</a> sur l&#8217;extensibilité du protocole Lightning. À un niveau élevé, ce champ porte un ensemble de bits qui représentent les fonctionnalités qu&#8217;un nœud comprend. Par exemple, un nœud peut signaler qu&#8217;il comprend le tout dernier type de canal.</p>
+</dd>
+<dt class="hdlist1">timestamp</dt>
+<dd>
+<p>Un horodatage codé par époque Unix. Cela permet aux clients d&#8217;appliquer un ordre partiel aux mises à jour de l&#8217;annonce d&#8217;un nœud.</p>
+</dd>
+<dt class="hdlist1">node_id</dt>
+<dd>
+<p>La clé publique secp256k1 à laquelle appartient cette annonce de nœud. Il ne peut y avoir qu&#8217;un seul node_announcement pour un nœud donné dans le graphe des canaux à un instant donné. Par conséquent, un node_announcement peut remplacer un node_announcement antérieure pour le même nœud s&#8217;il porte un horodatage plus grand (plus tard).</p>
+</dd>
+<dt class="hdlist1">rgb_color</dt>
+<dd>
+<p>Un champ qui permet à un nœud de spécifier une couleur RVB ("RGB" en anglais) à lui associer, souvent utilisé dans les visualisations de graphes de canaux et les répertoires de nœuds.</p>
+</dd>
+<dt class="hdlist1">alias</dt>
+<dd>
+<p>Une chaîne UTF-8 servant de surnom pour un nœud donné. Notez qu&#8217;il n&#8217;est pas nécessaire que ces alias soient globalement uniques et qu&#8217;ils ne sont en aucun cas vérifiés. Par conséquent, ils ne doivent pas être considérés comme une forme d&#8217;identité — ils peuvent être facilement usurpés.</p>
+</dd>
+<dt class="hdlist1">adresses</dt>
+<dd>
+<p>Un ensemble d&#8217;adresses publiques accessibles sur Internet qui doivent être associées à un nœud donné. Dans la version actuelle du protocole, quatre types d&#8217;adresses sont pris en charge : IPv4 (type : 1), IPv6 (type : 2), Tor v2 (type : 3) et Tor v3 (type : 4). Dans le message node_announcement, chacun de ces types d&#8217;adresse est désigné par un type entier qui est inclus entre parenthèses après le type d&#8217;adresse.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect4 data-line-330">
+<h5 id="_validation_des_annonces_de_nœud">Validation des annonces de nœud</h5>
+<div class="paragraph data-line-332">
+<p>La validation d&#8217;une node_announcement entrante est simple. Les affirmations suivantes doivent être confirmées lors de l&#8217;examen d&#8217;une annonce de nœud :</p>
+</div>
+<div class="ulist data-line-334">
+<ul>
+<li class="data-line-334">
+<p>Si un node_announcement existant pour ce nœud est déjà connu, alors le champ timestamp d&#8217;un nouveau node_announcement entrant doit être supérieur au précédent.</p>
+</li>
+<li class="data-line-336">
+<p>Avec cette contrainte, nous appliquons un niveau forcé de "fraîcheur".</p>
+</li>
+<li class="data-line-338">
+<p>Si aucun node_announcement n&#8217;existe pour le nœud donné, alors un channel_announcement existant qui fait référence au nœud donné (nous y reviendrons plus tard) doit déjà exister dans son graphe local des canaux.</p>
+</li>
+<li class="data-line-340">
+<p>La signature incluse doit être une signature ECDSA valide vérifiée à l&#8217;aide de la clé publique node_id incluse et du double hachage SHA-256 de l&#8217;encodage brut du message (moins la signature et l&#8217;en-tête de trame) comme message.</p>
+</li>
+<li class="data-line-342">
+<p>Toutes les adresses incluses doivent être triées par ordre croissant en fonction de leur identifiant d&#8217;adresse.</p>
+</li>
+<li class="data-line-344">
+<p>Les octets alias inclus doivent être une chaîne UTF-8 valide.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect3 data-line-346">
+<h4 id="_le_message_channel_announcement">Le message channel_announcement</h4>
+<div class="paragraph data-line-348">
+<p>Ensuite, nous avons le message channel_announcement, qui est utilisé pour <em>annoncer</em> un nouveau canal <em>public</em> à l&#8217;ensemble du réseau. Notez que l&#8217;annonce d&#8217;un canal est <em>facultative</em>. Un canal ne doit être annoncé que s&#8217;il est destiné à être utilisé pour le routage sur le Lightning Network. Les nœuds de routage actifs peuvent souhaiter annoncer tous leurs canaux. Cependant, certains nœuds comme les nœuds mobiles n&#8217;ont probablement pas le
+temps de disponibilité ou le désir d&#8217;être un nœud de routage actif. En conséquence, ces
+nœuds mobiles (qui utilisent généralement des clients légers pour se connecter au réseau P2P de Bitcoin) peuvent à la place avoir des canaux purement <em>non annoncés</em> (privés).</p>
+</div>
+<div class="sect4 data-line-352">
+<h5 id="_canaux_privées_non_annoncés">Canaux (privées) non annoncés</h5>
+<div class="paragraph data-line-354">
+<p>Un canal non annoncé ne fait pas partie du graphe des canaux publics connus, mais peut toujours être utilisé pour envoyer/recevoir des paiements. Un lecteur avisé peut maintenant se demander comment un canal qui ne fait pas partie du graphe des canaux publiques peut recevoir des paiements. La solution à ce problème est un ensemble "d&#8217;aides au pathfinding" que nous appelons conseils de routage. Comme nous le verrons dans <a href="#invoices">[invoices]</a>, les factures créées par des nœuds avec des canaux non annoncés incluront des informations pour aider l&#8217;expéditeur à les acheminer, en supposant que le nœud a au moins un seul canal avec un nœud de routage public existant.</p>
+</div>
+<div class="paragraph data-line-356">
+<p>En raison de l&#8217;existence de canaux non annoncés, la taille <em>réelle</em> du graphe des canaux (à la fois les composants publics et privés) est inconnue.</p>
+</div>
+</div>
+<div class="sect4 data-line-358">
+<h5 id="_localisation_dun_canal_sur_la_blockchain_bitcoin">Localisation d&#8217;un canal sur la blockchain Bitcoin</h5>
+<div class="paragraph data-line-360">
+<p>Comme mentionné précédemment, le graphe des canaux est authentifié grâce à son utilisation de la cryptographie à clés publiques, ainsi que de la blockchain Bitcoin comme système de prévention du spam. Pour qu&#8217;un nœud accepte un nouveau channel_announcement, l&#8217;annonce doit <em>prouver</em> que le canal existe réellement dans la blockchain Bitcoin. Ce système de preuve ajoute un coût initial à l&#8217;ajout d&#8217;une nouvelle entrée au graphe des canaux (les frais de chaîne qu&#8217;il faut payer pour créer l&#8217;UTXO du canal). En conséquence, nous atténuons le spam et veillons à ce qu&#8217;un nœud malhonnête sur le réseau ne puisse pas remplir gratuitement la mémoire d&#8217;un nœud honnête avec de faux canaux.</p>
+</div>
+<div class="paragraph data-line-362">
+<p>Étant donné que nous devons construire une preuve de l&#8217;existence d&#8217;un canal, une
+question naturelle qui se pose est la suivante : comment "désigner" ou référencer un canal donné pour le vérificateur ? Étant donné qu&#8217;un canal de paiement est ancré dans une sortie de transaction non dépensée (voir <a href="#utxo">[utxo]</a>), une première idée pourrait être d&#8217;essayer d&#8217;abord d&#8217;annoncer le point de sortie complet (txid:index) du canal. Étant donné que le point de sortie est unique au monde et confirmé sur la chaîne, cela semble être une bonne idée ; cependant, cela présente un inconvénient : le vérificateur doit conserver une copie complète de l&#8217;ensemble des UTXO pour vérifier les canaux. Cela fonctionne bien pour les nœuds complets Bitcoin, mais les clients qui s&#8217;appuient sur une vérification légère ne conservent généralement pas un ensemble complet des UTXO. Car nous souhaitons nous assurer que nous pouvons prendre en charge les nœuds mobiles sur le Lightning Network, nous sommes obligés de trouver une autre solution.</p>
+</div>
+<div class="paragraph data-line-365">
+<p>Et si plutôt que de référencer un canal par son UTXO, on le référençait en fonction de sa "localisation" sur la chaîne ? Pour ce faire, nous aurons besoin d&#8217;un schéma qui nous permette de référencer un bloc donné, puis une transaction dans ce bloc, et enfin une sortie spécifique créée par cette transaction. Un tel identifiant est décrit dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md">BOLT #7</a> et est appelé <em>short channel ID</em> (identifiant de canal court), ou scid.
+Le scid est utilisé dans channel_announcement (et channel_update) ainsi que dans le paquet de routage encrypté en oignon inclus dans les HTLC, comme nous l&#8217;avons appris dans <a href="#onion_routing">[onion_routing]</a>.</p>
+</div>
+</div>
+<div class="sect4 data-line-370">
+<h5 id="scid">L&#8217;identifiant de canal court</h5>
+<div class="paragraph data-line-372">
+<p>Sur la base des informations précédentes, nous avons trois informations que nous devons encoder pour référencer de manière unique un canal donné. Parce que nous désirons une représentation compacte, nous allons essayer d&#8217;encoder les informations dans un entier <em>simple</em>. Notre format d&#8217;entier de choix est un entier 64 bits non signé, compris dans 8 octets.</p>
+</div>
+<div class="paragraph data-line-374">
+<p>Tout d&#8217;abord, la hauteur du bloc. En utilisant 3 octets (24 bits), nous pouvons encoder 16 777 216 blocs. Cela nous laisse 5 octets pour encoder respectivement l&#8217;index de transaction et l&#8217;index de sortie. Nous utiliserons les 3 octets suivants
+pour encoder l&#8217;index de transaction <em>dans</em> un bloc. C&#8217;est plus que suffisant étant donné qu&#8217;il est seulement possible de fixer des dizaines de milliers de transactions dans un bloc aux tailles de bloc actuelles. Cela nous laisse 2 octets pour encoder l&#8217;index de sortie du canal dans la transaction.</p>
+</div>
+<div class="paragraph data-line-377">
+<p>Notre format final de scid ressemble à :</p>
+</div>
+<div class="listingblock data-line-378">
+<div class="content">
+<pre>block_height (3 octets) || transaction_index (3 octets) || output_index (2 octets)</pre>
+</div>
+</div>
+<div class="paragraph data-line-382">
+<p>En utilisant des techniques de compression de bits, nous encodons d&#8217;abord les 3 octets les plus significatifs en tant que hauteur de bloc, les 3 octets suivants en tant qu&#8217;index de transaction et les 2 octets les moins significatifs en tant qu&#8217;index de sortie qui crée l&#8217;UTXO du canal.</p>
+</div>
+<div class="paragraph data-line-384">
+<p>Un ID de canal court peut être représenté par un seul entier
+(695313561322258433) ou comme une chaîne de caractères plus : 632384x1568x1. Ici, nous voyons que le canal a été extrait dans le bloc 632384, était la 1568ème transaction dans le bloc, avec la sortie de canal comme deuxième sortie (les UTXO sont indexés à partir zéro) produite par la transaction.</p>
+</div>
+<div class="paragraph data-line-387">
+<p>Maintenant que nous sommes en mesure de pointer succinctement vers une sortie de financement d&#8217;un canal donné sur la chaîne, nous pouvons examiner la structure complète du message channel_announcement, et déterminer comment vérifier la preuve d&#8217;existence incluse dans le message.</p>
+</div>
+</div>
+<div class="sect4 data-line-389">
+<h5 id="_la_structure_du_message_channel_announcement">La structure du message channel_announcement</h5>
+<div class="paragraph data-line-391">
+<p>Un channel_announcement communique principalement deux choses :</p>
+</div>
+<div class="olist arabic data-line-393">
+<ol class="arabic">
+<li class="data-line-393">
+<p>Une preuve qu&#8217;un canal existe entre le nœud A et le nœud B, les deux nœuds contrôlant les clés multisig dans la sortie de ce canal.</p>
+</li>
+<li class="data-line-395">
+<p>L&#8217;ensemble des capacités du canal (les types de HTLC qu&#8217;il peut router, etc.).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-397">
+<p>Lors de la description de la preuve, nous ferons généralement référence au nœud 1 et au nœud 2. Parmi les deux nœuds qu&#8217;un canal connecte, le "premier" nœud est le nœud qui a un codage de clé publique "inférieur" lorsque l&#8217;on compare la clé publique des deux nœuds au format compressé encodé en hexadécimal dans l&#8217;ordre lexicographique. De même, en plus d&#8217;une clé publique de nœud sur le réseau, chaque nœud doit également contrôler une clé publique au sein de la blockchain Bitcoin.</p>
+</div>
+<div class="paragraph data-line-399">
+<p>Comme pour le message node_announcement, toutes les signatures incluses dans le message channel_announcement doivent être signées/vérifiées par rapport à l&#8217;encodage brut du message (moins l&#8217;en-tête) qui suit <em>après</em> la signature finale (car il n&#8217;est pas possible pour une signature numérique de se signer elle-même).</p>
+</div>
+<div class="paragraph data-line-401">
+<p>Cela étant précisé, un message channel_announcement contient les champs suivants :</p>
+</div>
+<div class="dlist data-line-403">
+<dl>
+<dt class="hdlist1">node_signature_1</dt>
+<dd>
+<p>La signature du premier nœud sur le digest du message.</p>
+</dd>
+<dt class="hdlist1">node_signature_2</dt>
+<dd>
+<p>La signature du deuxième nœud sur le digest du message.</p>
+</dd>
+<dt class="hdlist1">bitcoin_signature_1</dt>
+<dd>
+<p>La signature de la clé multisig (dans la sortie de financement) du premier nœud sur le digest du message.</p>
+</dd>
+<dt class="hdlist1">bitcoin_signature_2</dt>
+<dd>
+<p>La signature de la clé multisig (dans la sortie de financement) du deuxième nœud sur le digest du message.</p>
+</dd>
+<dt class="hdlist1">features</dt>
+<dd>
+<p>Un vecteur de bits de fonctionnalités qui décrit l&#8217;ensemble des fonctionnalités au niveau du protocole prises en charge par ce canal.</p>
+</dd>
+<dt class="hdlist1">chain_hash</dt>
+<dd>
+<p>Un hachage de 32 octets qui est généralement le hachage du bloc de genèse de la blockchain (par exemple, le réseau principal Bitcoin) dans laquelle le canal a été ouvert.</p>
+</dd>
+<dt class="hdlist1">short_channel_id</dt>
+<dd>
+<p>Le scid qui localise de manière unique la sortie de financement du canal donné dans la blockchain.</p>
+</dd>
+<dt class="hdlist1">node_id_1</dt>
+<dd>
+<p>La clé publique du premier nœud du réseau.</p>
+</dd>
+<dt class="hdlist1">node_id_2</dt>
+<dd>
+<p>La clé publique du deuxième nœud du réseau.</p>
+</dd>
+<dt class="hdlist1">bitcoin_key_1</dt>
+<dd>
+<p>La clé multisig brute pour la sortie de financement du canal pour le premier nœud du réseau.</p>
+</dd>
+<dt class="hdlist1">bitcoin_key_2</dt>
+<dd>
+<p>La clé multisig brute pour la sortie de financement du canal pour le deuxième nœud du réseau.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect4 data-line-425">
+<h5 id="_validation_de_lannonce_de_canal">Validation de l&#8217;annonce de canal</h5>
+<div class="paragraph data-line-427">
+<p>Maintenant que nous savons ce que contient un channel_announcement, nous pouvons voir comment vérifier l&#8217;existence du canal sur la chaîne.</p>
+</div>
+<div class="paragraph data-line-429">
+<p>Équipés des informations contenues dans le message channel_announcement, tout nœud Lightning (même sans copie complète de la blockchain Bitcoin) peut vérifier l&#8217;existence et l&#8217;authenticité du canal de paiement.</p>
+</div>
+<div class="paragraph data-line-431">
+<p>Tout d&#8217;abord, le vérificateur utilisera l&#8217;ID de canal court pour trouver quel bloc Bitcoin contient la sortie de financement du canal. Avec les informations de hauteur de bloc, le vérificateur peut demander uniquement ce bloc spécifique à un nœud Bitcoin. Le bloc peut ensuite être relié au bloc de genèse en suivant la chaîne d&#8217;en-têtes de blocs à reculons (vérification de la preuve de travail), confirmant qu&#8217;il s&#8217;agit bien d&#8217;un bloc appartenant à la blockchain Bitcoin.</p>
+</div>
+<div class="paragraph data-line-433">
+<p>Ensuite, le vérificateur utilise le numéro d&#8217;index de transaction pour identifier l&#8217;ID de transaction de la transaction qui contient le canal de paiement. Avec la plupart des bibliothèques Bitcoin modernes, il est possible d&#8217;accéder à une transaction d&#8217;un bloc en utilisant l&#8217;index de la transaction à l&#8217;intérieur du bloc.</p>
+</div>
+<div class="paragraph data-line-435">
+<p>Ensuite, le vérificateur utilise une bibliothèque Bitcoin (dans le langage du vérificateur) pour extraire la transaction pertinente en fonction de son index dans le bloc. Le vérificateur validera la transaction (vérifiant qu&#8217;elle est correctement signée et produit le même ID de transaction lorsqu&#8217;elle est hachée).</p>
+</div>
+<div class="paragraph data-line-437">
+<p>Ensuite, le vérificateur extraira la sortie Pay-to-Witness-Script-Hash (P2WSH) référencée par le numéro d&#8217;index de sortie de l&#8217;ID de canal court. Il s&#8217;agit de l&#8217;adresse de la sortie de financement du canal. De plus, le vérificateur s&#8217;assurera que la taille du canal présumé correspond à la valeur de la sortie produite à l&#8217;index de sortie spécifié.</p>
+</div>
+<div class="paragraph data-line-439">
+<p>Enfin, le vérificateur reconstruira le script multisig à partir de bitcoin_key_1 et bitcoin_key_2 et confirmera qu&#8217;il produit la même adresse que celle de la sortie.</p>
+</div>
+<div class="paragraph data-line-441">
+<p>Le vérificateur a maintenant vérifié de manière indépendante que le canal de paiement dans l&#8217;annonce est financé et confirmé sur la blockchain Bitcoin !</p>
+</div>
+</div>
+</div>
+<div class="sect3 data-line-443">
+<h4 id="_le_message_channel_update">Le message channel_update</h4>
+<div class="paragraph data-line-445">
+<p>Le troisième et dernier message utilisé dans le protocole de bavardage est le message channel_update. Deux d&#8217;entre eux sont générés pour chaque canal de paiement (un par chaque partenaire de canal) annonçant leurs frais de routage, leurs attentes en matière de timelock et leurs capacités.</p>
+</div>
+<div class="paragraph data-line-447">
+<p>Le message channel_update contient également un horodatage (timestamp) permettant à un nœud de mettre à jour ses frais de routage et d&#8217;autres attentes et capacités en envoyant un nouveau message channel_update avec un horodatage plus grand (plus tard) qui remplace toutes les mises à jour plus anciennes.</p>
+</div>
+<div class="paragraph data-line-449">
+<p>Le message channel_update contient les champs suivants :</p>
+</div>
+<div class="dlist data-line-452">
+<dl>
+<dt class="hdlist1">signature</dt>
+<dd>
+<p>Une signature numérique correspondant à la clé publique du nœud, pour authentifier la source et l&#8217;intégrité de la mise à jour du canal</p>
+</dd>
+<dt class="hdlist1">chain_hash</dt>
+<dd>
+<p>Le hachage du bloc genèse de la chaîne contenant le canal</p>
+</dd>
+<dt class="hdlist1">short_channel_id</dt>
+<dd>
+<p>L&#8217;identifiant court du canal pour identifier le canal</p>
+</dd>
+<dt class="hdlist1">timestamp</dt>
+<dd>
+<p>L&#8217;horodatage de cette mise à jour, pour permettre aux destinataires de séquencer les mises à jour et de remplacer les anciennes mises à jour</p>
+</dd>
+<dt class="hdlist1">message_flags</dt>
+<dd>
+<p>Un champ de bits indiquant la présence de champs supplémentaires dans le message channel_update</p>
+</dd>
+<dt class="hdlist1">channel_flags</dt>
+<dd>
+<p>Un champ composé de bits indiquant la direction du canal et d&#8217;autres options du canal</p>
+</dd>
+<dt class="hdlist1">cltv_expiry_delta</dt>
+<dd>
+<p>Les attentes en termes de delta de timelock de ce nœud pour le routage (voir <a href="#onion_routing">[onion_routing]</a>)</p>
+</dd>
+<dt class="hdlist1">htlc_minimum_msat</dt>
+<dd>
+<p>Le montant minimum des HTLC qui seront acheminés</p>
+</dd>
+<dt class="hdlist1">fee_base_msat</dt>
+<dd>
+<p>Les frais de base qui seront facturés pour le routage</p>
+</dd>
+<dt class="hdlist1">fee_proportional_millionths</dt>
+<dd>
+<p>Le taux de frais proportionnel qui sera facturé pour le routage</p>
+</dd>
+<dt class="hdlist1">htlc_maximum_msat (option_channel_htlc_max)</dt>
+<dd>
+<p>Le montant maximum qui sera acheminé</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-474">
+<p>Un nœud qui reçoit le message channel_update peut attacher ces métadonnées à l&#8217;arête du graphe des canaux pour activer le pathfinding, comme nous le verrons dans <a href="#path_finding">[path_finding]</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-476">
+<h3 id="_maintenance_continue_du_graphe_des_canaux">Maintenance continue du graphe des canaux</h3>
+<div class="paragraph data-line-478">
+<p>La construction d&#8217;un graphe des canaux n&#8217;est pas un événement ponctuel, mais plutôt une activité continue. Au fur et à mesure qu&#8217;un nœud s&#8217;amorce dans le réseau, il commencera à recevoir des "bavardages", sous la forme des trois messages de mise à jour. Il utilisera ces messages pour commencer immédiatement à construire un graphe validé des canaux.</p>
+</div>
+<div class="paragraph data-line-480">
+<p>Plus un nœud reçoit d&#8217;informations, meilleure est sa "carte" du Lightning Network et plus il peut être efficace pour le pathfinding et la livraison des paiements.</p>
+</div>
+<div class="paragraph data-line-482">
+<p>Un nœud n&#8217;ajoutera pas seulement des informations au graphe des canaux. Il gardera également une trace de la dernière fois qu&#8217;un canal a été mis à jour et supprimera les canaux "obsolètes" qui n&#8217;ont pas été mises à jour depuis plus de deux semaines. Enfin, s&#8217;il voit qu&#8217;un nœud n&#8217;a plus de canal, il supprimera également ce nœud.</p>
+</div>
+<div class="paragraph data-line-484">
+<p>Les informations collectées à partir du protocole de bavardage ne sont pas les seules informations pouvant être stockées dans le graphe des canaux. Différentes implémentations de nœuds Lightning peuvent attacher d&#8217;autres métadonnées aux nœuds et aux canaux. Par exemple, certaines implémentations de nœuds calculent un "score" qui évalue la "qualité" d&#8217;un nœud en tant que pair de routage. Ce score est utilisé dans le cadre du pathfinding pour hiérarchiser ou déprioriser des chemins.</p>
+</div>
+</div>
+<div class="sect2 data-line-486">
+<h3 id="_conclusion">Conclusion</h3>
+<div class="paragraph data-line-487">
+<p>Dans ce chapitre, nous avons appris comment les nœuds Lightning se découvrent
+entre eux, découvrent et mettent à jour l&#8217;état de leur nœud et communiquent entre eux. Nous avons appris comment les graphs de canaux sont créés et maintenus, et nous avons exploré quelques façons dont le Lightning Network décourage les mauvais acteurs ou les nœuds malhonnêtes de spammer le réseau.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2023-04-28 02:38:12 -0400
+</div>
+</div>
+</body>
+</html>

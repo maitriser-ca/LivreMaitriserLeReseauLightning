@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.17">
+<title>Mise en route</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<style>
+/*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+/* Uncomment the following line when using as a custom stylesheet */
+/* @import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700"; */
+html{font-family:sans-serif;-webkit-text-size-adjust:100%}
+a{background:none}
+a:focus{outline:thin dotted}
+a:active,a:hover{outline:0}
+h1{font-size:2em;margin:.67em 0}
+b,strong{font-weight:bold}
+abbr{font-size:.9em}
+abbr[title]{cursor:help;border-bottom:1px dotted #dddddf;text-decoration:none}
+dfn{font-style:italic}
+hr{height:0}
+mark{background:#ff0;color:#000}
+code,kbd,pre,samp{font-family:monospace;font-size:1em}
+pre{white-space:pre-wrap}
+q{quotes:"\201C" "\201D" "\2018" "\2019"}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sup{top:-.5em}
+sub{bottom:-.25em}
+img{border:0}
+svg:not(:root){overflow:hidden}
+figure{margin:0}
+audio,video{display:inline-block}
+audio:not([controls]){display:none;height:0}
+fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}
+legend{border:0;padding:0}
+button,input,select,textarea{font-family:inherit;font-size:100%;margin:0}
+button,input{line-height:normal}
+button,select{text-transform:none}
+button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}
+button[disabled],html input[disabled]{cursor:default}
+input[type=checkbox],input[type=radio]{padding:0}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
+textarea{overflow:auto;vertical-align:top}
+table{border-collapse:collapse;border-spacing:0}
+*,::before,::after{box-sizing:border-box}
+html,body{font-size:100%}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;line-height:1;position:relative;cursor:auto;-moz-tab-size:4;-o-tab-size:4;tab-size:4;word-wrap:anywhere;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+a:hover{cursor:pointer}
+img,object,embed{max-width:100%;height:auto}
+object,embed{height:100%}
+img{-ms-interpolation-mode:bicubic}
+.left{float:left!important}
+.right{float:right!important}
+.text-left{text-align:left!important}
+.text-right{text-align:right!important}
+.text-center{text-align:center!important}
+.text-justify{text-align:justify!important}
+.hide{display:none}
+img,object,svg{display:inline-block;vertical-align:middle}
+textarea{height:auto;min-height:50px}
+select{width:100%}
+.subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0}
+a{color:#2156a5;text-decoration:underline;line-height:inherit}
+a:hover,a:focus{color:#1d4b8f}
+a img{border:0}
+p{line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
+p aside{font-size:.875em;line-height:1.35;font-style:italic}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
+h1 small,h2 small,h3 small,#toctitle small,.sidebarblock>.content>.title small,h4 small,h5 small,h6 small{font-size:60%;color:#e99b8f;line-height:0}
+h1{font-size:2.125em}
+h2{font-size:1.6875em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
+h4,h5{font-size:1.125em}
+h6{font-size:1em}
+hr{border:solid #dddddf;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em}
+em,i{font-style:italic;line-height:inherit}
+strong,b{font-weight:bold;line-height:inherit}
+small{font-size:60%;line-height:inherit}
+code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
+ul,ol,dl{line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
+ul,ol{margin-left:1.5em}
+ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0}
+ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
+ul.square{list-style-type:square}
+ul.circle{list-style-type:circle}
+ul.disc{list-style-type:disc}
+ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
+dl dt{margin-bottom:.3125em;font-weight:bold}
+dl dd{margin-bottom:1.25em}
+blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
+blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
+@media screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+h1{font-size:2.75em}
+h2{font-size:2.3125em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
+h4{font-size:1.4375em}}
+table{background:#fff;margin-bottom:1.25em;border:1px solid #dedede;word-wrap:normal}
+table thead,table tfoot{background:#f7f8f7}
+table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
+table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
+table tr.even,table tr.alt{background:#f8f8f7}
+table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{line-height:1.6}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
+h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
+.center{margin-left:auto;margin-right:auto}
+.stretch{width:100%}
+.clearfix::before,.clearfix::after,.float-group::before,.float-group::after{content:" ";display:table}
+.clearfix::after,.float-group::after{clear:both}
+:not(pre).nobreak{word-wrap:normal}
+:not(pre).nowrap{white-space:nowrap}
+:not(pre).pre-wrap{white-space:pre-wrap}
+:not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
+pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
+pre>code{display:block}
+pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
+em em{font-style:normal}
+strong strong{font-weight:400}
+.keyseq{color:rgba(51,51,51,.8)}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background:#f7f7f7;border:1px solid #ccc;border-radius:3px;box-shadow:0 1px 0 rgba(0,0,0,.2),inset 0 0 0 .1em #fff;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+.keyseq kbd:first-child{margin-left:0}
+.keyseq kbd:last-child{margin-right:0}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
+b.button::before,b.button::after{position:relative;top:-1px;font-weight:400}
+b.button::before{content:"[";padding:0 3px 0 2px}
+b.button::after{content:"]";padding:0 2px 0 3px}
+p a>code:hover{color:rgba(0,0,0,.9)}
+#header,#content,#footnotes,#footer{width:100%;margin:0 auto;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
+#header::before,#header::after,#content::before,#content::after,#footnotes::before,#footnotes::after,#footer::before,#footer::after{content:" ";display:table}
+#header::after,#content::after,#footnotes::after,#footer::after{clear:both}
+#content{margin-top:1.25em}
+#content::before{content:none}
+#header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
+#header .details span:first-child{margin-left:-.125em}
+#header .details span.email a{color:rgba(0,0,0,.85)}
+#header .details br{display:none}
+#header .details br+span::before{content:"\00a0\2013\00a0"}
+#header .details br+span.author::before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark::before{content:"\00a0|\00a0"}
+#header #revnumber{text-transform:capitalize}
+#header #revnumber::after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #dddddf;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #e7e7e9;padding-bottom:.5em}
+#toc>ul{margin-left:.125em}
+#toc ul.sectlevel0>li>a{font-style:italic}
+#toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
+#toc ul{font-family:"Open Sans","DejaVu Sans",sans-serif;list-style-type:none}
+#toc li{line-height:1.3334;margin-top:.3334em}
+#toc a{text-decoration:none}
+#toc a:active{text-decoration:underline}
+#toctitle{color:#7a2518;font-size:1.2em}
+@media screen and (min-width:768px){#toctitle{font-size:1.375em}
+body.toc2{padding-left:15em;padding-right:0}
+#toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
+#toc.toc2>ul{font-size:.9em;margin-bottom:0}
+#toc.toc2 ul ul{margin-left:0;padding-left:1em}
+#toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
+body.toc2.toc-right{padding-left:0;padding-right:15em}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #e7e7e9;left:auto;right:0}}
+@media screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+#toc.toc2{width:20em}
+#toc.toc2 #toctitle{font-size:1.375em}
+#toc.toc2>ul{font-size:.95em}
+#toc.toc2 ul ul{padding-left:1.25em}
+body.toc2.toc-right{padding-left:0;padding-right:20em}}
+#content #toc{border:1px solid #e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;border-radius:4px}
+#content #toc>:first-child{margin-top:0}
+#content #toc>:last-child{margin-bottom:0}
+#footer{max-width:none;background:rgba(0,0,0,.8);padding:1.25em}
+#footer-text{color:hsla(0,0%,100%,.8);line-height:1.44}
+#content{margin-bottom:.625em}
+.sect1{padding-bottom:.625em}
+@media screen and (min-width:768px){#content{margin-bottom:1.25em}
+.sect1{padding-bottom:1.25em}}
+.sect1:last-child{padding-bottom:0}
+.sect1+.sect1{border-top:1px solid #e7e7e9}
+#content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
+#content h1>a.anchor::before,h2>a.anchor::before,h3>a.anchor::before,#toctitle>a.anchor::before,.sidebarblock>.content>.title>a.anchor::before,h4>a.anchor::before,h5>a.anchor::before,h6>a.anchor::before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
+#content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
+#content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
+details,.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+details{margin-left:1.25rem}
+details>summary{cursor:pointer;display:block;position:relative;line-height:1.6;margin-bottom:.625rem;outline:none;-webkit-tap-highlight-color:transparent}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";border:solid transparent;border-left:solid;border-width:.3em 0 .3em .5em;position:absolute;top:.5em;left:-1.25rem;transform:translateX(15%)}
+details[open]>summary::before{border:solid transparent;border-top:solid;border-width:.5em .3em 0;transform:translateY(15%)}
+details>summary::after{content:"";width:1.25rem;height:1em;position:absolute;top:.3em;left:-1.25rem}
+.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
+table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
+.paragraph.lead>p,#preamble>.sectionbody>[class=paragraph]:first-of-type p{font-size:1.21875em;line-height:1.6;color:rgba(0,0,0,.85)}
+.admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
+.admonitionblock>table td.icon{text-align:center;width:80px}
+.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(0,0,0,.6);word-wrap:anywhere}
+.admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content{border:1px solid #e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;border-radius:4px}
+.exampleblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child{margin-bottom:0}
+.sidebarblock{border:1px solid #dbdbd6;margin-bottom:1.25em;padding:1.25em;background:#f3f3f2;border-radius:4px}
+.sidebarblock>:first-child{margin-top:0}
+.sidebarblock>:last-child{margin-bottom:0}
+.sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
+.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.literalblock pre,.listingblock>.content>pre{border-radius:4px;overflow-x:auto;padding:1em;font-size:.8125em}
+@media screen and (min-width:768px){.literalblock pre,.listingblock>.content>pre{font-size:.90625em}}
+@media screen and (min-width:1280px){.literalblock pre,.listingblock>.content>pre{font-size:1em}}
+.literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
+.literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
+.listingblock>.content{position:relative}
+.listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
+.listingblock:hover code[data-lang]::before{display:block}
+.listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
+.listingblock.terminal pre .command:not([data-prompt])::before{content:"$"}
+.listingblock pre.highlightjs{padding:0}
+.listingblock pre.highlightjs>code{padding:1em;border-radius:4px}
+.listingblock pre.prettyprint{border-width:0}
+.prettyprint{background:#f7f7f8}
+pre.prettyprint .linenums{line-height:1.45;margin-left:2em}
+pre.prettyprint li{background:none;list-style-type:inherit;padding-left:0}
+pre.prettyprint li code[data-lang]::before{opacity:1}
+pre.prettyprint li:not(:first-child) code[data-lang]::before{display:none}
+table.linenotable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.linenotable td[class]{color:inherit;vertical-align:top;padding:0;line-height:inherit;white-space:normal}
+table.linenotable td.code{padding-left:.75em}
+table.linenotable td.linenos,pre.pygments .linenos{border-right:1px solid;opacity:.35;padding-right:.5em;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+pre.pygments span.linenos{display:inline-block;margin-right:.75em}
+.quoteblock{margin:0 1em 1.25em 1.5em;display:table}
+.quoteblock:not(.excerpt)>.title{margin-left:-1.5em;margin-bottom:.75em}
+.quoteblock blockquote,.quoteblock p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote{margin:0;padding:0;border:0}
+.quoteblock blockquote::before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
+.quoteblock .attribution{margin-top:.75em;margin-right:.5ex;text-align:right}
+.verseblock{margin:0 1em 1.25em}
+.verseblock pre{font-family:"Open Sans","DejaVu Sans",sans-serif;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
+.verseblock pre strong{font-weight:400}
+.verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
+.quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
+.quoteblock .attribution br,.verseblock .attribution br{display:none}
+.quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
+.quoteblock.abstract blockquote::before,.quoteblock.excerpt blockquote::before,.quoteblock .quoteblock blockquote::before{display:none}
+.quoteblock.abstract blockquote,.quoteblock.abstract p,.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{line-height:1.6;word-spacing:0}
+.quoteblock.abstract{margin:0 1em 1.25em;display:block}
+.quoteblock.abstract>.title{margin:0 0 .375em;font-size:1.15em;text-align:center}
+.quoteblock.excerpt>blockquote,.quoteblock .quoteblock{padding:0 0 .25em 1em;border-left:.25em solid #dddddf}
+.quoteblock.excerpt,.quoteblock .quoteblock{margin-left:0}
+.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{color:inherit;font-size:1.0625rem}
+.quoteblock.excerpt .attribution,.quoteblock .quoteblock .attribution{color:inherit;font-size:.85rem;text-align:left;margin-right:0}
+p.tableblock:last-child{margin-bottom:0}
+td.tableblock>.content{margin-bottom:1.25em;word-wrap:anywhere}
+td.tableblock>.content>:last-child{margin-bottom:-1.25em}
+table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
+table.grid-all>*>tr>*{border-width:1px}
+table.grid-cols>*>tr>*{border-width:0 1px}
+table.grid-rows>*>tr>*{border-width:1px 0}
+table.frame-all{border-width:1px}
+table.frame-ends{border-width:1px 0}
+table.frame-sides{border-width:0 1px}
+table.frame-none>colgroup+*>:first-child>*,table.frame-sides>colgroup+*>:first-child>*{border-top-width:0}
+table.frame-none>:last-child>:last-child>*,table.frame-sides>:last-child>:last-child>*{border-bottom-width:0}
+table.frame-none>*>tr>:first-child,table.frame-ends>*>tr>:first-child{border-left-width:0}
+table.frame-none>*>tr>:last-child,table.frame-ends>*>tr>:last-child{border-right-width:0}
+table.stripes-all>*>tr,table.stripes-odd>*>tr:nth-of-type(odd),table.stripes-even>*>tr:nth-of-type(even),table.stripes-hover>*>tr:hover{background:#f8f8f7}
+th.halign-left,td.halign-left{text-align:left}
+th.halign-right,td.halign-right{text-align:right}
+th.halign-center,td.halign-center{text-align:center}
+th.valign-top,td.valign-top{vertical-align:top}
+th.valign-bottom,td.valign-bottom{vertical-align:bottom}
+th.valign-middle,td.valign-middle{vertical-align:middle}
+table thead th,table tfoot th{font-weight:bold}
+tbody tr th{background:#f7f8f7}
+tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
+p.tableblock>code:only-child{background:none;padding:0}
+p.tableblock{font-size:1em}
+ol{margin-left:1.75em}
+ul li ol{margin-left:1.5em}
+dl dd{margin-left:1.125em}
+dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
+li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+li>p:empty:only-child::before{content:"";display:inline-block}
+ul.checklist>li>p:first-child{margin-left:-1em}
+ul.checklist>li>p:first-child>.fa-square-o:first-child,ul.checklist>li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist>li>p:first-child>input[type=checkbox]:first-child{margin-right:.25em}
+ul.inline{display:flex;flex-flow:row wrap;list-style:none;margin:0 0 .625em -1.25em}
+ul.inline>li{margin-left:1.25em}
+.unstyled dl dt{font-weight:400;font-style:normal}
+ol.arabic{list-style-type:decimal}
+ol.decimal{list-style-type:decimal-leading-zero}
+ol.loweralpha{list-style-type:lower-alpha}
+ol.upperalpha{list-style-type:upper-alpha}
+ol.lowerroman{list-style-type:lower-roman}
+ol.upperroman{list-style-type:upper-roman}
+ol.lowergreek{list-style-type:lower-greek}
+.hdlist>table,.colist>table{border:0;background:none}
+.hdlist>table>tbody>tr,.colist>table>tbody>tr{background:none}
+td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
+td.hdlist1{font-weight:bold;padding-bottom:1.25em}
+td.hdlist2{word-wrap:anywhere}
+.literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
+.colist td:not([class]):first-child{padding:.4em .75em 0;line-height:1;vertical-align:top}
+.colist td:not([class]):first-child img{max-width:none}
+.colist td:not([class]):last-child{padding:.25em 0}
+.thumb,.th{line-height:0;display:inline-block;border:4px solid #fff;box-shadow:0 0 0 1px #ddd}
+.imageblock.left{margin:.25em .625em 1.25em 0}
+.imageblock.right{margin:.25em 0 1.25em .625em}
+.imageblock>.title{margin-bottom:0}
+.imageblock.thumb,.imageblock.th{border-width:6px}
+.imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
+.image.left,.image.right{margin-top:.25em;margin-bottom:.25em;display:inline-block;line-height:0}
+.image.left{margin-right:.625em}
+.image.right{margin-left:.625em}
+a.image{text-decoration:none;display:inline-block}
+a.image object{pointer-events:none}
+sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
+sup.footnote a,sup.footnoteref a{text-decoration:none}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
+#footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none;margin-left:-1.05em}
+#footnotes .footnote:last-of-type{margin-bottom:0}
+#content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
+div.unbreakable{page-break-inside:avoid}
+.big{font-size:larger}
+.small{font-size:smaller}
+.underline{text-decoration:underline}
+.overline{text-decoration:overline}
+.line-through{text-decoration:line-through}
+.aqua{color:#00bfbf}
+.aqua-background{background:#00fafa}
+.black{color:#000}
+.black-background{background:#000}
+.blue{color:#0000bf}
+.blue-background{background:#0000fa}
+.fuchsia{color:#bf00bf}
+.fuchsia-background{background:#fa00fa}
+.gray{color:#606060}
+.gray-background{background:#7d7d7d}
+.green{color:#006000}
+.green-background{background:#007d00}
+.lime{color:#00bf00}
+.lime-background{background:#00fa00}
+.maroon{color:#600000}
+.maroon-background{background:#7d0000}
+.navy{color:#000060}
+.navy-background{background:#00007d}
+.olive{color:#606000}
+.olive-background{background:#7d7d00}
+.purple{color:#600060}
+.purple-background{background:#7d007d}
+.red{color:#bf0000}
+.red-background{background:#fa0000}
+.silver{color:#909090}
+.silver-background{background:#bcbcbc}
+.teal{color:#006060}
+.teal-background{background:#007d7d}
+.white{color:#bfbfbf}
+.white-background{background:#fafafa}
+.yellow{color:#bfbf00}
+.yellow-background{background:#fafa00}
+span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note::before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning::before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important::before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background:rgba(0,0,0,.8);border-radius:50%;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:#fff!important}
+.conum[data-value]+b{display:none}
+.conum[data-value]::after{content:attr(data-value)}
+pre .conum[data-value]{position:relative;top:-.125em}
+b.conum *{color:inherit!important}
+.conum:not([data-value]):empty{display:none}
+dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
+h1,h2,p,td.content,span.alt,summary{letter-spacing:-.01em}
+p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
+p,blockquote,dt,td.content,span.alt,summary{font-size:1.0625rem}
+p{margin-bottom:1.25rem}
+.sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
+.exampleblock>.content{background:#fffef7;border-color:#e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.print-only{display:none!important}
+@page{margin:1.25cm .75cm}
+@media print{*{box-shadow:none!important;text-shadow:none!important}
+html{font-size:80%}
+a{color:inherit!important;text-decoration:underline!important}
+a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
+a[href^="http:"]:not(.bare)::after,a[href^="https:"]:not(.bare)::after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]{border-bottom:1px dotted}
+abbr[title]::after{content:" (" attr(title) ")"}
+pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
+thead{display:table-header-group}
+svg{max-width:100%}
+p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
+h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
+#header,#content,#footnotes,#footer{max-width:none}
+#toc,.sidebarblock,.exampleblock>.content{background:none!important}
+#toc{border-bottom:1px solid #dddddf!important;padding-bottom:0!important}
+body.book #header{text-align:center}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em}
+body.book #header .details{border:0!important;display:block;padding:0!important}
+body.book #header .details span:first-child{margin-left:0!important}
+body.book #header .details br{display:block}
+body.book #header .details br+span::before{content:none!important}
+body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
+body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
+.listingblock code[data-lang]::before{display:block}
+#footer{padding:0 .9375em}
+.hide-on-print{display:none!important}
+.print-only{display:block!important}
+.hide-for-print{display:none!important}
+.show-for-print{display:inherit!important}}
+@media amzn-kf8,print{#header>h1:first-child{margin-top:1.25rem}
+.sect1{padding:0!important}
+.sect1+.sect1{border:0}
+#footer{background:none}
+#footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
+@media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
+</style>
+</head>
+<body class="article data-line-1">
+<div id="header">
+</div>
+<div id="content">
+<div class="sect1 data-line-2">
+<h2 id="getting-started">Mise en route</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-5">
+<p>Dans ce chapitre, nous commencerons là où la plupart des gens commencent lorsqu&#8217;ils rencontrent le Lightning Network pour la première fois &#x2014; choisir un logiciel pour participer à l&#8217;économie LN. Nous examinerons les choix de deux utilisateurs qui représentent un cas d&#8217;utilisation courant pour le Lightning Network et apprendrons par l&#8217;exemple. Alice, cliente d&#8217;un café, utilisera un porte-monnaie Lightning sur son appareil mobile pour acheter du café au Café de Bob. Bob, un commerçant, utilisera un nœud Lightning et un porte-monnaie pour exécuter un système de point de vente dans son café, afin qu&#8217;il puisse accepter les paiements par le Lightning Network.</p>
+</div>
+<div class="sect2 data-line-7">
+<h3 id="_premier_porte_monnaie_lightning_dalice">Premier porte-monnaie Lightning d&#8217;Alice</h3>
+<div class="paragraph data-line-9">
+<p>Alice est une utilisatrice de Bitcoin de longue date. Nous avons rencontré Alice pour la première fois dans le chapitre 1 de <em>Maîtriser Bitcoin</em>, note de bas de page : [Andreas M. Antonopoulos, <em>Maîtriser Bitcoin</em>, 2e édition, <a href="https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch01.asciidoc" data-href="https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch01.asciidoc">Chapitre 1</a> (O 'Reilly)] lorsqu&#8217;elle a acheté une tasse de café au Café de Bob en utilisant une transaction Bitcoin. Si vous n&#8217;êtes pas encore familiarisé avec le fonctionnement des transactions Bitcoin ou si vous avez besoin d&#8217;un rappel, veuillez lire <em>Maîtriser Bitcoin</em> ou le résumé dans <a href="#bitcoin_fundamentals_review">[bitcoin_fundamentals_review]</a>.</p>
+</div>
+<div class="paragraph data-line-11">
+<p>Alice a récemment appris que le Café de Bob venait de commencer à accepter les paiements LN ! Alice est impatiente d&#8217;apprendre et d&#8217;expérimenter avec le Lightning Network ; elle veut être l&#8217;une des premières clientes LN de Bob. Pour ce faire, Alice doit d&#8217;abord sélectionner un porte-monnaie Lightning qui répond à ses besoins.</p>
+</div>
+<div class="paragraph data-line-13">
+<p>Alice ne souhaite pas confier la garde de ses bitcoins à des tiers. Elle en a suffisamment appris sur la cryptomonnaie pour savoir comment utiliser un porte-monnaie. Elle souhaite également un porte-monnaie mobile afin de pouvoir l&#8217;utiliser pour de petits paiements en déplacement, elle choisit donc le porte-monnaie <em>Eclair</em>, un porte-monnaie Lightning mobile non dépositaire populaire. Apprenons-en plus sur comment et pourquoi elle a fait ces choix.</p>
+</div>
+</div>
+<div class="sect2 data-line-15">
+<h3 id="_nœuds_lightning">Nœuds Lightning</h3>
+<div class="paragraph data-line-17">
+<p>Le Lightning Network est accessible via des applications logicielles qui peuvent parler le protocole LN. Un <em>nœud Lightning Network</em> (nœud LN ou simplement nœud) est une application logicielle qui présente trois caractéristiques importantes. Premièrement, les nœuds Lightning sont des porte-monnaie, ils envoient et reçoivent donc des paiements sur le Lightning Network ainsi que sur le réseau Bitcoin. Deuxièmement, les nœuds doivent communiquer de pair-à-pair avec les autres nœuds Lightning créant le réseau. Enfin, les nœuds Lightning ont également besoin d&#8217;accéder à la blockchain Bitcoin (ou à d&#8217;autres blockchains pour d&#8217;autres cryptomonnaies) pour sécuriser les fonds utilisés pour les paiements.</p>
+</div>
+<div class="paragraph data-line-19">
+<p>Les utilisateurs ont le plus haut degré de contrôle en exécutant leur propre nœud Bitcoin et nœud Lightning. Cependant, les nœuds Lightning peuvent également utiliser un client Bitcoin léger, communément appelé vérification simplifiée des paiements (SPV), pour interagir avec la blockchain Bitcoin.</p>
+</div>
+</div>
+<div class="sect2 data-line-22">
+<h3 id="ln_explorer">Explorateurs Lightning</h3>
+<div class="paragraph data-line-24">
+<p>Les explorateurs LN sont des outils utiles pour afficher les statistiques des nœuds, des canaux et de la capacité du réseau.</p>
+</div>
+<div class="paragraph data-line-26">
+<p>En voici une liste non exhaustive :</p>
+</div>
+<div class="ulist data-line-28">
+<ul>
+<li class="data-line-28">
+<p><a href="https://1ml.com" data-href="https://1ml.com">Explorateur Lightning 1ML</a></p>
+</li>
+<li class="data-line-29">
+<p><a href="https://explorer.acinq.co" data-href="https://explorer.acinq.co">Explorateur Lightning d&#8217;ACINQ</a>, avec une visualisation sophistiquée</p>
+</li>
+<li class="data-line-30">
+<p><a href="https://amboss.space" data-href="https://amboss.space">Explorateur Amboss Space Lightning</a>, avec des métriques communautaires et des <span class="keep-together">visualisations</span> intuitives.</p>
+</li>
+<li class="data-line-31">
+<p><a href="https://ln.bigsun.xyz" data-href="https://ln.bigsun.xyz">Explorateur  Lightning de Fiatjaf</a> avec de nombreux diagrammes</p>
+</li>
+<li class="data-line-32">
+<p><a href="https://hashxp.org/lightning/node" data-href="https://hashxp.org/lightning/node">Explorateur Lightning hashXP</a></p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock tip data-line-35">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-36">
+<p>Notez que lorsque vous utilisez des explorateurs Lightning, tout comme avec les autres explorateurs de blocs, la confidentialité peut être un problème.
+Si les utilisateurs sont négligents, le site Web peut suivre leurs adresses IP et collecter des enregistrements de leur comportement (par exemple, les nœuds qui intéressent les utilisateurs).</p>
+</div>
+<div class="paragraph data-line-39">
+<p>En outre, il convient de noter qu&#8217;en l&#8217;absence de consensus mondial sur le graphe Lightning actuel ou sur l&#8217;état actuel d&#8217;une politique de canaux existante, les utilisateurs ne doivent jamais compter sur les explorateurs Lightning pour récupérer les informations les plus récentes.
+De plus, à mesure que les utilisateurs ouvrent, ferment et mettent à jour des canaux, le graphe change et les explorateurs Lightning individuels peuvent ne pas être à jour.
+Utilisez les explorateurs Lightning pour visualiser le réseau ou recueillir des informations, mais pas en tant que source faisant autorité sur ce qui se passe sur le Lightning Network.
+Pour avoir une vue faisant autorité sur le Lightning Network, exécutez votre propre nœud Lightning qui créera un graphe des canaux et collectera diverses statistiques, que vous pourrez afficher avec une interface Web.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2 data-line-45">
+<h3 id="_porte_monnaie_lightning">Porte-monnaie Lightning</h3>
+<div class="paragraph data-line-47">
+<p>Le terme <em>porte-monnaie Lightning</em> est quelque peu ambigu car il peut décrire une large variété de composants combinés à une interface utilisateur. Les composants les plus courants d&#8217;un logiciel de porte-monnaie Lightning incluent :</p>
+</div>
+<div class="ulist data-line-49">
+<ul>
+<li class="data-line-49">
+<p>Un magasin de clés ("keystore" en anglais) contenant des secrets, tels que des clés privées</p>
+</li>
+<li class="data-line-50">
+<p>Un nœud LN (nœud Lightning) qui communique sur le réseau pair-à-pair, comme décrit précédemment</p>
+</li>
+<li class="data-line-51">
+<p>Un nœud Bitcoin qui stocke les données de la blockchain et communique avec d&#8217;autres nœuds Bitcoin</p>
+</li>
+<li class="data-line-52">
+<p>Une "carte" de base de données des nœuds et des canaux qui sont annoncés sur le Lightning Network</p>
+</li>
+<li class="data-line-53">
+<p>Un gestionnaire de canaux qui peut ouvrir et fermer des canaux LN</p>
+</li>
+<li class="data-line-54">
+<p>Un système de rapprochement qui peut trouver un chemin de canaux connectés de la source du paiement à la destination du paiement</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-56">
+<p>Un porte-monnaie Lightning peut contenir toutes ces fonctions, agissant comme un porte-monnaie "complet", sans dépendre de services tiers. Ou un ou plusieurs de ces composants peuvent s&#8217;appuyer (partiellement ou entièrement) sur des services tiers qui négocient ces fonctions.</p>
+</div>
+<div class="paragraph data-line-58">
+<p>Une distinction <em>clé</em> (jeu de mots) est de savoir si la fonction de magasin de clés est interne ou externalisée. Dans les blockchains, le contrôle des clés détermine la détention des fonds, comme le rappelle la phrase "vos clés, vos pièces ; pas vos clés, pas vos pièces". Tout porte-monnaie qui sous-traite la gestion des clés est appelé un porte-monnaie <em>dépositaire</em> parce qu&#8217;un tiers agissant en tant que dépositaire a le contrôle des fonds de l&#8217;utilisateur, et non de l&#8217;utilisateur. Un porte-monnaie <em>non-dépositaire</em> ou <em>auto-dépositaire</em>, par comparaison, est un porte-monnaie dans lequel le magasin de clés fait partie du porte-monnaie et les clés sont contrôlées directement par l&#8217;utilisateur. Le terme porte-monnaie non-dépositaire implique simplement que le magasin de clés est local et sous le contrôle de l&#8217;utilisateur. Cependant, un ou plusieurs des autres composants du porte-monnaie peuvent ou non être externalisés et s&#8217;appuyer sur des tiers de confiance.</p>
+</div>
+<div class="paragraph data-line-60">
+<p>Les blockchains, en particulier les blockchains ouvertes comme Bitcoin, tentent de minimiser ou d&#8217;éliminer la confiance envers les tiers et de responsabiliser les utilisateurs. Ceci est souvent appelé un modèle "sans confiance" ("trustless" en anglais), bien que "confiance minimisée" ("trust minimized" en anglais) soit une meilleure expression. Dans de tels systèmes, l&#8217;utilisateur fait confiance aux règles du logiciel, et non à des tiers. Par conséquent, la question du contrôle des clés est une considération principale lors du choix d&#8217;un porte-monnaie Lightning.</p>
+</div>
+<div class="paragraph data-line-62">
+<p>Tous les autres composants d&#8217;un porte-monnaie Lightning apportent des considérations de confiance similaires. Si tous les composants sont sous le contrôle de l&#8217;utilisateur, le degré de confiance envers les tiers est minimisé, apportant un maximum de pouvoir à l&#8217;utilisateur. Bien sûr, cela entraîne un compromis direct, car ce pouvoir s&#8217;accompagne de la responsabilité correspondante de gérer des logiciels complexes.</p>
+</div>
+<div class="paragraph data-line-64">
+<p>Chaque utilisateur doit tenir compte de ses propres compétences techniques avant de décider du type de porte-monnaie Lightning à utiliser. Ceux qui ont de solides compétences techniques devraient utiliser un porte-monnaie Lightning qui place tous les composants sous le contrôle direct de l&#8217;utilisateur. Ceux qui ont moins de compétences techniques, mais qui souhaitent contrôler leurs fonds, devraient choisir un porte-monnaie Lightning non dépositaire.
+Souvent, la confiance dans ces cas est liée à la confidentialité.
+Si les utilisateurs décident de sous-traiter certaines fonctionnalités à un tiers, ils renoncent généralement à une certaine confidentialité car le tiers apprendra certaines informations à leur sujet.</p>
+</div>
+<div class="paragraph data-line-68">
+<p>Enfin, ceux qui recherchent la simplicité et la commodité, même au détriment du contrôle et de la sécurité, peuvent choisir un porte-monnaie Lightning dépositaire. C&#8217;est l&#8217;option la moins difficile techniquement, mais elle <em>sape le modèle de confiance de la cryptomonnaie</em> et ne devrait donc être considérée que comme un tremplin vers plus de contrôle et d&#8217;autonomie.</p>
+</div>
+<div class="paragraph data-line-70">
+<p>Il existe de nombreuses façons de caractériser ou de catégoriser les porte-monnaie.
+Les questions les plus importantes à poser sur un porte-monnaie spécifique sont :</p>
+</div>
+<div class="olist arabic data-line-73">
+<ol class="arabic">
+<li class="data-line-73">
+<p>Ce porte-monnaie Lightning a-t-il un nœud Lightning complet ou utilise-t-il un nœud Lightning tiers ?</p>
+</li>
+<li class="data-line-74">
+<p>Ce porte-monnaie Lightning a-t-il un nœud Bitcoin complet ou utilise-t-il un nœud Bitcoin tiers ?</p>
+</li>
+<li class="data-line-75">
+<p>Ce porte-monnaie Lightning stocke-t-il ses propres clés sous le contrôle de l&#8217;utilisateur (auto-dépôt) ou les clés sont-elles détenues par un dépositaire tiers ?</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock tip data-line-78">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-79">
+<p>Si un porte-monnaie Lightning utilise un nœud Lightning tiers, c&#8217;est ce nœud Lightning tiers qui décide comment communiquer avec Bitcoin. Par conséquent, l&#8217;utilisation d&#8217;un nœud Lightning tiers implique que vous utilisez également un nœud Bitcoin tiers. Ce n&#8217;est que lorsque le porte-monnaie Lightning utilise son propre nœud Lightning que le choix entre un nœud Bitcoin complet et un nœud Bitcoin tiers existe.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-82">
+<p>Au plus haut niveau d&#8217;abstraction, les questions 1 et 3 sont les plus élémentaires.
+De ces deux questions, nous pouvons déduire quatre catégories possibles.
+Nous pouvons placer ces quatre catégories dans un quadrant, comme on le voit dans <a href="#lnwallet-categories">Quadrant des porte-monnaie Lightning</a>.
+Mais rappelez-vous que ce n&#8217;est qu&#8217;une des façons de classer les porte-monnaie Lightning.</p>
+</div>
+<table id="lnwallet-categories" class="tableblock frame-all grid-all stretch data-line-90">
+<caption class="title">Table 1. Quadrant des porte-monnaie Lightning</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"></th>
+<th class="tableblock halign-left valign-top"><strong>Nœud Lightning complet</strong></th>
+<th class="tableblock halign-left valign-top"><strong>Nœud Lightning tiers</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Auto-dépositaire</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Q1 : Compétences techniques élevées, faible confiance dans les tiers, absence totale de permission</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Q2 : Compétences techniques inférieures à la moyenne, confiance en des tiers inférieure à la moyenne, nécessite certaines permissions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Dépositaire</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Q3 : Compétences techniques supérieures à la moyenne, confiance en des tiers supérieure à la moyenne, nécessite quelques permissions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Q4 : Faibles compétences techniques, grande confiance dans les tiers, absence de permission ("permissionless" en anglais)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-96">
+<p>Le quadrant 3 (Q3), où un nœud Lightning complet est utilisé, mais les clés sont détenues par un dépositaire, n&#8217;est actuellement pas courant.
+Les futurs porte-monnaie de ce quadrant peuvent laisser un utilisateur se soucier des aspects opérationnels de son nœud, mais déléguer ensuite l&#8217;accès aux clés à un tiers qui utilise principalement le cold storage.</p>
+</div>
+<div class="paragraph data-line-99">
+<p>Les porte-monnaie Lightning peuvent être installés sur une variété d&#8217;appareils, y compris les ordinateurs portables, les serveurs et les appareils mobiles. Pour exécuter un nœud Lightning complet, vous devrez utiliser un serveur ou un ordinateur de bureau, car les appareils mobiles et les ordinateurs portables ne sont généralement pas assez puissants en termes de capacité, de traitement, d&#8217;autonomie de la batterie et de connectivité.</p>
+</div>
+<div class="paragraph data-line-101">
+<p>La catégorie des nœuds Lightning tiers peut à nouveau être subdivisée :</p>
+</div>
+<div class="dlist data-line-103">
+<dl>
+<dt class="hdlist1">Poids léger</dt>
+<dd>
+<p>Cela signifie que le porte-monnaie n&#8217;exploite pas de nœud Lightning et doit donc obtenir des informations sur le Lightning Network via Internet à partir du nœud Lightning de quelqu&#8217;un d&#8217;autre.</p>
+</dd>
+<dt class="hdlist1">Aucun</dt>
+<dd>
+<p>Cela signifie que non seulement le nœud Lightning est exploité par un tiers, mais que la majeure partie du porte-monnaie est exploitée par un tiers dans le cloud. Il s&#8217;agit d&#8217;un porte-monnaie dépositaire pour lequel quelqu&#8217;un d&#8217;autre contrôle la détention des fonds.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-108">
+<p>Ces sous-catégories sont utilisées dans <a href="#lnwallet-examples">Exemples de porte-monnaie Lightning populaires</a>.</p>
+</div>
+<div class="paragraph pagebreak-before data-line-111">
+<p>Quelques autres termes nécessitant une explication dans <a href="#lnwallet-examples">Exemples de porte-monnaie Lightning populaires</a> qui sont dans la colonne "Nœud Bitcoin" :</p>
+</div>
+<div class="dlist data-line-113">
+<dl>
+<dt class="hdlist1">Neutrino</dt>
+<dd>
+<p>Ce porte-monnaie n&#8217;exploite pas de nœud Bitcoin. Au lieu de cela, un nœud Bitcoin exploité par quelqu&#8217;un d&#8217;autre (un tiers) est accessible via le protocole Neutrino.</p>
+</dd>
+<dt class="hdlist1">Electrum</dt>
+<dd>
+<p>Ce porte-monnaie n&#8217;exploite pas de nœud Bitcoin. Au lieu de cela, un nœud Bitcoin exploité par quelqu&#8217;un d&#8217;autre (un tiers) est accessible via le protocole Electrum.</p>
+</dd>
+<dt class="hdlist1">Bitcoin Core</dt>
+<dd>
+<p>Il s&#8217;agit d&#8217;une implémentation d&#8217;un nœud Bitcoin.</p>
+</dd>
+<dt class="hdlist1">btcd</dt>
+<dd>
+<p>C&#8217;est une autre implémentation d&#8217;un nœud Bitcoin.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-122">
+<p>Dans <a href="#lnwallet-examples">Exemples de porte-monnaie Lightning populaires</a>, nous voyons quelques exemples d&#8217;applications de nœud et de porte-monnaie Lightning actuellement populaires pour différents types d&#8217;appareils. La liste est d&#8217;abord triée par type d&#8217;appareil, puis par ordre alphabétique.</p>
+</div>
+<table id="lnwallet-examples" class="tableblock frame-all grid-all stretch data-line-127">
+<caption class="title">Table 2. Exemples de porte-monnaie Lightning populaires</caption>
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Application</th>
+<th class="tableblock halign-left valign-top">Appareil</th>
+<th class="tableblock halign-left valign-top">Nœud Lightning</th>
+<th class="tableblock halign-left valign-top">Noeud Bitcoin</th>
+<th class="tableblock halign-left valign-top">Magasin de clés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Blue Wallet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aucun</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aucun</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Breez Wallet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nœud complet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Neutrino</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Eclair Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Poids léger</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Electrum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lntxbot</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aucun</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aucun</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Muun</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Poids léger</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Neutrino</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Phoenix Wallet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Poids léger</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Electrum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zeus</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mobile</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nœud complet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bitcoin Core/btcd</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Electrum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ordinateur de bureau</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nœud complet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bitcoin Core/Electrum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zap Desktop</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ordinateur de bureau</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nœud complet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Neutrino</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">c-lightning</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serveur</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nœud complet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bitcoin Core</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Eclair Server</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serveur</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nœud complet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bitcoin Core/Electrum</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lnd</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serveur</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nœud complet</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bitcoin Core/btcd</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-dépositaire</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3 data-line-144">
+<h4 id="testnet-bitcoin">Testnet Bitcoin</h4>
+<div class="paragraph data-line-146">
+<p>Le système Bitcoin offre une chaîne alternative à des fins de test appelée <em>testnet</em>, à la différence de la chaîne Bitcoin "normale", appelée <em>mainnet</em>. Sur le testnet, la devise est le <em>bitcoin testnet</em> (<em>tBTC</em>), qui est une copie sans valeur de bitcoin utilisée exclusivement pour les tests. Chaque fonction de Bitcoin est reproduite exactement, mais l&#8217;argent ne vaut rien, donc vous n&#8217;avez littéralement rien à perdre !</p>
+</div>
+<div class="paragraph data-line-148">
+<p>Certains porte-monnaie Lightning peuvent également fonctionner sur le testnet, ce qui vous permet d&#8217;effectuer des paiements Lightning avec des bitcoins testnet, sans risquer des fonds réels. C&#8217;est un excellent moyen d&#8217;expérimenter Lightning en toute sécurité. Eclair Mobile, qu&#8217;Alice utilise dans ce chapitre, est un exemple de porte-monnaie Lightning prenant en charge le fonctionnement du testnet.</p>
+</div>
+<div class="paragraph data-line-150">
+<p>Vous pouvez obtenir du tBTC pour jouer avec un <em>robinet à bitcoin testnet</em>, qui donne du tBTC gratuit sur demande. Voici quelques robinets pour le testnet :</p>
+</div>
+<ul class="simplelist">
+<li><a href="https://coinfaucet.eu/en/btc-testnet/"><em>https://coinfaucet.eu/en/btc-testnet</em></a></li>
+<li><a href="https://testnet-faucet.mempool.co/"><em>https://testnet-faucet.mempool.co</em></a></li>
+<li><a href="https://bitcoinfaucet.uo1.net/"><em>https://bitcoinfaucet.uo1.net</em></a></li>
+<li><a href="https://testnet.help/en/btcfaucet/testnet"><em>https://testnet.help/en/btcfaucet/testnet</em></a></li>
+</ul>
+<div class="paragraph data-line-161">
+<p>Tous les exemples de ce livre peuvent être reproduits exactement sur le testnet avec tBTC, vous pouvez donc suivre si vous le souhaitez sans risquer de l&#8217;argent réel.</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-163">
+<h3 id="_équilibre_entre_complexité_et_contrôle">Équilibre entre complexité et contrôle</h3>
+<div class="paragraph data-line-165">
+<p>Les porte-monnaie Lightning doivent trouver un équilibre délicat entre complexité et contrôle laissé à l&#8217;utilisateur. Ceux qui donnent à l&#8217;utilisateur le plus de contrôle sur ses fonds, le plus haut degré de confidentialité et la plus grande indépendance vis-à-vis des services tiers sont nécessairement plus complexes et difficiles à exploiter. Au fur et à mesure que la technologie progresse, certains de ces compromis deviendront moins difficiles et les utilisateurs pourront peut-être obtenir plus de contrôle sans plus de complexité. Cependant, pour l&#8217;instant, différentes entreprises et projets explorent différentes positions le long de ce spectre de complexité de contrôle, dans l&#8217;espoir de trouver le "sweet spot" pour les utilisateurs qu&#8217;ils ciblent.</p>
+</div>
+<div class="paragraph data-line-167">
+<p>Lors de la sélection d&#8217;un porte-monnaie, gardez à l&#8217;esprit que même si vous ne voyez pas ces compromis, ils existent toujours. Par exemple, de nombreux porte-monnaie tenteront de supprimer le fardeau de la gestion des canaux de leurs utilisateurs. Pour ce faire, ils introduisent des <em>nœuds hub</em> (concentrateurs) centraux auxquels tous leurs porte-monnaie se connectent automatiquement. Bien que ce compromis simplifie l&#8217;interface utilisateur et l&#8217;expérience utilisateur, il introduit un point de défaillance unique ("SPoF" en anglais) car ces nœuds hub deviennent indispensables au fonctionnement du porte-monnaie. De plus, s&#8217;appuyer sur un "hub" comme celui-ci peut réduire la confidentialité de l&#8217;utilisateur puisque le hub connaît l&#8217;expéditeur et potentiellement (s&#8217;il construit l&#8217;itinéraire de paiement au nom de l&#8217;utilisateur) également le destinataire de chaque paiement effectué par le porte-monnaie de l&#8217;utilisateur.</p>
+</div>
+<div class="paragraph data-line-169">
+<p>Dans la section suivante, nous reviendrons à notre premier utilisateur et passerons en revue sa première configuration de porte-monnaie Lightning. Elle a choisi un porte-monnaie plus sophistiqué que les porte-monnaie de dépositaires plus faciles. Cela nous permet de montrer une partie de la complexité sous-jacente et de présenter certains des rouages d&#8217;un porte-monnaie avancé. Vous constaterez peut-être que votre premier porte-monnaie idéal est orienté vers la facilité d&#8217;utilisation, acceptant certains des compromis en matière de contrôle et de confidentialité. Ou peut-être êtes-vous plutôt un utilisateur expérimenté et souhaitez-vous exécuter vos propres nœuds Lightning et Bitcoin dans le cadre de votre solution de porte-monnaie.</p>
+</div>
+</div>
+<div class="sect2 data-line-171">
+<h3 id="_téléchargement_et_installation_dun_porte_monnaie_lightning">Téléchargement et installation d&#8217;un porte-monnaie Lightning</h3>
+<div class="paragraph data-line-173">
+<p>Lors de la recherche d&#8217;un nouveau porte-monnaie de cryptomonnaies, vous devez faire très attention à sélectionner une source sécurisée pour le logiciel.</p>
+</div>
+<div class="paragraph data-line-175">
+<p>Malheureusement, de nombreuses fausses applications de porte-monnaie voleront votre argent, et certaines d&#8217;entre elles se retrouvent même sur des sites de logiciels réputés et soi-disant contrôlés comme les magasins d&#8217;applications Apple et Google. Que vous installiez votre premier ou votre dixième porte-monnaie, faites toujours preuve d&#8217;une extrême prudence. Une application malveillante peut non seulement voler l&#8217;argent que vous lui confiez, mais elle peut également être en mesure de voler des clés et des mots de passe d&#8217;autres applications en compromettant le système d&#8217;exploitation de votre appareil mobile.</p>
+</div>
+<div class="paragraph data-line-177">
+<p>Alice utilise un appareil Android et utilisera le Google Play Store pour télécharger et installer le porte-monnaie Eclair. En effectuant une recherche sur Google Play, elle trouve une entrée pour "Eclair Mobile", comme indiqué dans <a href="#eclair-playstore">Eclair Mobile dans le Google Play Store</a>.</p>
+</div>
+<div id="eclair-playstore" class="imageblock data-line-181">
+<div class="content">
+<img src="images/mtln_0201.png" alt="Eclair Mobile dans le Google Play Store">
+</div>
+<div class="title">Figure 1. Eclair Mobile dans le Google Play Store</div>
+</div>
+<div class="admonitionblock tip data-line-185">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-186">
+<p>Il est possible d&#8217;expérimenter et de tester tous les logiciels de type Bitcoin sans risque (à part la perte de temps) en utilisant des bitcoins testnet. Vous pouvez également télécharger le porte-monnaie Eclair testnet pour essayer Lightning (sur le testnet) en vous rendant sur le Google Play Store.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-189">
+<p>Alice remarque quelques éléments différents sur cette page qui l&#8217;aident à déterminer qu&#8217;il s&#8217;agit très probablement du bon porte-monnaie "Eclair Mobile" qu&#8217;elle recherche. Tout d&#8217;abord, l&#8217;organisation ACINQ<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup> est répertoriée comme le développeur de ce porte-monnaie mobile, ce qu&#8217;Alice sait, d&#8217;après ses recherches, être le bon développeur. Deuxièmement, le porte-monnaie a été installé "plus de 10 000" fois et compte plus de 320 avis positifs. Il est peu probable qu&#8217;il s&#8217;agisse d&#8217;une application malveillante qui s&#8217;est introduite dans le Google Play Store. Dans un troisième temps, elle se rend sur le <a href="https://acinq.co" data-href="https://acinq.co">site d&#8217;ACINQ</a>. Elle vérifie que la page Web est sécurisée en vérifiant que l&#8217;adresse commence par https, ou préfixée par un cadenas dans certains navigateurs. Sur le site Web, elle se rend dans la section Téléchargement ou recherche le lien vers Google App Store. Elle trouve le lien et clique dessus. Elle compare que ce lien l&#8217;amène à la même application dans le Google App Store. Satisfaite de ces résultats, Alice installe l&#8217;application Eclair sur son appareil mobile.</p>
+</div>
+<div class="admonitionblock warning data-line-192">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-193">
+<p>Faites toujours très attention lorsque vous installez un logiciel sur n&#8217;importe quel appareil. Il existe de nombreux faux porte-monnaie de cryptomonnaies qui non seulement voleront votre argent, mais pourraient également compromettre toutes les autres applications de votre appareil.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2 data-line-196">
+<h3 id="_créer_un_nouveau_porte_monnaie">Créer un nouveau porte-monnaie</h3>
+<div class="paragraph data-line-198">
+<p>Lorsqu&#8217;Alice ouvre l&#8217;application Eclair Mobile pour la première fois, elle a le choix de "Créer un nouveau porte-monnaie" ou "Importer un porte-monnaie existant". Alice va créer un nouveau porte-monnaie, mais discutons d&#8217;abord de la raison pour laquelle ces options sont présentées ici et de ce que cela signifie d&#8217;importer un porte-monnaie existant.</p>
+</div>
+<div class="sect3 data-line-200">
+<h4 id="_responsabilité_avec_la_détention_de_clés">Responsabilité avec la détention de clés</h4>
+<div class="paragraph data-line-202">
+<p>Comme nous l&#8217;avons mentionné au début de cette section, Eclair est un porte-monnaie <em>non-dépositaire</em>, ce qui signifie que Alice a la garde exclusive des clés utilisées pour contrôler ses bitcoins. Cela signifie également qu&#8217;Alice est responsable de la protection et de la sauvegarde de ces clés. Si Alice perd les clés, personne ne peut l&#8217;aider à récupérer ses bitcoins, et ils seront perdus à jamais.</p>
+</div>
+<div class="admonitionblock warning data-line-205">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-206">
+<p>Avec le porte-monnaie Eclair Mobile, Alice a la détention et le contrôle des clés et, par conséquent, l&#8217;entière responsabilité de garder les clés en sécurité et sauvegardées. Si elle perd les clés, elle perd les bitcoins, et personne ne peut l&#8217;aider à se remettre de cette perte !</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3 data-line-209">
+<h4 id="_mots_mnémoniques">Mots Mnémoniques</h4>
+<div class="paragraph data-line-211">
+<p>Semblable à la plupart des porte-monnaie Bitcoin, Eclair Mobile fournit une <em>phrase mnémonique</em> (également parfois appelée "graine" ou "phrase de graine" ou même "seed" en anglais) pour qu&#8217;Alice la sauvegarde. La phrase mnémonique se compose de 24 mots anglais, sélectionnés au hasard par le logiciel et utilisés comme base pour les clés générées par le porte-monnaie. Alice peut utiliser la phrase mnémonique pour restaurer toutes les transactions et tous les fonds du porte-monnaie Eclair Mobile en cas de perte d&#8217;un appareil mobile, d&#8217;un bogue logiciel ou d&#8217;une corruption de la mémoire.</p>
+</div>
+<div class="admonitionblock tip data-line-214">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-215">
+<p>Le terme correct pour ces mots de sauvegarde est "phrase mnémonique". Nous évitons d&#8217;utiliser le terme "graine" pour désigner une phrase mnémotechnique car même si son utilisation est courante, elle est incorrecte.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-218">
+<p>Lorsqu&#8217;Alice choisit de créer un nouveau porte-monnaie, elle voit un écran avec sa phrase mnémonique, qui ressemble à la capture d&#8217;écran dans <a href="#eclair-mnemonic">Nouvelle phrase mnémonique du porte-monnaie</a>.</p>
+</div>
+<div id="eclair-mnemonic" class="imageblock data-line-222">
+<div class="content">
+<img src="images/mtln_0202.png" alt="Nouvelle phrase mnémonique du porte-monnaie">
+</div>
+<div class="title">Figure 2. Nouvelle phrase mnémonique du porte-monnaie</div>
+</div>
+<div class="paragraph data-line-224">
+<p>Dans <a href="#eclair-mnemonic">Nouvelle phrase mnémonique du porte-monnaie</a>, nous avons délibérément obscurci une partie de la phrase mnémonique pour empêcher les lecteurs de ce livre de réutiliser ce mnémonique.</p>
+</div>
+</div>
+<div class="sect3 data-line-227">
+<h4 id="mnemonic-storage">Stocker le mnémonique en toute sécurité</h4>
+<div class="paragraph data-line-229">
+<p>Alice doit faire attention à stocker la phrase mnémonique de manière à empêcher le vol mais également à éviter toute perte accidentelle. La méthode recommandée pour équilibrer correctement ces risques est d&#8217;écrire deux copies de la phrase mnémonique sur papier, avec chacun des mots numérotés &#x2014; l&#8217;ordre compte.</p>
+</div>
+<div class="paragraph data-line-231">
+<p>Une fois qu&#8217;Alice a enregistré la phrase mnémonique, après avoir pressé sur "OK GOT IT" sur son écran, un quiz lui sera présenté pour s&#8217;assurer qu&#8217;elle a correctement enregistré la mnémonique. Le quiz demandera trois ou quatre des mots au hasard. Alice ne s&#8217;attend pas à un quiz, mais comme elle a correctement enregistré le mnémonique, elle réussit sans aucune difficulté.</p>
+</div>
+<div class="paragraph data-line-233">
+<p>Une fois qu&#8217;Alice a enregistré la phrase mnémonique et réussi le test, elle doit stocker chaque copie dans un endroit sécurisé séparé, comme un tiroir de bureau verrouillé ou un coffre-fort ignifuge.</p>
+</div>
+<div class="admonitionblock warning data-line-236">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-237">
+<p>N&#8217;essayez jamais un système de sécurité "bricolage" qui s&#8217;écarte de quelque manière que ce soit des recommandations de meilleures pratiques pour <a href="#mnemonic-storage">Stocker le mnémonique en toute sécurité</a>. Ne découpez pas votre mnémonique en deux, ne faites pas de captures d&#8217;écran, ne le stockez pas sur des clés USB ou stockage cloud, ne l&#8217;encryptez pas et n&#8217;essayez aucune autre méthode non standard. Sinon vous augmenterez les risques d&#8217;une perte permanente. De nombreuses personnes ont perdu des fonds, non pas à cause d&#8217;un vol, mais parce qu&#8217;elles ont essayé une solution non standard sans avoir l&#8217;expertise pour équilibrer les risques encourus. Cette recommandations des meilleures pratiques est soigneusement étudiée par des experts et convient à la grande majorité des utilisateurs.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-240">
+<p>Après qu&#8217;Alice a initialisé son porte-monnaie Eclair Mobile, elle verra un bref tutoriel qui met en évidence les différents éléments de l&#8217;interface utilisateur. Nous ne reproduirons pas le tutoriel ici, mais nous explorerons tous ces éléments en suivant la tentative d&#8217;Alice d&#8217;acheter une tasse de café !</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-242">
+<h3 id="_chargement_de_bitcoin_sur_le_porte_monnaie">Chargement de Bitcoin sur le porte-monnaie</h3>
+<div class="paragraph data-line-244">
+<p>Alice a maintenant un porte-monnaie Lightning. Mais il est vide ! Elle est maintenant confrontée à l&#8217;un des aspects les plus difficiles de cette expérience : elle doit trouver un moyen d&#8217;acquérir des bitcoins et de les charger sur son porte-monnaie Eclair.</p>
+</div>
+<div class="admonitionblock tip data-line-247">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-248">
+<p>Si Alice a déjà des bitcoins dans un autre porte-monnaie, elle peut choisir d&#8217;envoyer ces bitcoins vers son porte-monnaie Eclair au lieu d&#8217;acquérir de nouveaux bitcoins à charger sur son nouveau porte-monnaie.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3 data-line-252">
+<h4 id="acquiring-bitcoin">Acquisition des bitcoins</h4>
+<div class="paragraph data-line-254">
+<p>Alice peut acquérir des bitcoins de plusieurs manières :</p>
+</div>
+<div class="ulist data-line-256">
+<ul>
+<li class="data-line-256">
+<p>Elle peut échanger une partie de sa monnaie nationale (par exemple, USD) sur un échange de cryptomonnaies.</p>
+</li>
+<li class="data-line-257">
+<p>Elle peut en acheter par l’intermédiaire d&#8217;un ami ou d&#8217;une connaissance lors d&#8217;une rencontre Bitcoin, en échange d&#8217;espèces.</p>
+</li>
+<li class="data-line-258">
+<p>Elle peut trouver un <em>guichet automatique Bitcoin</em> dans sa région, qui agit comme un distributeur automatique, vendant des bitcoins contre des espèces.</p>
+</li>
+<li class="data-line-260">
+<p>Elle peut proposer ses compétences ou un produit qu&#8217;elle vend et accepter le paiement en bitcoin.</p>
+</li>
+<li class="data-line-261">
+<p>Elle peut demander à son employeur ou à ses clients de la payer en bitcoin.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-263">
+<p>Toutes ces méthodes présentent des degrés de difficulté variables et nombre d&#8217;entre elles impliquent le paiement de frais. Certains exigeront également qu&#8217;Alice fournisse des documents d&#8217;identification pour se conformer aux réglementations bancaires locales. Cependant, avec toutes ces méthodes, Alice pourra recevoir des bitcoins.</p>
+</div>
+</div>
+<div class="sect3 data-line-265">
+<h4 id="_recevoir_des_bitcoins">Recevoir des bitcoins</h4>
+<div class="paragraph data-line-267">
+<p>Supposons qu&#8217;Alice ait trouvé un guichet automatique Bitcoin local et ait décidé d&#8217;acheter quelques bitcoins en échange d&#8217;argent. Un exemple de guichet automatique Bitcoin, construit par la société Lamassu, est présenté dans <a href="#bitcoin-atm">Un guichet automatique Bitcoin de Lamassu</a>. Ces guichets automatiques Bitcoin acceptent la monnaie nationale (en espèces) via un guichet automatique et envoient des bitcoins à une adresse Bitcoin numérisée à partir du porte-monnaie d&#8217;un utilisateur à l&#8217;aide d&#8217;une caméra intégrée.</p>
+</div>
+<div id="bitcoin-atm" class="imageblock data-line-271">
+<div class="content">
+<img src="images/mtln_0203.png" alt="Un guichet automatique Bitcoin de Lamassu">
+</div>
+<div class="title">Figure 3. Un guichet automatique Bitcoin de Lamassu</div>
+</div>
+<div class="paragraph data-line-273">
+<p>Pour recevoir les bitcoins dans son porte-monnaie Eclair Lightning, Alice devra présenter une adresse Bitcoin du porte-monnaie Eclair Lightning au guichet automatique. Le guichet automatique peut alors envoyer les bitcoins nouvellement acquis d&#8217;Alice à cette adresse Bitcoin.</p>
+</div>
+<div class="paragraph data-line-275">
+<p>Pour voir une adresse Bitcoin sur le porte-monnaie Eclair, Alice doit glisser vers la colonne de gauche intitulée YOUR BITCOIN ADDRESS (voir <a href="#eclair-receive">L&#8217;adresse bitcoin d&#8217;Alice telle qu&#8217;affichée dans Eclair</a>), où elle verra un code-barres carré (appelé <em>QR code</em>) et une chaîne de lettres et de chiffres en dessous.</p>
+</div>
+<div class="paragraph data-line-277">
+<p>Le code QR contient la même chaîne de lettres et de chiffres que celle indiquée en dessous, dans un format facile à scanner. De cette façon, Alice n&#8217;a pas à taper l&#8217;adresse Bitcoin. Dans la capture d&#8217;écran (<a href="#eclair-receive">L&#8217;adresse bitcoin d&#8217;Alice telle qu&#8217;affichée dans Eclair</a>), nous avons délibérément brouillé les deux, pour empêcher les lecteurs d&#8217;envoyer par inadvertance des bitcoins à cette adresse.</p>
+</div>
+<div id="eclair-receive" class="imageblock data-line-281">
+<div class="content">
+<img src="images/mtln_0204.png" alt="Code QR de l&#8217;adresse bitcoin d&#8217;Eclair">
+</div>
+<div class="title">Figure 4. L&#8217;adresse bitcoin d&#8217;Alice telle qu&#8217;affichée dans Eclair</div>
+</div>
+<div class="admonitionblock note data-line-284">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-285">
+<p>Les adresses Bitcoin et les codes QR contiennent des informations de détection d&#8217;erreur qui empêchent toute erreur de frappe ou de numérisation qui pourraient produire une "mauvaise" adresse Bitcoin. S&#8217;il y a une erreur dans l&#8217;adresse, tout porte-monnaie Bitcoin remarquera l&#8217;erreur et refusera d&#8217;accepter l&#8217;adresse Bitcoin comme valide.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph pagebreak-before data-line-289">
+<p>Alice peut apporter son appareil mobile au guichet automatique et le montrer à la caméra intégrée, comme indiqué dans <a href="#bitcoin-atm-receive">Le guichet automatique Bitcoin scanne le code QR</a>. Après avoir inséré de l&#8217;argent dans la fente, elle recevra des bitcoins dans Eclair !</p>
+</div>
+<div id="bitcoin-atm-receive" class="imageblock data-line-293">
+<div class="content">
+<img src="images/mtln_0205.png" alt="Le guichet automatique Bitcoin scanne le code QR">
+</div>
+<div class="title">Figure 5. Le guichet automatique Bitcoin scanne le code QR</div>
+</div>
+<div class="paragraph data-line-295">
+<p>Alice verra la transaction du guichet automatique dans l&#8217;onglet TRANSACTION HISTORY du porte-monnaie Eclair. Bien qu&#8217;Eclair détecte la transaction bitcoin en quelques secondes, il faudra environ une heure pour que la transaction bitcoin soit "confirmée" sur la blockchain Bitcoin. Comme vous pouvez le voir dans <a href="#eclair-tx1">Alice reçoit des bitcoins</a>, le porte-monnaie Eclair d&#8217;Alice affiche "6+ conf" sous la transaction, indiquant que la transaction a reçu le minimum requis de six confirmations, et que ses fonds sont maintenant prêts à être utilisés.</p>
+</div>
+<div class="admonitionblock tip data-line-298">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-299">
+<p>Le nombre de confirmations sur une transaction est le nombre de blocs minés depuis (et y compris) le bloc qui contenait cette transaction. Six confirmations est la meilleure pratique, mais différents porte-monnaie Lightning peuvent considérer qu&#8217;un canal est ouvert après n&#8217;importe quel nombre de confirmations. Certains porte-monnaie augmentent même le nombre de confirmations attendues en fonction de la valeur monétaire du canal.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-302">
+<p>Bien que dans cet exemple, Alice ait utilisé un guichet automatique pour acquérir ses premiers bitcoins, les mêmes concepts de base s&#8217;appliqueraient même si elle utilisait l&#8217;une des autres méthodes de <a href="#acquiring-bitcoin">Acquisition des bitcoins</a>. Par exemple, si Alice voulait vendre un produit ou fournir un service professionnel en échange de bitcoins, ses clients pourraient scanner l&#8217;adresse Bitcoin avec leur porte-monnaie et la payer en bitcoins.</p>
+</div>
+<div id="eclair-tx1" class="imageblock data-line-306">
+<div class="content">
+<img src="images/mtln_0206.png" alt="Transaction Bitcoin reçue">
+</div>
+<div class="title">Figure 6. Alice reçoit des bitcoins</div>
+</div>
+<div class="paragraph data-line-308">
+<p>De même, si elle facturait un client pour un service offert sur Internet, Alice pourrait envoyer un e-mail ou un message instantané avec l&#8217;adresse Bitcoin ou le code QR à son client, et ils pourraient coller ou scanner les informations dans un porte-monnaie Bitcoin pour la payer.</p>
+</div>
+<div class="paragraph data-line-310">
+<p>Alice pourrait même imprimer le code QR et l&#8217;apposer sur un panneau et l&#8217;afficher publiquement pour recevoir des conseils. Par exemple, elle pourrait avoir un code QR apposé sur sa guitare et recevoir des pourboires tout en se produisant dans la rue !<sup class="footnote">[<a id="_footnoteref_2" class="footnote" href="#_footnotedef_2" title="View footnote.">2</a>]</sup></p>
+</div>
+<div class="paragraph data-line-314">
+<p>Enfin, si Alice achetait du bitcoin à partir d&#8217;un échange de cryptomonnaies, elle pourrait (et devrait) "retirer" les bitcoins en collant son adresse Bitcoin sur le site Web de l&#8217;échange. L&#8217;échange enverra alors les bitcoins directement à son adresse.</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-316">
+<h3 id="_de_bitcoin_au_lightning_network">De Bitcoin au Lightning Network</h3>
+<div class="paragraph data-line-318">
+<p>Le bitcoin d&#8217;Alice est maintenant contrôlé par son porte-monnaie Eclair et a été enregistré sur la blockchain Bitcoin. À ce stade, les bitcoins d&#8217;Alice sont <em>sur la chaîne</em>, ce qui signifie que la transaction a été diffusée sur l&#8217;ensemble du réseau Bitcoin, vérifiée par tous les nœuds Bitcoin, et <em>minée</em> (enregistrée) sur la blockchain Bitcoin.</p>
+</div>
+<div class="paragraph data-line-320">
+<p>Jusqu&#8217;à présent, le porte-monnaie Eclair Mobile ne s&#8217;est comporté que comme un porte-monnaie Bitcoin et Alice n&#8217;a pas utilisé les fonctionnalités Lightning Network d&#8217;Eclair. Comme c&#8217;est le cas avec de nombreux porte-monnaie Lightning, Eclair relie Bitcoin et le Lightning Network en agissant à la fois comme un porte-monnaie Bitcoin et un porte-monnaie Lightning.</p>
+</div>
+<div class="paragraph data-line-322">
+<p>Maintenant, Alice est prête à commencer à utiliser le Lightning Network en retirant ses bitcoins de la chaîne pour profiter des paiements rapides, bon marché et privés offerts par le Lightning Network.</p>
+</div>
+<div class="sect3 data-line-324">
+<h4 id="_canaux_du_lightning_network">Canaux du Lightning Network</h4>
+<div class="paragraph data-line-326">
+<p>En glissant vers la droite, Alice accède à la section LIGHTNING CHANNELS d&#8217;Eclair. Ici, elle peut gérer les canaux qui connecteront son porte-monnaie au Lightning Network.</p>
+</div>
+<div class="paragraph data-line-328">
+<p>Passons en revue la définition d&#8217;un canal LN à ce stade, pour clarifier un peu les choses. Premièrement, le mot "canal" est une métaphore d&#8217;une <em>relation financière</em> entre le porte-monnaie Lightning d&#8217;Alice et un autre porte-monnaie Lightning. Nous l&#8217;appelons un canal car c&#8217;est un moyen pour le porte-monnaie d&#8217;Alice et cet autre porte-monnaie d&#8217;échanger de nombreux paiements entre eux sur le Lightning Network (hors chaîne) sans engager de transactions dans la blockchain Bitcoin (sur la chaîne).</p>
+</div>
+<div class="paragraph data-line-330">
+<p>Le porte-monnaie ou <em>nœud</em> avec lequel Alice ouvre un canal s&#8217;appelle son <em>pair de canal</em>. Une fois "ouvert", un canal peut être utilisé pour envoyer de nombreux paiements dans les deux sens entre le porte-monnaie d&#8217;Alice et son pair de canal.</p>
+</div>
+<div class="paragraph data-line-332">
+<p>De plus, le pair de canal d&#8217;Alice peut <em>transférer</em> les paiements via d&#8217;autres canaux plus loin dans le Lightning Network. De cette façon, Alice peut <em>router</em> un paiement vers n&#8217;importe quel porte-monnaie (par exemple, le porte-monnaie Lightning de Bob) tant que le porte-monnaie d&#8217;Alice peut trouver un <em>chemin</em> viable en sautant de canal en canal, jusqu&#8217;au porte-monnaie de Bob.</p>
+</div>
+<div class="admonitionblock tip data-line-335">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-336">
+<p>Tous les pairs de canal ne sont pas de <em>bons</em> pairs pour le routage des paiements. Des pairs bien connectés pourront acheminer les paiements sur des chemins plus courts vers la destination, augmentant ainsi les chances de succès. Les pairs de canal disposant de fonds suffisants pourront acheminer des paiements plus importants.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-339">
+<p>En d&#8217;autres termes, Alice a besoin d&#8217;un ou plusieurs canaux qui la connectent à un ou plusieurs autres nœuds du Lightning Network. Elle n&#8217;a pas besoin d&#8217;un canal pour connecter son porte-monnaie directement au Café de Bob afin d&#8217;envoyer un paiement à Bob, bien qu&#8217;elle puisse également choisir d&#8217;ouvrir un canal direct. N&#8217;importe quel nœud du Lightning Network peut être utilisé pour le premier canal d&#8217;Alice. Plus un nœud est bien connecté, plus Alice peut atteindre de personnes. Dans cet exemple, puisque nous voulons également démontrer le routage des paiements, Alice n&#8217;ouvrira pas de canal directement vers le porte-monnaie de Bob. Au lieu de cela, Alice ouvrira un canal vers un nœud bien connecté, puis utilisera plus tard ce nœud pour transférer son paiement, en le faisant passer par tous les autres nœuds nécessaires pour atteindre Bob.</p>
+</div>
+<div class="paragraph data-line-341">
+<p>Au début, il n&#8217;y a pas de canaux ouverts, donc comme nous le voyons dans <a href="#eclair-channels">Onglet LIGHTNING CHANNELS</a>, l&#8217;onglet LIGHTNING CHANNELS affiche une liste vide. Si vous remarquez, dans le coin inférieur droit, il y a un symbole plus (+), qui est un bouton pour ouvrir un nouveau canal.</p>
+</div>
+<div id="eclair-channels" class="imageblock data-line-345">
+<div class="content">
+<img src="images/mtln_0207.png" alt="Onglet LIGHTNING CHANNELS">
+</div>
+<div class="title">Figure 7. Onglet LIGHTNING CHANNELS</div>
+</div>
+<div class="paragraph pagebreak-before data-line-348">
+<p>Alice appuie sur le symbole plus et se voit présenter quatre manières possibles d&#8217;ouvrir un canal :</p>
+</div>
+<div class="ulist data-line-350">
+<ul>
+<li class="data-line-350">
+<p>Coller un URI de nœud</p>
+</li>
+<li class="data-line-351">
+<p>Scanner un URI de nœud</p>
+</li>
+<li class="data-line-352">
+<p>Nœud aléatoire</p>
+</li>
+<li class="data-line-353">
+<p>Nœud d&#8217;ACINQ</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-355">
+<p>Un "URI de nœud" est un Identifiant de Ressource Universel ("Universal Resource Identifier" ou "URI" en anglais) qui identifie un nœud Lightning spécifique. Alice peut soit coller un tel URI à partir de son presse-papiers, soit scanner un code QR contenant les mêmes informations. Un exemple d&#8217;URI de nœud est illustré sous forme de code QR dans <a href="#node-URI-QR">URI de nœud sous forme de code QR</a> puis sous forme de chaîne de caractères.</p>
+</div>
+<div id="node-URI-QR" class="imageblock data-line-359">
+<div class="content">
+<img src="images/mtln_0208.png" alt="Code QR de l&#8217;URI d&#8217;un nœud Lightning" width="120">
+</div>
+<div class="title">Figure 8. URI de nœud sous forme de code QR</div>
+</div>
+<div id="node-URI-example" class="listingblock data-line-363">
+<div class="title">URI de nœud</div>
+<div class="content">
+<pre>0237fefbe8626bf888de0cad8c73630e32746a22a2c4faa91c1d9877a3826e1174@1.ln.aantonop.com:9735</pre>
+</div>
+</div>
+<div class="paragraph data-line-367">
+<p>Bien qu&#8217;Alice puisse sélectionner un nœud Lightning spécifique ou utiliser l&#8217;option "Nœud aléatoire" pour que le porte-monnaie Eclair sélectionne un nœud au hasard, elle sélectionnera l&#8217;option Nœud d&#8217;ACINQ pour se connecter à l&#8217;un des nœuds Lightning bien connectés d&#8217;ACINQ.</p>
+</div>
+<div class="paragraph data-line-369">
+<p>Le choix du nœud ACINQ réduira légèrement la confidentialité d&#8217;Alice, car il donnera à ACINQ la possibilité de voir toutes les transactions d&#8217;Alice. Cela créera également un point de défaillance unique, car Alice n&#8217;aura qu&#8217;un seul canal, et si le nœud ACINQ n&#8217;est pas disponible, Alice ne pourra pas effectuer de paiements. Pour garder les choses simples au début, nous accepterons ces compromis. Dans les chapitres suivants, nous apprendrons progressivement à gagner en autonomie et à faire moins de compromis !</p>
+</div>
+<div class="paragraph data-line-371">
+<p>Alice sélectionne le nœud d&#8217;ACINQ et est prête à ouvrir son premier canal sur le Lightning Network.</p>
+</div>
+</div>
+<div class="sect3 data-line-373">
+<h4 id="_ouvrir_un_canal_lightning">Ouvrir un canal Lightning</h4>
+<div class="paragraph data-line-375">
+<p>Lorsqu&#8217;Alice sélectionne un nœud pour ouvrir un nouveau canal, on lui demande de sélectionner la quantité de bitcoins qu&#8217;elle souhaite allouer à ce canal. Dans les chapitres suivants, nous discuterons des implications de ces choix, mais pour l&#8217;instant, Alice allouera la quasi-totalité de ses fonds au canal. Puisqu&#8217;elle devra payer des frais de transaction pour ouvrir le canal, elle sélectionnera un montant légèrement inférieur à son solde total.<sup class="footnote">[<a id="_footnoteref_3" class="footnote" href="#_footnotedef_3" title="View footnote.">3</a>]</sup></p>
+</div>
+<div class="paragraph data-line-377">
+<p>Alice alloue 0,018 BTC de son total de 0,020 BTC sur son canal et accepte le taux de frais par défaut, comme indiqué dans <a href="#eclair-open-channel">Ouverture d&#8217;un canal Lightning</a>.</p>
+</div>
+<div id="eclair-open-channel" class="imageblock data-line-381">
+<div class="content">
+<img src="images/mtln_0209.png" alt="Ouvrir un canal Lightning">
+</div>
+<div class="title">Figure 9. Ouverture d&#8217;un canal Lightning</div>
+</div>
+<div class="paragraph data-line-383">
+<p>Une fois qu&#8217;elle a cliqué sur OUVRIR, son porte-monnaie construit la transaction Bitcoin spéciale qui  ouvre un canal Lightning, connu sous le nom de <em>transaction de financement</em>. La transaction de financement sur la chaîne est envoyée au réseau Bitcoin pour confirmation.</p>
+</div>
+<div class="paragraph data-line-385">
+<p>Alice doit maintenant attendre à nouveau (voir <a href="#eclair-channel-waiting">En attente de la transaction de financement pour ouvrir le canal</a>) pour que la transaction soit enregistrée sur la blockchain Bitcoin. Comme pour la transaction Bitcoin initiale qu&#8217;elle a utilisée pour acquérir ses bitcoins, elle doit attendre six confirmations ou plus (environ une heure).</p>
+</div>
+<div id="eclair-channel-waiting" class="imageblock data-line-389">
+<div class="content">
+<img src="images/mtln_0210.png" alt="En attente de la transaction de financement pour ouvrir le canal">
+</div>
+<div class="title">Figure 10. En attente de la transaction de financement pour ouvrir le canal</div>
+</div>
+<div class="paragraph data-line-391">
+<p>Une fois la transaction de financement confirmée, le canal d&#8217;Alice vers le nœud d&#8217;ACINQ est ouvert, financé et prêt, comme indiqué dans <a href="#eclair-channel-open">Le canal est ouvert</a>.</p>
+</div>
+<div id="eclair-channel-open" class="imageblock data-line-395">
+<div class="content">
+<img src="images/mtln_0211.png" alt="Le canal est ouvert">
+</div>
+<div class="title">Figure 11. Le canal est ouvert</div>
+</div>
+<div class="admonitionblock tip data-line-398">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-399">
+<p>Avez-vous remarqué que le montant du canal semble avoir changé ? Ce n&#8217;est pas le cas : le canal contient 0,018 BTC, mais entre les captures d&#8217;écran, le taux de change du BTC a changé, de sorte que la valeur en USD est différente. Vous pouvez choisir d&#8217;afficher les soldes en BTC ou en USD, mais gardez à l&#8217;esprit que les valeurs en USD sont calculées en temps réel et changeront !</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-402">
+<h3 id="_acheter_une_tasse_de_café_en_utilisant_le_lightning_network">Acheter une tasse de café en utilisant le Lightning Network</h3>
+<div class="paragraph data-line-404">
+<p>Alice a maintenant tout préparé pour commencer à utiliser le Lightning Network. Comme vous pouvez le voir, cela a pris un peu de travail et un peu de temps pour attendre les confirmations. Cependant, les actions suivantes sont maintenant rapides et faciles. Le Lightning Network permet des paiements sans avoir à attendre les confirmations, car les fonds sont réglés en quelques secondes.</p>
+</div>
+<div class="paragraph data-line-406">
+<p>Alice attrape son appareil mobile et court au Café de Bob dans son quartier. Elle est ravie d&#8217;essayer son nouveau porte-monnaie Lightning et de l&#8217;utiliser pour acheter quelque chose !</p>
+</div>
+<div class="sect3 data-line-408">
+<h4 id="_le_café_de_bob">Le Café de Bob</h4>
+<div class="paragraph data-line-410">
+<p>Bob dispose d&#8217;une application de point de vente ("Point of Sale" ou "PoS" en anglais) simple à l&#8217;usage pour tout client qui souhaite payer avec des bitcoins sur le Lightning Network. Comme nous le verrons dans le chapitre suivant, Bob utilise la plateforme open source populaire <em>BTCPay Server</em> qui contient tous les composants nécessaires pour une solution de commerce électronique ou de vente au détail, tels que :</p>
+</div>
+<div class="ulist data-line-412">
+<ul>
+<li class="data-line-412">
+<p>Un nœud Bitcoin utilisant le logiciel Bitcoin Core</p>
+</li>
+<li class="data-line-413">
+<p>Un nœud Lightning utilisant le logiciel c-lightning</p>
+</li>
+<li class="data-line-414">
+<p>Une simple application PoS pour une tablette</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-416">
+<p>BTCPay Server simplifie l&#8217;installation de tous les logiciels nécessaires, le téléchargement des photos et des prix des produits et le lancement rapide d&#8217;une boutique.</p>
+</div>
+<div class="paragraph data-line-418">
+<p>Sur le comptoir du Café de Bob, il y a une tablette montrant ce que vous voyez dans <a href="#bob-cafe-posapp">L&#8217;application de Point de Vente de Bob</a>.</p>
+</div>
+<div id="bob-cafe-posapp" class="imageblock data-line-422">
+<div class="content">
+<img src="images/mtln_0212.png" alt="L&#8217;application de Point de Vente de Bob">
+</div>
+<div class="title">Figure 12. L&#8217;application de Point de Vente de Bob</div>
+</div>
+</div>
+<div class="sect3 data-line-424">
+<h4 id="_une_facture_lightning">Une facture Lightning</h4>
+<div class="paragraph data-line-426">
+<p>Alice sélectionne l&#8217;option Café Latte à l&#8217;écran et se voit présenter une <em>facture Lightning</em> (également connue sous le nom de "demande de paiement"), comme indiqué dans <a href="#bob-cafe-invoice">Facture Lightning pour le latte d&#8217;Alice</a>.</p>
+</div>
+<div id="bob-cafe-invoice" class="imageblock data-line-430">
+<div class="content">
+<img src="images/mtln_0213.png" alt="Facture Lightning de BTCPay Server">
+</div>
+<div class="title">Figure 13. Facture Lightning pour le latte d&#8217;Alice</div>
+</div>
+<div class="paragraph pagebreak-before data-line-433">
+<p>Pour payer la facture, Alice ouvre son porte-monnaie Eclair et sélectionne le bouton Envoyer (qui ressemble à une flèche vers le haut) sous l&#8217;onglet TRANSACTION HISTORY, comme indiqué dans <a href="#alice-send-start">Alice sélectionnant Envoyer</a>.</p>
+</div>
+<div id="alice-send-start" class="imageblock data-line-437">
+<div class="content">
+<img src="images/mtln_0214.png" alt="Transaction Lightning envoyée" width="300">
+</div>
+<div class="title">Figure 14. Alice sélectionnant Envoyer</div>
+</div>
+<div class="admonitionblock tip data-line-440">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-441">
+<p>Le terme "demande de paiement" peut faire référence à une demande de paiement Bitcoin ou à une facture Lightning, et les termes "facture" et "demande de paiement" sont souvent utilisés de manière interchangeable. Le terme technique correct est "facture Lightning", quelle que soit la manière dont elle est nommée dans le porte-monnaie.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-444">
+<p>Alice sélectionne l&#8217;option "scan a payment request" (Scanner une demande de paiement), scanne le QR code affiché sur l&#8217;écran de la tablette (voir <a href="#bob-cafe-invoice">Facture Lightning pour le latte d&#8217;Alice</a>), et est invitée à confirmer son paiement, comme illustré dans <a href="#alice-send-detail">La confirmation d&#8217;envoi d&#8217;Alice</a>.</p>
+</div>
+<div class="paragraph data-line-446">
+<p>Alice appuie sur PAY (Payer), et une seconde plus tard, la tablette de Bob affiche un paiement réussi. Alice a terminé son premier paiement LN ! C&#8217;était rapide, peu coûteux et facile. Maintenant, elle peut profiter de son latte qui a été acheté en bitcoin via un système de paiement rapide, bon marché et décentralisé. Dès à présent, Alice peut simplement sélectionner un article sur l&#8217;écran de la tablette de Bob, scanner le code QR avec son téléphone portable, cliquer sur PAY et se faire servir un café, le tout en quelques secondes et le tout sans transaction sur la chaîne.</p>
+</div>
+<div id="alice-send-detail" class="imageblock data-line-450">
+<div class="content">
+<img src="images/mtln_0215.png" alt="La confirmation d&#8217;envoi de la transaction Lightning" width="300">
+</div>
+<div class="title">Figure 15. La confirmation d&#8217;envoi d&#8217;Alice</div>
+</div>
+<div class="paragraph data-line-452">
+<p>Les paiements Lightning sont également plus avantageux pour Bob. Il est convaincu qu&#8217;il sera payé pour le latte d&#8217;Alice sans attendre une confirmation sur la chaîne. À l&#8217;avenir, chaque fois qu&#8217;Alice aura envie de boire un café au Café de Bob, elle pourra choisir de payer en bitcoin sur le réseau Bitcoin ou le Lightning Network. Lequel pensez-vous qu&#8217;elle choisira ?</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-454">
+<h3 id="_conclusion">Conclusion</h3>
+<div class="paragraph data-line-456">
+<p>Dans ce chapitre, nous avons suivi Alice alors qu&#8217;elle téléchargeait et installait son premier porte-monnaie Lightning, acquérait et transférait des bitcoins, ouvrait son premier canal Lightning et achetait une tasse de café en effectuant son premier paiement sur le Lightning Network. Dans les chapitres suivants, nous verrons "dans les coulisses" comment fonctionne chaque composant du Lightning Network et comment le paiement d&#8217;Alice a atteint le Café de Bob.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes">
+<hr>
+<div class="footnote" id="_footnotedef_1">
+<a href="#_footnoteref_1">1</a>. ACINQ : développeurs du porte-monnaie Lightning Eclair Mobile.
+</div>
+<div class="footnote" id="_footnotedef_2">
+<a href="#_footnoteref_2">2</a>. Il est généralement déconseillé de réutiliser la même adresse Bitcoin pour plusieurs paiements car toutes les transactions Bitcoin sont publiques. Une personne curieuse passant par-là pourrait scanner le code QR d&#8217;Alice et voir combien de pourboires Alice a déjà reçus à cette adresse sur la blockchain Bitcoin. Heureusement, le Lightning Network propose des solutions plus privées à cela, abordées plus loin dans le livre !
+</div>
+<div class="footnote" id="_footnotedef_3">
+<a href="#_footnoteref_3">3</a>. Le porte-monnaie Eclair ne propose pas d&#8217;option permettant de calculer automatiquement les frais nécessaires et d&#8217;allouer le montant maximum de fonds à un canal, Alice doit donc faire le calcul elle-même.
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2023-04-28 02:37:20 -0400
+</div>
+</div>
+</body>
+</html>

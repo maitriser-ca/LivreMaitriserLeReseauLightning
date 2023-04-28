@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.17">
+<title>Le routage en oignon</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<style>
+/*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+/* Uncomment the following line when using as a custom stylesheet */
+/* @import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700"; */
+html{font-family:sans-serif;-webkit-text-size-adjust:100%}
+a{background:none}
+a:focus{outline:thin dotted}
+a:active,a:hover{outline:0}
+h1{font-size:2em;margin:.67em 0}
+b,strong{font-weight:bold}
+abbr{font-size:.9em}
+abbr[title]{cursor:help;border-bottom:1px dotted #dddddf;text-decoration:none}
+dfn{font-style:italic}
+hr{height:0}
+mark{background:#ff0;color:#000}
+code,kbd,pre,samp{font-family:monospace;font-size:1em}
+pre{white-space:pre-wrap}
+q{quotes:"\201C" "\201D" "\2018" "\2019"}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sup{top:-.5em}
+sub{bottom:-.25em}
+img{border:0}
+svg:not(:root){overflow:hidden}
+figure{margin:0}
+audio,video{display:inline-block}
+audio:not([controls]){display:none;height:0}
+fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}
+legend{border:0;padding:0}
+button,input,select,textarea{font-family:inherit;font-size:100%;margin:0}
+button,input{line-height:normal}
+button,select{text-transform:none}
+button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}
+button[disabled],html input[disabled]{cursor:default}
+input[type=checkbox],input[type=radio]{padding:0}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
+textarea{overflow:auto;vertical-align:top}
+table{border-collapse:collapse;border-spacing:0}
+*,::before,::after{box-sizing:border-box}
+html,body{font-size:100%}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;line-height:1;position:relative;cursor:auto;-moz-tab-size:4;-o-tab-size:4;tab-size:4;word-wrap:anywhere;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+a:hover{cursor:pointer}
+img,object,embed{max-width:100%;height:auto}
+object,embed{height:100%}
+img{-ms-interpolation-mode:bicubic}
+.left{float:left!important}
+.right{float:right!important}
+.text-left{text-align:left!important}
+.text-right{text-align:right!important}
+.text-center{text-align:center!important}
+.text-justify{text-align:justify!important}
+.hide{display:none}
+img,object,svg{display:inline-block;vertical-align:middle}
+textarea{height:auto;min-height:50px}
+select{width:100%}
+.subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0}
+a{color:#2156a5;text-decoration:underline;line-height:inherit}
+a:hover,a:focus{color:#1d4b8f}
+a img{border:0}
+p{line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
+p aside{font-size:.875em;line-height:1.35;font-style:italic}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
+h1 small,h2 small,h3 small,#toctitle small,.sidebarblock>.content>.title small,h4 small,h5 small,h6 small{font-size:60%;color:#e99b8f;line-height:0}
+h1{font-size:2.125em}
+h2{font-size:1.6875em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
+h4,h5{font-size:1.125em}
+h6{font-size:1em}
+hr{border:solid #dddddf;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em}
+em,i{font-style:italic;line-height:inherit}
+strong,b{font-weight:bold;line-height:inherit}
+small{font-size:60%;line-height:inherit}
+code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
+ul,ol,dl{line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
+ul,ol{margin-left:1.5em}
+ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0}
+ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
+ul.square{list-style-type:square}
+ul.circle{list-style-type:circle}
+ul.disc{list-style-type:disc}
+ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
+dl dt{margin-bottom:.3125em;font-weight:bold}
+dl dd{margin-bottom:1.25em}
+blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
+blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
+@media screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+h1{font-size:2.75em}
+h2{font-size:2.3125em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
+h4{font-size:1.4375em}}
+table{background:#fff;margin-bottom:1.25em;border:1px solid #dedede;word-wrap:normal}
+table thead,table tfoot{background:#f7f8f7}
+table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
+table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
+table tr.even,table tr.alt{background:#f8f8f7}
+table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{line-height:1.6}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
+h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
+.center{margin-left:auto;margin-right:auto}
+.stretch{width:100%}
+.clearfix::before,.clearfix::after,.float-group::before,.float-group::after{content:" ";display:table}
+.clearfix::after,.float-group::after{clear:both}
+:not(pre).nobreak{word-wrap:normal}
+:not(pre).nowrap{white-space:nowrap}
+:not(pre).pre-wrap{white-space:pre-wrap}
+:not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
+pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
+pre>code{display:block}
+pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
+em em{font-style:normal}
+strong strong{font-weight:400}
+.keyseq{color:rgba(51,51,51,.8)}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background:#f7f7f7;border:1px solid #ccc;border-radius:3px;box-shadow:0 1px 0 rgba(0,0,0,.2),inset 0 0 0 .1em #fff;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+.keyseq kbd:first-child{margin-left:0}
+.keyseq kbd:last-child{margin-right:0}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
+b.button::before,b.button::after{position:relative;top:-1px;font-weight:400}
+b.button::before{content:"[";padding:0 3px 0 2px}
+b.button::after{content:"]";padding:0 2px 0 3px}
+p a>code:hover{color:rgba(0,0,0,.9)}
+#header,#content,#footnotes,#footer{width:100%;margin:0 auto;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
+#header::before,#header::after,#content::before,#content::after,#footnotes::before,#footnotes::after,#footer::before,#footer::after{content:" ";display:table}
+#header::after,#content::after,#footnotes::after,#footer::after{clear:both}
+#content{margin-top:1.25em}
+#content::before{content:none}
+#header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
+#header .details span:first-child{margin-left:-.125em}
+#header .details span.email a{color:rgba(0,0,0,.85)}
+#header .details br{display:none}
+#header .details br+span::before{content:"\00a0\2013\00a0"}
+#header .details br+span.author::before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark::before{content:"\00a0|\00a0"}
+#header #revnumber{text-transform:capitalize}
+#header #revnumber::after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #dddddf;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #e7e7e9;padding-bottom:.5em}
+#toc>ul{margin-left:.125em}
+#toc ul.sectlevel0>li>a{font-style:italic}
+#toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
+#toc ul{font-family:"Open Sans","DejaVu Sans",sans-serif;list-style-type:none}
+#toc li{line-height:1.3334;margin-top:.3334em}
+#toc a{text-decoration:none}
+#toc a:active{text-decoration:underline}
+#toctitle{color:#7a2518;font-size:1.2em}
+@media screen and (min-width:768px){#toctitle{font-size:1.375em}
+body.toc2{padding-left:15em;padding-right:0}
+#toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
+#toc.toc2>ul{font-size:.9em;margin-bottom:0}
+#toc.toc2 ul ul{margin-left:0;padding-left:1em}
+#toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
+body.toc2.toc-right{padding-left:0;padding-right:15em}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #e7e7e9;left:auto;right:0}}
+@media screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+#toc.toc2{width:20em}
+#toc.toc2 #toctitle{font-size:1.375em}
+#toc.toc2>ul{font-size:.95em}
+#toc.toc2 ul ul{padding-left:1.25em}
+body.toc2.toc-right{padding-left:0;padding-right:20em}}
+#content #toc{border:1px solid #e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;border-radius:4px}
+#content #toc>:first-child{margin-top:0}
+#content #toc>:last-child{margin-bottom:0}
+#footer{max-width:none;background:rgba(0,0,0,.8);padding:1.25em}
+#footer-text{color:hsla(0,0%,100%,.8);line-height:1.44}
+#content{margin-bottom:.625em}
+.sect1{padding-bottom:.625em}
+@media screen and (min-width:768px){#content{margin-bottom:1.25em}
+.sect1{padding-bottom:1.25em}}
+.sect1:last-child{padding-bottom:0}
+.sect1+.sect1{border-top:1px solid #e7e7e9}
+#content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
+#content h1>a.anchor::before,h2>a.anchor::before,h3>a.anchor::before,#toctitle>a.anchor::before,.sidebarblock>.content>.title>a.anchor::before,h4>a.anchor::before,h5>a.anchor::before,h6>a.anchor::before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
+#content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
+#content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
+details,.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+details{margin-left:1.25rem}
+details>summary{cursor:pointer;display:block;position:relative;line-height:1.6;margin-bottom:.625rem;outline:none;-webkit-tap-highlight-color:transparent}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";border:solid transparent;border-left:solid;border-width:.3em 0 .3em .5em;position:absolute;top:.5em;left:-1.25rem;transform:translateX(15%)}
+details[open]>summary::before{border:solid transparent;border-top:solid;border-width:.5em .3em 0;transform:translateY(15%)}
+details>summary::after{content:"";width:1.25rem;height:1em;position:absolute;top:.3em;left:-1.25rem}
+.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
+table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
+.paragraph.lead>p,#preamble>.sectionbody>[class=paragraph]:first-of-type p{font-size:1.21875em;line-height:1.6;color:rgba(0,0,0,.85)}
+.admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
+.admonitionblock>table td.icon{text-align:center;width:80px}
+.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(0,0,0,.6);word-wrap:anywhere}
+.admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content{border:1px solid #e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;border-radius:4px}
+.exampleblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child{margin-bottom:0}
+.sidebarblock{border:1px solid #dbdbd6;margin-bottom:1.25em;padding:1.25em;background:#f3f3f2;border-radius:4px}
+.sidebarblock>:first-child{margin-top:0}
+.sidebarblock>:last-child{margin-bottom:0}
+.sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
+.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.literalblock pre,.listingblock>.content>pre{border-radius:4px;overflow-x:auto;padding:1em;font-size:.8125em}
+@media screen and (min-width:768px){.literalblock pre,.listingblock>.content>pre{font-size:.90625em}}
+@media screen and (min-width:1280px){.literalblock pre,.listingblock>.content>pre{font-size:1em}}
+.literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
+.literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
+.listingblock>.content{position:relative}
+.listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
+.listingblock:hover code[data-lang]::before{display:block}
+.listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
+.listingblock.terminal pre .command:not([data-prompt])::before{content:"$"}
+.listingblock pre.highlightjs{padding:0}
+.listingblock pre.highlightjs>code{padding:1em;border-radius:4px}
+.listingblock pre.prettyprint{border-width:0}
+.prettyprint{background:#f7f7f8}
+pre.prettyprint .linenums{line-height:1.45;margin-left:2em}
+pre.prettyprint li{background:none;list-style-type:inherit;padding-left:0}
+pre.prettyprint li code[data-lang]::before{opacity:1}
+pre.prettyprint li:not(:first-child) code[data-lang]::before{display:none}
+table.linenotable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.linenotable td[class]{color:inherit;vertical-align:top;padding:0;line-height:inherit;white-space:normal}
+table.linenotable td.code{padding-left:.75em}
+table.linenotable td.linenos,pre.pygments .linenos{border-right:1px solid;opacity:.35;padding-right:.5em;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+pre.pygments span.linenos{display:inline-block;margin-right:.75em}
+.quoteblock{margin:0 1em 1.25em 1.5em;display:table}
+.quoteblock:not(.excerpt)>.title{margin-left:-1.5em;margin-bottom:.75em}
+.quoteblock blockquote,.quoteblock p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote{margin:0;padding:0;border:0}
+.quoteblock blockquote::before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
+.quoteblock .attribution{margin-top:.75em;margin-right:.5ex;text-align:right}
+.verseblock{margin:0 1em 1.25em}
+.verseblock pre{font-family:"Open Sans","DejaVu Sans",sans-serif;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
+.verseblock pre strong{font-weight:400}
+.verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
+.quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
+.quoteblock .attribution br,.verseblock .attribution br{display:none}
+.quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
+.quoteblock.abstract blockquote::before,.quoteblock.excerpt blockquote::before,.quoteblock .quoteblock blockquote::before{display:none}
+.quoteblock.abstract blockquote,.quoteblock.abstract p,.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{line-height:1.6;word-spacing:0}
+.quoteblock.abstract{margin:0 1em 1.25em;display:block}
+.quoteblock.abstract>.title{margin:0 0 .375em;font-size:1.15em;text-align:center}
+.quoteblock.excerpt>blockquote,.quoteblock .quoteblock{padding:0 0 .25em 1em;border-left:.25em solid #dddddf}
+.quoteblock.excerpt,.quoteblock .quoteblock{margin-left:0}
+.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{color:inherit;font-size:1.0625rem}
+.quoteblock.excerpt .attribution,.quoteblock .quoteblock .attribution{color:inherit;font-size:.85rem;text-align:left;margin-right:0}
+p.tableblock:last-child{margin-bottom:0}
+td.tableblock>.content{margin-bottom:1.25em;word-wrap:anywhere}
+td.tableblock>.content>:last-child{margin-bottom:-1.25em}
+table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
+table.grid-all>*>tr>*{border-width:1px}
+table.grid-cols>*>tr>*{border-width:0 1px}
+table.grid-rows>*>tr>*{border-width:1px 0}
+table.frame-all{border-width:1px}
+table.frame-ends{border-width:1px 0}
+table.frame-sides{border-width:0 1px}
+table.frame-none>colgroup+*>:first-child>*,table.frame-sides>colgroup+*>:first-child>*{border-top-width:0}
+table.frame-none>:last-child>:last-child>*,table.frame-sides>:last-child>:last-child>*{border-bottom-width:0}
+table.frame-none>*>tr>:first-child,table.frame-ends>*>tr>:first-child{border-left-width:0}
+table.frame-none>*>tr>:last-child,table.frame-ends>*>tr>:last-child{border-right-width:0}
+table.stripes-all>*>tr,table.stripes-odd>*>tr:nth-of-type(odd),table.stripes-even>*>tr:nth-of-type(even),table.stripes-hover>*>tr:hover{background:#f8f8f7}
+th.halign-left,td.halign-left{text-align:left}
+th.halign-right,td.halign-right{text-align:right}
+th.halign-center,td.halign-center{text-align:center}
+th.valign-top,td.valign-top{vertical-align:top}
+th.valign-bottom,td.valign-bottom{vertical-align:bottom}
+th.valign-middle,td.valign-middle{vertical-align:middle}
+table thead th,table tfoot th{font-weight:bold}
+tbody tr th{background:#f7f8f7}
+tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
+p.tableblock>code:only-child{background:none;padding:0}
+p.tableblock{font-size:1em}
+ol{margin-left:1.75em}
+ul li ol{margin-left:1.5em}
+dl dd{margin-left:1.125em}
+dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
+li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+li>p:empty:only-child::before{content:"";display:inline-block}
+ul.checklist>li>p:first-child{margin-left:-1em}
+ul.checklist>li>p:first-child>.fa-square-o:first-child,ul.checklist>li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist>li>p:first-child>input[type=checkbox]:first-child{margin-right:.25em}
+ul.inline{display:flex;flex-flow:row wrap;list-style:none;margin:0 0 .625em -1.25em}
+ul.inline>li{margin-left:1.25em}
+.unstyled dl dt{font-weight:400;font-style:normal}
+ol.arabic{list-style-type:decimal}
+ol.decimal{list-style-type:decimal-leading-zero}
+ol.loweralpha{list-style-type:lower-alpha}
+ol.upperalpha{list-style-type:upper-alpha}
+ol.lowerroman{list-style-type:lower-roman}
+ol.upperroman{list-style-type:upper-roman}
+ol.lowergreek{list-style-type:lower-greek}
+.hdlist>table,.colist>table{border:0;background:none}
+.hdlist>table>tbody>tr,.colist>table>tbody>tr{background:none}
+td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
+td.hdlist1{font-weight:bold;padding-bottom:1.25em}
+td.hdlist2{word-wrap:anywhere}
+.literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
+.colist td:not([class]):first-child{padding:.4em .75em 0;line-height:1;vertical-align:top}
+.colist td:not([class]):first-child img{max-width:none}
+.colist td:not([class]):last-child{padding:.25em 0}
+.thumb,.th{line-height:0;display:inline-block;border:4px solid #fff;box-shadow:0 0 0 1px #ddd}
+.imageblock.left{margin:.25em .625em 1.25em 0}
+.imageblock.right{margin:.25em 0 1.25em .625em}
+.imageblock>.title{margin-bottom:0}
+.imageblock.thumb,.imageblock.th{border-width:6px}
+.imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
+.image.left,.image.right{margin-top:.25em;margin-bottom:.25em;display:inline-block;line-height:0}
+.image.left{margin-right:.625em}
+.image.right{margin-left:.625em}
+a.image{text-decoration:none;display:inline-block}
+a.image object{pointer-events:none}
+sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
+sup.footnote a,sup.footnoteref a{text-decoration:none}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
+#footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none;margin-left:-1.05em}
+#footnotes .footnote:last-of-type{margin-bottom:0}
+#content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
+div.unbreakable{page-break-inside:avoid}
+.big{font-size:larger}
+.small{font-size:smaller}
+.underline{text-decoration:underline}
+.overline{text-decoration:overline}
+.line-through{text-decoration:line-through}
+.aqua{color:#00bfbf}
+.aqua-background{background:#00fafa}
+.black{color:#000}
+.black-background{background:#000}
+.blue{color:#0000bf}
+.blue-background{background:#0000fa}
+.fuchsia{color:#bf00bf}
+.fuchsia-background{background:#fa00fa}
+.gray{color:#606060}
+.gray-background{background:#7d7d7d}
+.green{color:#006000}
+.green-background{background:#007d00}
+.lime{color:#00bf00}
+.lime-background{background:#00fa00}
+.maroon{color:#600000}
+.maroon-background{background:#7d0000}
+.navy{color:#000060}
+.navy-background{background:#00007d}
+.olive{color:#606000}
+.olive-background{background:#7d7d00}
+.purple{color:#600060}
+.purple-background{background:#7d007d}
+.red{color:#bf0000}
+.red-background{background:#fa0000}
+.silver{color:#909090}
+.silver-background{background:#bcbcbc}
+.teal{color:#006060}
+.teal-background{background:#007d7d}
+.white{color:#bfbfbf}
+.white-background{background:#fafafa}
+.yellow{color:#bfbf00}
+.yellow-background{background:#fafa00}
+span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note::before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning::before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important::before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background:rgba(0,0,0,.8);border-radius:50%;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:#fff!important}
+.conum[data-value]+b{display:none}
+.conum[data-value]::after{content:attr(data-value)}
+pre .conum[data-value]{position:relative;top:-.125em}
+b.conum *{color:inherit!important}
+.conum:not([data-value]):empty{display:none}
+dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
+h1,h2,p,td.content,span.alt,summary{letter-spacing:-.01em}
+p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
+p,blockquote,dt,td.content,span.alt,summary{font-size:1.0625rem}
+p{margin-bottom:1.25rem}
+.sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
+.exampleblock>.content{background:#fffef7;border-color:#e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.print-only{display:none!important}
+@page{margin:1.25cm .75cm}
+@media print{*{box-shadow:none!important;text-shadow:none!important}
+html{font-size:80%}
+a{color:inherit!important;text-decoration:underline!important}
+a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
+a[href^="http:"]:not(.bare)::after,a[href^="https:"]:not(.bare)::after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]{border-bottom:1px dotted}
+abbr[title]::after{content:" (" attr(title) ")"}
+pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
+thead{display:table-header-group}
+svg{max-width:100%}
+p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
+h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
+#header,#content,#footnotes,#footer{max-width:none}
+#toc,.sidebarblock,.exampleblock>.content{background:none!important}
+#toc{border-bottom:1px solid #dddddf!important;padding-bottom:0!important}
+body.book #header{text-align:center}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em}
+body.book #header .details{border:0!important;display:block;padding:0!important}
+body.book #header .details span:first-child{margin-left:0!important}
+body.book #header .details br{display:block}
+body.book #header .details br+span::before{content:none!important}
+body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
+body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
+.listingblock code[data-lang]::before{display:block}
+#footer{padding:0 .9375em}
+.hide-on-print{display:none!important}
+.print-only{display:block!important}
+.hide-for-print{display:none!important}
+.show-for-print{display:inherit!important}}
+@media amzn-kf8,print{#header>h1:first-child{margin-top:1.25rem}
+.sect1{padding:0!important}
+.sect1+.sect1{border:0}
+#footer{background:none}
+#footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
+@media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
+</style>
+</head>
+<body class="article data-line-1">
+<div id="header">
+</div>
+<div id="content">
+<div class="sect1 data-line-2">
+<h2 id="onion_routing">Le routage en oignon</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-4">
+<p>Dans ce chapitre, nous décrirons le mécanisme de routage en oignon du Lightning Network. L&#8217;invention du <em>routage en oignon</em> précède le Lightning Network de 25 ans ! Le routage en oignon a été inventé par des chercheurs de l&#8217;U.S. Navy en tant que protocole de sécurité des communications. Le routage en oignon est surtout utilisé par Tor, une surcouche d&#8217;Internet routée en oignon qui permet aux chercheurs, aux militants, aux agents du renseignement et à tout le monde d&#8217;utiliser Internet de manière privée et anonyme.</p>
+</div>
+<div class="paragraph data-line-6">
+<p>Dans ce chapitre, nous nous intéressons à la partie "Source-based onion routing (SPHINX)" (Routage en oignon basé sur la source) de l&#8217;architecture du protocole Lightning, mise en évidence par un contour épais au centre (couche de routage) de <a href="#LN_protocol_onion_highlight">Routage en oignon dans la suite de protocoles Lightning</a>.</p>
+</div>
+<div id="LN_protocol_onion_highlight" class="imageblock data-line-10">
+<div class="content">
+<img src="images/mtln_1001.png" alt="Routage en oignon dans la suite de protocoles Lightning">
+</div>
+<div class="title">Figure 1. Routage en oignon dans la suite de protocoles Lightning</div>
+</div>
+<div class="paragraph data-line-12">
+<p>Le routage en oignon décrit une méthode de communication encryptée dans laquelle un expéditeur de message construit des <em>couches d&#8217;encryptage imbriquées</em> successives qui sont "épluchées" par chaque nœud intermédiaire, jusqu&#8217;à ce que la couche la plus au centre soit livrée au destinataire prévu. Le nom "routage en oignon" décrit cette utilisation de l&#8217;encryptage en couches qui épluche une couche à la fois, comme la peau d&#8217;un oignon.</p>
+</div>
+<div class="paragraph data-line-14">
+<p>Chacun des nœuds intermédiaires ne peut "éplucher" qu&#8217;une couche et voir qui est le suivant sur le chemin de communication. Le routage en oignon garantit que personne, à l&#8217;exception de l&#8217;expéditeur, ne connaît la destination ou la longueur du chemin de communication. Chaque intermédiaire ne connaît que le saut précédent et suivant.</p>
+</div>
+<div class="paragraph data-line-16">
+<p>Le Lightning Network utilise une implémentation du protocole de routage en oignon basé sur <em>Sphinx</em>,<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup> développé en 2009 par George Danezis et Ian Goldberg.</p>
+</div>
+<div class="paragraph data-line-18">
+<p>La mise en œuvre du routage en oignon dans le Lightning Network est définie dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md">BOLT #4: Onion Routing Protocol</a>.</p>
+</div>
+<div class="sect2 data-line-20">
+<h3 id="_un_exemple_physique_illustrant_le_routage_en_oignon">Un exemple physique illustrant le routage en oignon</h3>
+<div class="paragraph data-line-22">
+<p>Il existe de nombreuses façons de décrire le routage en oignon, mais l&#8217;une des plus simples consiste à utiliser l&#8217;équivalent physique d&#8217;enveloppes scellées. Une enveloppe représente une couche de cryptage, permettant uniquement au destinataire nommé de l&#8217;ouvrir et d&#8217;en lire le contenu.</p>
+</div>
+<div class="paragraph data-line-24">
+<p>Disons qu&#8217;Alice veut envoyer une lettre secrète à Dina, indirectement via des intermédiaires.</p>
+</div>
+<div class="sect3 data-line-26">
+<h4 id="_sélection_dun_chemin">Sélection d&#8217;un chemin</h4>
+<div class="paragraph data-line-28">
+<p>Le Lightning Network utilise le <em>routage basé sur la source</em>, ce qui signifie que le chemin de paiement est sélectionné et spécifié par l&#8217;expéditeur, et uniquement par l&#8217;expéditeur. Dans cet exemple, la lettre secrète d&#8217;Alice à Dina sera l&#8217;équivalent d&#8217;un paiement. Pour s&#8217;assurer que la lettre parvienne à Dina, Alice créera un chemin d&#8217;elle à Dina, en utilisant Bob et Chan comme intermédiaires.</p>
+</div>
+<div class="admonitionblock tip data-line-31">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-32">
+<p>Il peut y avoir de nombreux chemins qui permettent à Alice d&#8217;atteindre Dina. Nous expliquerons le processus de sélection du chemin <em>optimum</em> dans <a href="#path_finding">[path_finding]</a>. Pour l&#8217;instant, nous supposerons que le chemin sélectionné par Alice utilise Bob et Chan comme intermédiaires pour atteindre Dina.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph pagebreak-before data-line-36">
+<p>Pour rappel, le chemin sélectionné par Alice est illustré dans <a href="#alice_dina_path">Chemin : d&#8217;Alice à Bob à Chan à Dina</a>.</p>
+</div>
+<div id="alice_dina_path" class="imageblock data-line-40">
+<div class="content">
+<img src="images/mtln_1002.png" alt="D&#8217;Alice à Bob à Chan à Dina">
+</div>
+<div class="title">Figure 2. Chemin : d&#8217;Alice à Bob à Chan à Dina</div>
+</div>
+<div class="paragraph data-line-42">
+<p>Voyons comment Alice peut utiliser ce chemin sans révéler d&#8217;informations aux intermédiaires Bob et Chan.</p>
+</div>
+<div class="sidebarblock data-line-45">
+<div class="content">
+<div class="title">Routage basé sur la source</div>
+<div class="paragraph data-line-46">
+<p>Le routage basé sur la source n&#8217;est pas la manière dont les paquets sont généralement acheminés sur Internet aujourd&#8217;hui, bien que le routage à la source ait été possible au début.
+Le routage Internet est basé sur la <em>commutation de paquets</em> ("packet switching" en anglais) à chaque nœud de routage intermédiaire. Un paquet IPv4, par exemple, comprend les adresses IP de l&#8217;expéditeur et du destinataire, et chaque autre nœud de routage IP décide comment transférer chaque paquet vers la destination.
+Cependant, le manque de confidentialité dans un tel mécanisme de routage, où chaque nœud intermédiaire voit l&#8217;expéditeur et le destinataire, en fait un mauvais choix pour une utilisation dans un réseau de paiements.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3 data-line-51">
+<h4 id="_construire_les_couches">Construire les couches</h4>
+<div class="paragraph data-line-53">
+<p>Alice commence par écrire une lettre secrète à Dina. Elle scelle ensuite la lettre à l&#8217;intérieur d&#8217;une enveloppe et écrit "Pour Dina" à l&#8217;extérieur (voir <a href="#dina_envelope">La lettre secrète de Dina, scellée dans une enveloppe</a>). L&#8217;enveloppe représente le cryptage avec la clé publique de Dina afin que seule Dina puisse ouvrir l&#8217;enveloppe et lire la lettre.</p>
+</div>
+<div id="dina_envelope" class="imageblock data-line-57">
+<div class="content">
+<img src="images/mtln_1003.png" alt="La lettre secrète de Dina, scellée dans une enveloppe">
+</div>
+<div class="title">Figure 3. La lettre secrète de Dina, scellée dans une enveloppe</div>
+</div>
+<div class="paragraph data-line-59">
+<p>La lettre de Dina sera remise à Dina par Chan, qui est juste avant Dina sur le "chemin". Donc, Alice met l&#8217;enveloppe de Dina dans une enveloppe adressée à Chan (voir <a href="#chan_envelope">L&#8217;enveloppe de Chan, contenant l&#8217;enveloppe scellée de Dina</a>). La seule partie que Chan peut lire est la destination (les instructions de routage) : "Pour Dina". En scellant ceci à l&#8217;intérieur d&#8217;une enveloppe adressée à Chan représente le cryptage avec la clé publique de Chan afin que seul Chan puisse lire l&#8217;adresse de l&#8217;enveloppe. Chan ne peut toujours pas ouvrir l&#8217;enveloppe de Dina. Tout ce qu&#8217;il voit, ce sont les instructions à l&#8217;extérieur (l&#8217;adresse).</p>
+</div>
+<div id="chan_envelope" class="imageblock data-line-63">
+<div class="content">
+<img src="images/mtln_1004.png" alt="L&#8217;enveloppe de Chan, contenant l&#8217;enveloppe scellée de Dina">
+</div>
+<div class="title">Figure 4. L&#8217;enveloppe de Chan, contenant l&#8217;enveloppe scellée de Dina</div>
+</div>
+<div class="paragraph data-line-65">
+<p>Maintenant, cette lettre sera remise à Chan par Bob. Alors Alice le met dans une enveloppe adressée à Bob (voir <a href="#bob_envelope">L&#8217;enveloppe de Bob, contenant l&#8217;enveloppe scellée de Chan</a>). Comme précédemment, l&#8217;enveloppe représente un message encrypté pour Bob que seul Bob peut lire. Bob ne peut lire que l&#8217;extérieur de l&#8217;enveloppe de Chan (l&#8217;adresse), il sait donc qu&#8217;il doit l&#8217;envoyer à Chan.</p>
+</div>
+<div id="bob_envelope" class="imageblock data-line-69">
+<div class="content">
+<img src="images/mtln_1005.png" alt="L&#8217;enveloppe de Bob, contenant l&#8217;enveloppe scellée de Chan">
+</div>
+<div class="title">Figure 5. L&#8217;enveloppe de Bob, contenant l&#8217;enveloppe scellée de Chan</div>
+</div>
+<div class="paragraph data-line-71">
+<p>Maintenant, si nous pouvions regarder à travers les enveloppes (avec des rayons X !), nous verrions les enveloppes imbriquées les unes dans les autres, comme illustré dans <a href="#nested_envelopes">Enveloppes imbriquées</a>. </p>
+</div>
+<div id="nested_envelopes" class="imageblock data-line-75">
+<div class="content">
+<img src="images/mtln_1006.png" alt="Enveloppes imbriquées">
+</div>
+<div class="title">Figure 6. Enveloppes imbriquées</div>
+</div>
+</div>
+<div class="sect3 data-line-77">
+<h4 id="_éplucher_les_couches">Éplucher les couches</h4>
+<div class="paragraph data-line-79">
+<p>Alice a maintenant une enveloppe qui dit "Pour Bob" à l&#8217;extérieur. Elle représente un message encrypté que seul Bob peut ouvrir (décrypter). Alice va maintenant commencer le processus en envoyant ceci à Bob. L&#8217;ensemble du processus est illustré dans <a href="#sending_nested_envelopes">Envoi des enveloppes</a>.</p>
+</div>
+<div id="sending_nested_envelopes" class="imageblock data-line-83">
+<div class="content">
+<img src="images/mtln_1007.png" alt="Envoi des enveloppes">
+</div>
+<div class="title">Figure 7. Envoi des enveloppes</div>
+</div>
+<div class="paragraph data-line-85">
+<p>Comme vous pouvez le voir, Bob reçoit l&#8217;enveloppe d&#8217;Alice. Il sait que cela vient d&#8217;Alice, mais ne sait pas si Alice est l&#8217;expéditeur d&#8217;origine ou simplement quelqu&#8217;un qui transmet des enveloppes. Il l&#8217;ouvre pour trouver une enveloppe à l&#8217;intérieur qui dit "Pour Chan". Puisqu&#8217;elle est adressée à Chan, Bob ne peut pas l&#8217;ouvrir. Il ne sait pas ce qu&#8217;il y a dedans et ne sait pas si Chan reçoit une lettre ou une autre enveloppe à faire suivre. Bob ne sait pas si Chan est le destinataire final ou non. Bob transmet l&#8217;enveloppe à Chan.</p>
+</div>
+<div class="paragraph data-line-87">
+<p>Chan reçoit l&#8217;enveloppe de Bob. Il ne sait pas que cela vient d&#8217;Alice. Il ne sait pas si Bob est un intermédiaire ou l&#8217;expéditeur d&#8217;une lettre. Chan ouvre l&#8217;enveloppe et trouve une autre enveloppe à l&#8217;intérieur adressée "Pour Dina", qu&#8217;il ne peut pas ouvrir. Chan la transmet à Dina, ne sachant pas si Dina est la destinataire finale.</p>
+</div>
+<div class="paragraph data-line-89">
+<p>Dina reçoit une enveloppe de Chan. En l&#8217;ouvrant, elle trouve une lettre à l&#8217;intérieur, alors maintenant elle sait qu&#8217;elle est la destinataire prévue de ce message. Elle lit la lettre, sachant qu&#8217;aucun des intermédiaires ne sait d&#8217;où elle vient et que personne d&#8217;autre n&#8217;a lu sa lettre secrète !</p>
+</div>
+<div class="paragraph data-line-91">
+<p>C&#8217;est l&#8217;essence du routage en oignon. L&#8217;expéditeur enveloppe un message dans plusieurs couches, spécifiant exactement comment il sera acheminé et empêchant tous les intermédiaires d&#8217;obtenir des informations sur le chemin ou la charge utile. Chaque intermédiaire épluche une couche, ne voit qu&#8217;une adresse de transfert et ne connaît rien d&#8217;autre que le saut précédent et suivant dans le chemin.</p>
+</div>
+<div class="paragraph data-line-93">
+<p>Examinons maintenant les détails de la mise en œuvre du routage en oignon dans le Lightning Network.</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-95">
+<h3 id="_introduction_au_routage_en_oignon_des_htlc">Introduction au routage en oignon des HTLC</h3>
+<div class="paragraph data-line-97">
+<p>Le routage en oignon dans le Lightning Network semble complexe à première vue, mais une fois que vous avez compris le concept de base, c&#8217;est vraiment très simple.</p>
+</div>
+<div class="paragraph data-line-99">
+<p>D&#8217;un point de vue pratique, Alice indique à chaque nœud intermédiaire quel HTLC mettre en place avec le nœud suivant sur le chemin.</p>
+</div>
+<div class="paragraph data-line-101">
+<p>Le premier nœud, qui est l&#8217;expéditeur du paiement ou Alice dans notre exemple, est appelé le <em>nœud d&#8217;origine</em>. Le dernier nœud, qui est le destinataire du paiement ou Dina dans notre exemple, est appelé le <em>nœud final</em>.</p>
+</div>
+<div class="paragraph data-line-103">
+<p>Chaque nœud intermédiaire, ou Bob et Chan dans notre exemple, est appelé un <em>saut</em>. Chaque saut doit établir un <em>HTLC sortant</em> vers le prochain saut. Les informations communiquées à chaque saut par Alice sont appelées <em>charge utile de saut</em>, "hop payload" en anglais, ou <em>données de saut</em>, "hop data" en anglais. Le message qui est acheminé d&#8217;Alice à Dina est appelé un <em>oignon</em> et se compose de messages <em>hop payload</em> ou <em>hop data</em> encryptés à chaque saut.</p>
+</div>
+<div class="paragraph data-line-105">
+<p>Maintenant que nous connaissons la terminologie utilisée dans le routage en oignon de Lightning, reformulons ce qu&#8217;Alice doit faire :  Alice doit construire un oignon avec des données de saut, indiquant à chaque saut comment construire un HTLC sortant pour envoyer un paiement au nœud final (Dina).</p>
+</div>
+<div class="sect3 data-line-107">
+<h4 id="_alice_choisit_le_chemin">Alice choisit le chemin</h4>
+<div class="paragraph data-line-109">
+<p>Grâce à <a href="#routing">[routing]</a> nous savons qu&#8217;Alice enverra un paiement de 50 000 satoshis à Dina via Bob et Chan. Ce paiement est transmis via une série de HTLC, comme illustré dans <a href="#alice_dina_htlc_path">Chemin de paiements avec des HTLC d&#8217;Alice à Dina</a>.</p>
+</div>
+<div id="alice_dina_htlc_path" class="imageblock data-line-113">
+<div class="content">
+<img src="images/mtln_1008.png" alt="Chemin de paiements avec des HTLC d&#8217;Alice à Dina">
+</div>
+<div class="title">Figure 8. Chemin de paiements avec des HTLC d&#8217;Alice à Dina</div>
+</div>
+<div class="paragraph data-line-115">
+<p>Comme nous le verrons dans <a href="#gossip">[gossip]</a>, Alice est capable de construire ce chemin vers Dina car les nœuds Lightning annoncent leurs canaux à l&#8217;ensemble du Lightning Network à l&#8217;aide du protocole de bavardage de Lightning. Après l&#8217;annonce initiale du canal, Bob et Chan ont chacun envoyé un message supplémentaire <code>channel_update</code> avec leurs frais de routage et leurs attentes en matière de timelock pour le routage des paiements.</p>
+</div>
+<div class="paragraph data-line-117">
+<p>D&#8217;après les annonces et les mises à jour, Alice connaît les informations suivantes sur les canaux entre Bob, Chan et Dina :</p>
+</div>
+<div class="ulist data-line-119">
+<ul>
+<li class="data-line-119">
+<p>Un short_channel_id (ID de canal court) pour chaque canal, qu&#8217;Alice peut utiliser pour référencer le canal lors de la construction du chemin</p>
+</li>
+<li class="data-line-121">
+<p>Un cltv_expiry_delta (delta de timelock), qu&#8217;Alice peut ajouter au temps d&#8217;expiration pour chaque HTLC</p>
+</li>
+<li class="data-line-123">
+<p>Un fee_base_msat et un fee_proportional_millionths, qu&#8217;Alice peut utiliser pour calculer les frais de routage totaux attendus par ce nœud pour le relais sur ce canal.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-125">
+<p>En pratique, d&#8217;autres informations sont également échangées, telles que les HTLC les plus grands (<code>htlc_maximum_msat</code>) et les plus petits (<code>htlc_minimum_msat</code>) qu&#8217;un canal transportera, mais ceux-ci ne sont pas utilisés aussi directement lors de la construction de la route en oignon que les champs précédents.</p>
+</div>
+<div class="paragraph data-line-127">
+<p>Ces informations sont utilisées par Alice pour identifier les nœuds, les canaux, les frais et les timelocks pour le chemin détaillé suivant illustré dans <a href="#alice_dina_path_detail">Un chemin détaillé construit à partir d&#8217;informations sur les canaux et les nœuds</a>.</p>
+</div>
+<div id="alice_dina_path_detail" class="imageblock data-line-131">
+<div class="content">
+<img src="images/mtln_1009.png" alt="Un chemin détaillé construit à partir d&#8217;informations sur les canaux et les nœuds">
+</div>
+<div class="title">Figure 9. Un chemin détaillé construit à partir d&#8217;informations sur les canaux et les nœuds</div>
+</div>
+<div class="paragraph data-line-133">
+<p>Alice connaît déjà son propre canal vers Bob et n&#8217;a donc pas besoin de cette information pour construire le chemin. Notez également qu&#8217;Alice n&#8217;a pas eu besoin d&#8217;une mise à jour du canal de Dina car elle a la mise à jour de Chan pour ce dernier canal du chemin.</p>
+</div>
+</div>
+<div class="sect3 data-line-135">
+<h4 id="_alice_construit_les_charges_utiles">Alice construit les charges utiles</h4>
+<div class="paragraph data-line-137">
+<p>Alice peut utiliser deux formats possibles pour les informations communiquées à chaque saut : un ancien format de longueur fixe appelé <em>hop data</em> et un format plus flexible basé sur Type-Length-Value (TLV) appelé <em>hop payload</em>. Le format de message TLV est expliqué plus en détail dans <a href="#tlv">[tlv]</a>. Il offre une flexibilité en permettant d&#8217;ajouter des champs au protocole à volonté.</p>
+</div>
+<div class="admonitionblock note data-line-140">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-141">
+<p>Les deux formats sont spécifiés dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-structure" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-structure">BOLT #4: Onion Routing Protocol, Packet Structure</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-144">
+<p>Alice commencera à construire les données de saut à partir de la fin du chemin en reculant : Dina, Chan, puis Bob.</p>
+</div>
+<div class="sect4 data-line-146">
+<h5 id="_charge_utile_du_nœud_final_pour_dina">Charge utile du nœud final pour Dina</h5>
+<div class="paragraph data-line-148">
+<p>Alice construit d&#8217;abord la charge utile qui sera livrée à Dina. Dina ne construira pas de "HTLC sortant", car Dina est le nœud final et le destinataire du paiement. Pour cette raison, la charge utile pour Dina est différente de toutes les autres (elle utilise des zéros pour tout le <code>short_channel_id</code>), mais seule Dina le saura car elle sera cryptée dans la couche la plus au centre de l&#8217;oignon. Il s&#8217;agit essentiellement de la "lettre secrète pour Dina" que nous avons vue dans notre exemple d&#8217;enveloppes physiques.</p>
+</div>
+<div class="paragraph data-line-150">
+<p>La charge utile de saut pour Dina doit correspondre aux informations de la facture générée par Dina pour Alice et contiendra (au moins) les champs suivants dans le format TLV :</p>
+</div>
+<div class="dlist data-line-152">
+<dl>
+<dt class="hdlist1">amt_to_forward</dt>
+<dd>
+<p>Le montant de ce paiement en millisatoshis. S&#8217;il ne s&#8217;agit que d&#8217;une partie d&#8217;un paiement en plusieurs parties, le montant est inférieur au total. Sinon, il s&#8217;agit d&#8217;un paiement unique et complet, égal au montant de la facture et à la valeur total_msat.</p>
+</dd>
+<dt class="hdlist1">outgoing_cltv_value</dt>
+<dd>
+<p>Le délai d&#8217;expiration du paiement défini par la valeur min_final_cltv_expiry dans la facture.</p>
+</dd>
+<dt class="hdlist1">payment_secret</dt>
+<dd>
+<p>Une valeur secrète spéciale de 256 bits de la facture, permettant à Dina de reconnaître ce paiement entrant. Cela empêche également une classe d&#8217;attaque par sondage qui rendait auparavant les factures à valeur nulle non sécurisées. Le sondage par les nœuds intermédiaires est atténué car cette valeur est cryptée <em>uniquement</em> pour le destinataire, ce qui signifie qu&#8217;ils ne peuvent pas reconstruire un paquet final qui "semble" légitime.</p>
+</dd>
+<dt class="hdlist1">total_msat</dt>
+<dd>
+<p>Le montant total correspondant à la facture. Ceci peut être omis s&#8217;il n&#8217;y a qu&#8217;une seule partie, auquel cas il est supposé correspondre à amt_to_forward et doit être égal au montant de la facture.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-160">
+<p>La facture qu&#8217;Alice a reçue de Dina spécifiait le montant de 50 000 satoshis, soit 50 000 000 millisatoshis. Dina a spécifié l&#8217;expiration minimale du paiement min_final_cltv_expiry à 18 blocs (3 heures, étant donné 10 minutes en moyenne par bloc Bitcoin). Au moment où Alice tente d&#8217;effectuer le paiement, disons que la blockchain Bitcoin a enregistré 700 000 blocs. Alice doit donc définir la valeur outgoing_cltv_value sur une hauteur de bloc <em>minimum</em> de 700 018.</p>
+</div>
+<div class="paragraph data-line-162">
+<p>Alice construit la charge utile du saut pour Dina comme suit :</p>
+</div>
+<div class="listingblock data-line-164">
+<div class="content">
+<pre>amt_to_forward : 50,000,000
+outgoing_cltv_value: 700,018
+payment_secret: fb53d94b7b65580f75b98f10...03521bdab6d519143cd521d1b3826
+total_msat: 50,000,000</pre>
+</div>
+</div>
+<div class="paragraph data-line-171">
+<p>Alice la sérialise au format TLV, comme indiqué (de manière simplifiée) dans <a href="#dina_onion_payload">La charge utile de Dina est construite par Alice</a>.</p>
+</div>
+<div id="dina_onion_payload" class="imageblock data-line-175">
+<div class="content">
+<img src="images/mtln_1010.png" alt="La charge utile de Dina est construite par Alice">
+</div>
+<div class="title">Figure 10. La charge utile de Dina est construite par Alice</div>
+</div>
+</div>
+<div class="sect4 data-line-177">
+<h5 id="_charge_utile_de_saut_pour_chan">Charge utile de saut pour Chan</h5>
+<div class="paragraph data-line-179">
+<p>Ensuite, Alice construit la charge utile de saut pour Chan. Cela indiquera à Chan comment configurer un HTLC sortant vers Dina.</p>
+</div>
+<div class="paragraph data-line-181">
+<p>La charge utile de saut pour Chan comprend trois champs : short_channel_id, amt_to_forward et outgoing_cltv_value :</p>
+</div>
+<div class="listingblock data-line-183">
+<div class="content">
+<pre>short_channel_id: 010002010a42be
+amt_to_forward: 50,000,000
+outgoing_cltv_value: 700,018</pre>
+</div>
+</div>
+<div class="paragraph data-line-189">
+<p>Alice sérialise cette charge utile au format TLV, comme illustré (de manière simplifiée) dans <a href="#chan_onion_payload">La charge utile de Chan est construite par Alice</a>.</p>
+</div>
+<div id="chan_onion_payload" class="imageblock data-line-193">
+<div class="content">
+<img src="images/mtln_1011.png" alt="La charge utile de Chan est construite par Alice">
+</div>
+<div class="title">Figure 11. La charge utile de Chan est construite par Alice</div>
+</div>
+</div>
+<div class="sect4 data-line-195">
+<h5 id="_charge_utile_de_saut_pour_bob">Charge utile de saut pour Bob</h5>
+<div class="paragraph data-line-197">
+<p>Enfin, Alice construit la charge utile de saut pour Bob, qui contient également les trois mêmes champs que la charge utile de saut pour Chan, mais avec des valeurs différentes :</p>
+</div>
+<div class="listingblock data-line-199">
+<div class="content">
+<pre>short_channel_id: 000004040a61f0
+amt_to_forward: 50,100,000
+outgoing_cltv_value: 700,038</pre>
+</div>
+</div>
+<div class="paragraph data-line-205">
+<p>Comme vous pouvez le voir, le champ amt_to_forward est de 50 100 000 millisatoshis ou 50 100 satoshis. C&#8217;est parce que Chan s&#8217;attend à des frais de 100 satoshis pour acheminer un paiement à Dina. Pour que Chan "gagne" ces frais de routage, le HTLC entrant de Chan doit être supérieur de 100 satoshis au HTLC sortant de Chan. Puisque le HTLC entrant de Chan est le HTLC sortant de Bob, les instructions à Bob reflètent les frais que Chan gagne. En termes simples, il faut dire à Bob d&#8217;envoyer 50 100 satoshis à Chan, afin que Chan puisse envoyer 50 000 satoshis et garder 100 satoshis.</p>
+</div>
+<div class="paragraph data-line-207">
+<p>De même, Chan s&#8217;attend à un delta de timelock de 20 blocs. Ainsi, le HTLC entrant de Chan doit expirer 20 blocs <em>plus tard</em> que le HTLC sortant de Chan. Pour y parvenir, Alice dit à Bob de faire expirer son HTLC sortant vers Chan à une hauteur de bloc 700 038 — 20 blocs plus tard que le HTLC de Chan vers Dina.</p>
+</div>
+<div class="admonitionblock tip data-line-210">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-211">
+<p>Les attentes en termes de delta de frais et de timelock pour un canal sont définies par la différence entre les HTLC entrants et sortants. Étant donné que le HTLC entrant est créé par le <em>nœud précédent</em>, le delta de frais et de timelock est défini dans la charge utile de l&#8217;oignon pour ce nœud précédent. On explique à Bob comment créer un HTLC qui répond aux attentes de Chan en matière de frais et timelock.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-214">
+<p>Alice sérialise cette charge utile au format TLV, comme illustré (de manière simplifiée) dans <a href="#bob_onion_payload">La charge utile de Bob est construite par Alice</a>.</p>
+</div>
+<div id="bob_onion_payload" class="imageblock data-line-218">
+<div class="content">
+<img src="images/mtln_1012.png" alt="La charge utile de Bob est construite par Alice">
+</div>
+<div class="title">Figure 12. La charge utile de Bob est construite par Alice</div>
+</div>
+</div>
+<div class="sect4 data-line-220">
+<h5 id="_charges_utiles_de_saut_finies">Charges utiles de saut finies</h5>
+<div class="paragraph data-line-222">
+<p>Alice a maintenant construit les charges utiles de trois sauts qui seront enveloppées dans un oignon. Une vue simplifiée des charges utiles est présentée dans <a href="#onion_hop_payloads">Charges utiles de saut pour tous les sauts</a>. </p>
+</div>
+<div id="onion_hop_payloads" class="imageblock data-line-226">
+<div class="content">
+<img src="images/mtln_1013.png" alt="Charges utiles de saut pour tous les sauts">
+</div>
+<div class="title">Figure 13. Charges utiles de saut pour tous les sauts</div>
+</div>
+</div>
+</div>
+<div class="sect3 pagebreak-before less_space data-line-229">
+<h4 id="_génération_de_clés">Génération de clés</h4>
+<div class="paragraph data-line-231">
+<p>Alice doit maintenant générer plusieurs clés qui serviront à encrypter les différentes couches de l&#8217;oignon.</p>
+</div>
+<div class="paragraph data-line-233">
+<p>Avec ces clés, Alice peut atteindre un degré élevé de confidentialité et d&#8217;intégrité :</p>
+</div>
+<div class="ulist data-line-235">
+<ul>
+<li class="data-line-235">
+<p>Alice peut encrypter chaque couche de l&#8217;oignon afin que seul le destinataire prévu puisse le lire.</p>
+</li>
+<li class="data-line-236">
+<p>Chaque intermédiaire peut vérifier que le message n&#8217;est pas modifié.</p>
+</li>
+<li class="data-line-237">
+<p>Personne sur le chemin ne saura qui a envoyé cet oignon ni où il va. Alice ne révèle pas son identité en tant qu&#8217;expéditeur ou l&#8217;identité de Dina en tant que destinataire du paiement.</p>
+</li>
+<li class="data-line-238">
+<p>Chaque saut n&#8217;est renseigné que le saut précédent et suivant.</p>
+</li>
+<li class="data-line-239">
+<p>Personne ne peut savoir quelle est la longueur du chemin, ni où ils se trouvent sur le chemin.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock warning data-line-242">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-243">
+<p>Comme un oignon haché, les détails techniques suivants peuvent vous faire monter les larmes aux yeux. N&#8217;hésitez pas à passer à la section suivante si vous êtes confus. Revenez à ceci et lisez <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction">BOLT #4: Onion Routing, Packet Construction</a>, si vous voulez pour apprendre davantage.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-247">
+<p>La base de toutes les clés utilisées dans l&#8217;oignon est un <em>secret partagé</em> qu&#8217;Alice et Bob peuvent générer indépendamment à l&#8217;aide de l&#8217;algorithme Elliptic Curve Diffie–Hellman (ECDH). À partir du secret partagé (ss), ils peuvent générer indépendamment quatre clés supplémentaires nommées rho, mu, um et pad :</p>
+</div>
+<div class="dlist data-line-249">
+<dl>
+<dt class="hdlist1">rho</dt>
+<dd>
+<p>Utilisé pour générer un flux d&#8217;octets aléatoires à partir d&#8217;un encryptage de flux (utilisé comme
+CSPRNG). Ces octets sont utilisés pour encrypter/décrypter le corps du message ainsi que
+des octet zéro de remplissage durant le traitement des paquets Sphinx.</p>
+</dd>
+<dt class="hdlist1">mu</dt>
+<dd>
+<p>Utilisé pour le code d&#8217;authentification de message basé sur le hachage (HMAC) pour la vérification de l&#8217;intégrité/authenticité.</p>
+</dd>
+<dt class="hdlist1">um</dt>
+<dd>
+<p>Utilisé pour le rapport d&#8217;erreurs.</p>
+</dd>
+<dt class="hdlist1">pad</dt>
+<dd>
+<p>Utilisé pour générer des octets de remplissage pour remplir l&#8217;oignon afin qu&#8217;il ait une longueur fixe.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-259">
+<p>La relation entre les différentes clés et leur génération est schématisée dans <a href="#onion_keygen">Génération de clés d&#8217;oignon</a>.</p>
+</div>
+<div id="onion_keygen" class="imageblock data-line-263">
+<div class="content">
+<img src="images/mtln_1014.png" alt="Génération de clés d&#8217;oignon">
+</div>
+<div class="title">Figure 14. Génération de clés d&#8217;oignon</div>
+</div>
+<div class="sect4 data-line-266">
+<h5 id="session_key">La clé de session d&#8217;Alice</h5>
+<div class="paragraph data-line-268">
+<p>Pour éviter de révéler son identité, Alice n&#8217;utilise pas la clé publique de son propre nœud pour construire l&#8217;oignon. Au lieu de cela, Alice crée une clé temporaire de 32 octets (256 bits) appelée <em>clé privée de session</em> et la <em>clé publique de session</em> correspondante. Cela sert "d&#8217;identité" temporaire et de clé <em>pour cet oignon uniquement</em>. À partir de cette clé de session, Alice construira toutes les autres clés qui seront utilisées dans cet oignon.</p>
+</div>
+</div>
+<div class="sect4 data-line-271">
+<h5 id="keygen_details">Détails de génération de la clé</h5>
+<div class="paragraph data-line-272">
+<p>La génération de clés, la génération d&#8217;octets aléatoires, les clés éphémères et la façon dont elles sont utilisées dans la construction de paquets sont spécifiées dans trois sections de BOLT #4 :</p>
+</div>
+<div class="ulist data-line-274">
+<ul>
+<li class="data-line-274">
+<p><a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#key-generation" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#key-generation">Key Generation</a></p>
+</li>
+<li class="data-line-275">
+<p><a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#pseudo-random-byte-stream" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#pseudo-random-byte-stream">Random Byte Stream</a></p>
+</li>
+<li class="data-line-276">
+<p><a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction">Packet Construction</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-278">
+<p>Par souci de simplicité et pour éviter d&#8217;être trop technique, nous n&#8217;avons pas inclus ces détails dans le livre. Référez-vous aux liens précédents si vous voulez voir ces fonctionnements internes.</p>
+</div>
+</div>
+<div class="sect4 data-line-281">
+<h5 id="shared_secret">Génération d&#8217;un secret partagé</h5>
+<div class="paragraph data-line-283">
+<p>Un détail important qui semble presque magique est la possibilité pour Alice de créer un <em>secret partagé</em> avec un autre nœud simplement en connaissant leurs clés publiques. Ceci est basé sur l&#8217;invention de l&#8217;échange de clés Diffie-Hellman (DH) dans les années 1970 qui a révolutionné cryptographie. Le routage Lightning en oignon utilise la courbe elliptique Diffie-Hellman (ECDH) sur la courbe secp256k1 de Bitcoin. C&#8217;est une astuce tellement cool que nous essayons de l&#8217;expliquer en termes simples dans <a href="#ecdh_explained">Courbe elliptique Diffie–Hellman expliquée</a>.</p>
+</div>
+<div id="ecdh_explained" class="sidebarblock data-line-291">
+<div class="content">
+<div class="title">Courbe elliptique Diffie–Hellman expliquée</div>
+<div class="paragraph data-line-292">
+<p>Supposons que la clé privée d&#8217;Alice est <em>a</em> et que la clé privée de Bob est <em>b</em>. En utilisant la courbe elliptique, Alice et Bob multiplient chacun leur clé privée par le point générateur <em>G</em> pour produire leurs clés publiques <em>A</em> et <em>B</em>, respectivement :</p>
+</div>
+<ul class="simplelist">
+<li><em>A</em> = <em>aG</em></li>
+<li><em>B</em> = <em>bG</em></li>
+</ul>
+<div class="paragraph data-line-301">
+<p>Alice et Bob peuvent désormais utiliser <em>l&#8217;échange de clés Elliptic Curve Diffie–Hellman</em> pour créer un secret partagé <em>ss</em>, une valeur qu&#8217;ils peuvent tous les deux calculer indépendamment sans échanger aucune information.</p>
+</div>
+<div class="paragraph data-line-303">
+<p>Le secret partagé <em>ss</em> est calculé par chacun en multipliant sa propre clé privée par la clé publique de <em>l&#8217;autre</em>, de sorte que :</p>
+</div>
+<ul class="simplelist">
+<li><em>ss</em> = <em>aB</em> = <em>bA</em></li>
+</ul>
+<div class="paragraph data-line-311">
+<p>Mais pourquoi ces deux multiplications donneraient-elles la même valeur <em>ss</em> ?
+Suivez notre démonstration mathématique qui prouve que c&#8217;est possible :</p>
+</div>
+<ul class="simplelist">
+<li><em>ss</em></li>
+<li>= <em>aB</em></li>
+</ul>
+<div class="paragraph data-line-321">
+<p>calculé par Alice qui connaît à la fois <em>a</em> (sa clé privée) et <em>B</em> (la clé publique de Bob)</p>
+</div>
+<ul class="simplelist">
+<li>= <em>a</em>(<em>bG</em>)</li>
+</ul>
+<div class="paragraph data-line-329">
+<p>car on sait que <em>B</em> = <em>bG</em>, on substitue</p>
+</div>
+<ul class="simplelist">
+<li> = (<em>ab</em>)<em>G</em></li>
+</ul>
+<div class="paragraph data-line-337">
+<p>à cause de l&#8217;associativité, nous pouvons déplacer les parenthèses</p>
+</div>
+<ul class="simplelist">
+<li>= (<em>ba</em>)<em>G</em></li>
+</ul>
+<div class="paragraph data-line-345">
+<p>car <em>xy</em> = <em>yx</em> (la courbe est un groupe abélien)</p>
+</div>
+<ul class="simplelist">
+<li>= <em>b</em>(<em>aG</em>)</li>
+</ul>
+<div class="paragraph data-line-353">
+<p>à cause de l&#8217;associativité, nous pouvons déplacer les parenthèses</p>
+</div>
+<ul class="simplelist">
+<li>= <em>bA</em></li>
+</ul>
+<div class="paragraph data-line-361">
+<p>et nous pouvons remplacer <em>aG</em> par <em>A</em>.</p>
+</div>
+<div class="paragraph data-line-363">
+<p>Le résultat <em>bA</em> peut être calculé indépendamment par Bob qui connaît <em>b</em> (sa clé privée) et <em>A</em> (la clé publique d&#8217;Alice).</p>
+</div>
+<div class="paragraph data-line-365">
+<p>Nous avons donc démontré que :</p>
+</div>
+<ul class="simplelist">
+<li><em>ss</em> = <em>aB</em> (Alice peut calculer ceci)</li>
+<li><em>ss</em> = <em>bA</em> (Bob peut calculer ceci)</li>
+</ul>
+<div class="paragraph data-line-374">
+<p>Ainsi, ils peuvent chacun calculer indépendamment <em>ss</em> qu&#8217;ils peuvent utiliser comme clé partagée pour encrypter symétriquement les secrets entre eux deux sans communiquer le secret partagé.</p>
+</div>
+</div>
+</div>
+<div class="paragraph data-line-378">
+<p>Une caractéristique unique de Sphinx en tant que format de paquet mix-net est que, plutôt que d&#8217;inclure une clé de session distincte pour chaque saut de la route, ce qui augmenterait considérablement la taille du paquet mix-net,  un schéma intelligent de <em>d&#8217;aveuglement</em> est utilisé pour randomiser de manière déterministe la clé de session pour chaque saut.</p>
+</div>
+<div class="paragraph data-line-380">
+<p>En pratique, cette petite astuce nous permet de garder le paquet oignon aussi compact que possible tout en conservant les propriétés de sécurité souhaitées.</p>
+</div>
+<div class="paragraph data-line-382">
+<p>La clé de session pour le saut <code>i</code> est dérivée à l&#8217;aide de la clé publique du nœud et du secret partagé dérivé du saut <code>i – 1</code> :</p>
+</div>
+<div class="listingblock data-line-383">
+<div class="content">
+<pre class="highlight"><code>session_key_i = session_key_{i-1} * SHA-256(node_pubkey_{i-1} || shared_secret_{i-1})</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-387">
+<p>En d&#8217;autres termes, nous prenons la clé de session du saut précédent et la multiplions par une valeur dérivée de la clé publique et du secret partagé dérivé pour ce saut.</p>
+</div>
+<div class="paragraph data-line-389">
+<p>Comme la multiplication de courbe elliptique peut être effectuée sur une clé publique sans connaître la clé privée, chaque saut est capable de rerandomiser la clé de session pour le saut suivant de manière déterministe.</p>
+</div>
+<div class="paragraph data-line-391">
+<p>Le créateur du paquet oignon connaît tous les secrets partagés (car il a crypté le paquet de manière unique pour chaque saut) et est donc en mesure de dériver tous les facteurs aveuglants.</p>
+</div>
+<div class="paragraph data-line-393">
+<p>Cette connaissance leur permet de dériver toutes les clés de session utilisées en amont lors de la génération des paquets.</p>
+</div>
+<div class="paragraph data-line-395">
+<p>Notez que le tout premier saut utilise la clé de session d&#8217;origine générée car cette clé est utilisée pour lancer l&#8217;aveuglement de la clé de session par chaque saut suivant.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-399">
+<h3 id="wrapping_the_onion">Envelopper les couches d&#8217;oignon</h3>
+<div class="paragraph data-line-401">
+<p>Le processus d&#8217;enveloppement de l&#8217;oignon est détaillé dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction">BOLT #4: Onion Routing, Packet Construction</a>.</p>
+</div>
+<div class="paragraph data-line-403">
+<p>Dans cette section, nous décrirons ce processus à un niveau élevé et quelque peu simplifié, en omettant certains détails.</p>
+</div>
+<div class="sect3 data-line-407">
+<h4 id="fixed_length_onions">Oignons à longueur fixe</h4>
+<div class="paragraph data-line-409">
+<p>Nous avons mentionné le fait qu&#8217;aucun des nœuds "de saut" ne sait quelle est la longueur du chemin, ni où il se trouve dans le chemin. Comment est-ce possible ?</p>
+</div>
+<div class="paragraph data-line-411">
+<p>Si vous disposez d&#8217;un ensemble d&#8217;instructions de directions, même cryptées, ne pouvez-vous pas déterminer la distance qui vous sépare du début ou de la fin simplement en regardant <em>où</em> vous vous trouvez dans la liste d&#8217;instructions de directions ?</p>
+</div>
+<div class="paragraph data-line-413">
+<p>L&#8217;astuce utilisée dans le routage en oignon est de toujours faire en sorte que le chemin (la liste des directions) ait la même longueur pour chaque nœud. Ceci est réalisé en gardant le paquet oignon de la même longueur à chaque étape.</p>
+</div>
+<div class="paragraph data-line-415">
+<p>À chaque saut, la charge utile de saut apparaît au début de la charge utile d&#8217;oignon, suivie de <em>ce qui semble être</em> 19 autres charges utiles de saut. Chaque saut se considère comme le premier de 20 sauts.</p>
+</div>
+<div class="admonitionblock tip data-line-418">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-419">
+<p>La charge utile de l&#8217;oignon est de 1 300 octets. Chaque charge utile de saut est composée de 65 octets ou moins (complétée jusqu&#8217;à 65 octets si nécessaire). Ainsi, la charge utile totale de l&#8217;oignon peut contenir 20 charges utiles de saut (1300 = 20 fois 65). Le chemin routé en oignon maximum est donc de 20 sauts.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-422">
+<p>Au fur et à mesure que chaque couche est "épluchée", davantage de données de remplissage (essentiellement des données "déchet") sont ajoutées à la fin de la charge utile de l&#8217;oignon afin que le saut suivant obtienne un oignon de la même taille et soit à nouveau le "premier saut" dans l&#8217;oignon.</p>
+</div>
+<div class="paragraph data-line-424">
+<p>La taille de l&#8217;oignon est de 1 366 octets, structurés comme illustré dans <a href="#onion_packet">Le paquet oignon</a> :</p>
+</div>
+<div class="dlist data-line-426">
+<dl>
+<dt class="hdlist1">1 octet </dt>
+<dd>
+<p>Un octet de version</p>
+</dd>
+<dt class="hdlist1">33 octets</dt>
+<dd>
+<p>Une clé de session publique compressée (<a href="#session_key">La clé de session d&#8217;Alice</a>) à partir de laquelle le secret partagé par saut (<a href="#shared_secret">Génération d&#8217;un secret partagé</a>) peut être généré sans révéler l&#8217;identité d&#8217;Alice</p>
+</dd>
+<dt class="hdlist1">1 300 octets</dt>
+<dd>
+<p>La <em>charge utile de l’oignon</em> réelle contenant les instructions pour chaque saut</p>
+</dd>
+<dt class="hdlist1">32 octets</dt>
+<dd>
+<p>Une somme de contrôle d&#8217;intégrité HMAC</p>
+</dd>
+</dl>
+</div>
+<div id="onion_packet" class="imageblock data-line-433">
+<div class="content">
+<img src="images/mtln_1015.png" alt="mtln 1015">
+</div>
+<div class="title">Figure 15. Le paquet oignon</div>
+</div>
+<div class="paragraph data-line-435">
+<p>Une caractéristique unique de Sphinx en tant que format de paquet mix-net est que, plutôt que d&#8217;inclure une clé de session distincte pour chaque saut de la route, ce qui augmenterait considérablement la taille du paquet mix-net, un schéma intelligent de <em>d&#8217;aveuglement</em> est utilisé pour randomiser de manière déterministe la clé de session pour chaque saut.</p>
+</div>
+<div class="paragraph data-line-437">
+<p>En pratique, cette petite astuce nous permet de garder le paquet oignon aussi compact que possible tout en conservant les propriétés de sécurité souhaitées.</p>
+</div>
+</div>
+<div class="sect3 data-line-439">
+<h4 id="_emballage_de_loignon_résumé">Emballage de l&#8217;oignon (Résumé)</h4>
+<div class="paragraph data-line-441">
+<p>Voici le processus d&#8217;emballage de l&#8217;oignon, résumé ci-dessous. Revenez à cette liste lorsque nous explorerons chaque étape avec notre exemple dans le monde réel.</p>
+</div>
+<div class="paragraph data-line-443">
+<p>Pour chaque saut, l&#8217;expéditeur (Alice) répète le même processus :</p>
+</div>
+<div class="olist arabic data-line-445">
+<ol class="arabic">
+<li class="data-line-445">
+<p>Alice génère le secret partagé par saut et les clés rho, mu et pad.</p>
+</li>
+<li class="data-line-447">
+<p>Alice génère 1 300 octets de remplissage et remplit le champ de charge utile de l&#8217;oignon avec ces 1 300 octets de remplissage.</p>
+</li>
+<li class="data-line-449">
+<p>Alice calcule le HMAC pour la charge utile du saut (des zéros pour le saut final).</p>
+</li>
+<li class="data-line-451">
+<p>Alice calcule la longueur de la charge utile du saut + HMAC + l&#8217;espace nécessaire pour stocker la longueur elle-même.</p>
+</li>
+<li class="data-line-453">
+<p>Alice décale vers la droite la charge utile de l&#8217;oignon de l&#8217;espace nécessaire calculé pour s&#8217;adapter à la charge utile du saut. Les données de "remplissage" les plus à droite sont supprimées, laissant suffisamment d&#8217;espace sur la gauche pour la charge utile.</p>
+</li>
+<li class="data-line-455">
+<p>Alice insère la longueur + la charge utile de saut + HMAC au début du champ de charge utile dans l&#8217;espace créé par le déplacement du remplissage.</p>
+</li>
+<li class="data-line-457">
+<p>Alice utilise la clé rho pour générer un remplissage unique de 1 300 octets.</p>
+</li>
+<li class="data-line-459">
+<p>Alice obscurcit toute la charge utile de l&#8217;oignon en effectuant une opération XOR avec les octets générés à partir de rho.</p>
+</li>
+<li class="data-line-461">
+<p>Alice calcule le HMAC de la charge utile de l’oignon, en utilisant la clé mu.</p>
+</li>
+<li class="data-line-463">
+<p>Alice ajoute la clé publique de session (afin que le saut puisse calculer le secret partagé).</p>
+</li>
+<li class="data-line-465">
+<p>Alice ajoute le numéro de version.</p>
+</li>
+<li class="data-line-467">
+<p>Alice réaveugle de manière déterministe la clé de session en utilisant une valeur dérivée en hachant le secret partagé et la clé publique du saut précédent.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-469">
+<p>Ensuite, Alice répète le processus. Les nouvelles clés sont calculées, la charge utile de l&#8217;oignon est décalée (en supprimant plus de déchets), la nouvelle charge utile de saut est ajoutée au début et toute la charge utile de l&#8217;oignon est encrypté avec le flux d&#8217;octets rho pour le saut suivant.</p>
+</div>
+<div class="paragraph data-line-471">
+<p>Pour le saut final, le HMAC inclus à l&#8217;étape 3 au-dessus des instructions en texte brut est en fait <em>entièrement des zéros</em>.
+Le dernier saut utilise ce signal pour déterminer qu&#8217;il s&#8217;agit bien du dernier saut de la route.
+Il est également possible d&#8217;utiliser le fait que le <code>short_chan_id</code> inclus dans la charge utile pour indiquer le "prochain saut" est entièrement constitué de zéros.</p>
+</div>
+<div class="paragraph data-line-475">
+<p>Notez qu&#8217;à chaque phase la clé mu est utilisée pour générer un HMAC sur le paquet oignon <em>encrypté</em> (du point de vue du nœud traitant la charge utile), ainsi que sur le contenu du paquet avec une seule couche d&#8217;encryptage retirée.
+Ce HMAC externe permet au nœud traitant le paquet de vérifier l&#8217;intégrité du paquet oignon (aucun octet modifié).
+Le HMAC interne est ensuite révélé lors de l&#8217;inverse de la routine "décaler et encrypter" décrite précédemment, qui sert de HMAC <em>externe</em> pour le saut suivant.</p>
+</div>
+</div>
+<div class="sect3 data-line-479">
+<h4 id="_emballage_de_la_charge_utile_du_saut_de_dina">Emballage de la charge utile du saut de Dina</h4>
+<div class="paragraph data-line-481">
+<p>Pour rappel, l&#8217;oignon est enveloppé en commençant par la fin du chemin à partir de Dina, le nœud final ou destinataire. Le chemin est ensuite construit en sens inverse jusqu&#8217;à l&#8217;expéditeur, Alice.</p>
+</div>
+<div class="paragraph data-line-483">
+<p>Alice commence par un champ vide de 1 300 octets, la <em>charge utile de l’oignon</em> de longueur fixe. Ensuite, elle remplit la charge utile d&#8217;oignon avec un "remplissage" de flux d&#8217;octets pseudo-aléatoirement généré à partir de la clé pad.</p>
+</div>
+<div class="paragraph data-line-485">
+<p>Ceci est illustré dans <a href="#onion_payload_filler">Remplissement de la charge utile d&#8217;oignon avec un flux d&#8217;octets aléatoire</a>.</p>
+</div>
+<div class="admonitionblock note data-line-488">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-489">
+<p>La génération de flux d&#8217;octets aléatoires utilise l&#8217;algorithme ChaCha20, comme un générateur de nombres pseudo-aléatoires cryptographiques sécurisés (CSPRNG). Un tel algorithme générera un flux déterministe, long et non répétitif d&#8217;octets apparemment aléatoires à partir d&#8217;une graine initiale. Les détails sont spécifiés dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#pseudo-random-byte-stream" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#pseudo-random-byte-stream">BOLT #4: Onion Routing, Pseudo Random Byte Stream</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="onion_payload_filler" class="imageblock data-line-494">
+<div class="content">
+<img src="images/mtln_1016.png" alt="mtln 1016">
+</div>
+<div class="title">Figure 16. Remplissement de la charge utile d&#8217;oignon avec un flux d&#8217;octets aléatoire</div>
+</div>
+<div class="paragraph data-line-496">
+<p>Alice va maintenant insérer la charge utile de saut de Dina par le côté gauche du tableau de 1 300 octets, en décalant le remplissage vers la droite et en supprimant tout ce qui déborde. Ceci est visualisé dans <a href="#onion_add_dina">Ajout de la charge utile de saut de Dina</a>.</p>
+</div>
+<div id="onion_add_dina" class="imageblock data-line-500">
+<div class="content">
+<img src="images/mtln_1017.png" alt="mtln 1017">
+</div>
+<div class="title">Figure 17. Ajout de la charge utile de saut de Dina</div>
+</div>
+<div class="paragraph data-line-502">
+<p>Une autre façon de voir cela est qu&#8217;Alice mesure la longueur de la charge utile de saut de Dina, déplace le remplissage vers la droite pour créer un espace égal sur le côté gauche de la charge utile de l&#8217;oignon et insère la charge utile de Dina dans cet espace.</p>
+</div>
+<div class="paragraph data-line-504">
+<p>La ligne suivante, nous voyons le résultat : la charge utile de l&#8217;oignon de 1 300 octets contient la charge utile de saut de Dina, puis le flux d&#8217;octets de remplissage occupant le reste de l&#8217;espace.</p>
+</div>
+<div class="paragraph data-line-506">
+<p>Ensuite, Alice obscurcit toute la charge utile de l&#8217;oignon afin que <em>seule Dina</em> puisse la lire.</p>
+</div>
+<div class="paragraph data-line-508">
+<p>Pour ce faire, Alice génère un flux d&#8217;octets à l&#8217;aide de la clé rho (que Dina connaît également). Alice utilise un ou exclusif au niveau des bits (XOR) entre les bits de la charge utile de l&#8217;oignon et le flux d&#8217;octets créé à partir de rho. Le résultat apparaît comme un flux d&#8217;octets aléatoires (ou encryptés) d&#8217;une longueur de 1 300 octets. Cette étape est illustrée dans <a href="#onion_obfuscate_dina">Obscurcissement de la charge utile de l&#8217;oignon</a>.</p>
+</div>
+<div id="onion_obfuscate_dina" class="imageblock data-line-512">
+<div class="content">
+<img src="images/mtln_1018.png" alt="mtln 1018">
+</div>
+<div class="title">Figure 18. Obscurcissement de la charge utile de l&#8217;oignon</div>
+</div>
+<div class="paragraph data-line-514">
+<p>L&#8217;une des propriétés de XOR est que si vous le faites deux fois, vous revenez aux données d&#8217;origine. Comme nous le verrons dans <a href="#bobDeobfuscates">Bob désobscurcit sa charge utile de saut</a>, si Dina applique la même opération XOR avec le flux d&#8217;octets généré à partir de rho, il révélera la charge utile originale de l&#8217;oignon.</p>
+</div>
+<div class="admonitionblock tip data-line-517">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-518">
+<p>XOR est une fonction <em>involutive</em>, ce qui signifie que si elle est appliquée deux fois, elle se défait par elle-même. Plus précisément XOR(XOR(<em>a</em>, <em>b</em>), <em>b</em>) = <em>a</em>. Cette propriété est largement utilisée dans la cryptographie à clé symétrique.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-521">
+<p>Parce que seules Alice et Dina ont la clé rho (dérivée du secret partagé d&#8217;Alice et Dina), elles seules peuvent le faire. En fait, cela crypte la charge utile de l&#8217;oignon pour les seuls yeux de Dina.</p>
+</div>
+<div class="paragraph data-line-523">
+<p>Enfin, Alice calcule un code d&#8217;authentification du message basé sur le hachage (HMAC) pour la charge utile de Dina, qui utilise la clé mu comme clé d&#8217;initialisation. Ceci est illustré dans <a href="#dina_hop_payload_hmac">Ajout d&#8217;une somme de contrôle d&#8217;intégrité HMAC à la charge utile de saut de Dina</a>.</p>
+</div>
+<div id="dina_hop_payload_hmac" class="imageblock data-line-527">
+<div class="content">
+<img src="images/mtln_1019.png" alt="mtln 1019">
+</div>
+<div class="title">Figure 19. Ajout d&#8217;une somme de contrôle d&#8217;intégrité HMAC à la charge utile de saut de Dina</div>
+</div>
+<div class="sect4 data-line-529">
+<h5 id="_protection_et_détection_dattaques_par_rejeu_pour_le_routage_en_oignon">Protection et détection d&#8217;attaques par rejeu pour le routage en oignon</h5>
+<div class="paragraph data-line-531">
+<p>Le HMAC agit comme une somme de contrôle sécurisée et aide Dina à vérifier l&#8217;intégrité de la charge utile du saut. Le HMAC de 32 octets est ajouté à la charge utile de saut de Dina.
+Notez que nous calculons le HMAC sur les données <em>encryptées</em> plutôt que sur les données en texte brut.
+Ceci est connu sous le nom de <em>encrypt-then-mac</em> en anglais (traduit littéralement "encrypter-puis-mac") et est la méthode recommandée pour utiliser un MAC, car il fournit à la fois l&#8217;intégrité du texte brut <em>et</em> du texte chiffré.</p>
+</div>
+<div class="paragraph data-line-535">
+<p>Le cryptage authentifié moderne permet également l&#8217;utilisation d&#8217;un ensemble facultatif d&#8217;octets en clair à authentifier également, appelé <em>données associées</em>.
+En pratique, il s&#8217;agit généralement d&#8217;un en-tête de paquet en texte brut ou d&#8217;autres informations auxiliaires.
+En incluant ces données associées dans la charge utile à authentifier (transformée en un MAC), le vérificateur du MAC s&#8217;assure que ces données associées n&#8217;ont pas été falsifiées (par exemple, substitution de l&#8217;en-tête en texte clair d&#8217;un paquet encrypté).</p>
+</div>
+<div class="paragraph data-line-539">
+<p>Dans le cadre du Lightning Network, ces données associées sont utilisées pour <em>renforcer</em> la protection contre les attaques par rejeu sur ce mécanisme.
+Comme nous l&#8217;apprendrons dans ce qui suit, la protection contre les rejeux garantit qu&#8217;un attaquant ne peut pas <em>retransmettre</em> (rejouer, ou "replay" en anglais) un paquet sur le réseau et observer son chemin résultant.
+Au lieu de cela, les nœuds intermédiaires peuvent utiliser les mesures de protection contre les rejeux définies pour détecter et rejeter un paquet rejoué.
+Le format de paquet Sphinx de base utilise un journal de toutes les clés secrètes éphémères utilisées pour détecter les rejeux.
+Si une clé secrète est réutilisée, le nœud peut la détecter et rejeter le paquet.</p>
+</div>
+<div class="paragraph data-line-545">
+<p>La nature des HTLC dans le Lightning Network nous permet de renforcer davantage la protection contre les rejeux en ajoutant une incitation <em>économique</em> supplémentaire.
+N&#8217;oubliez pas que le hachage de paiement d&#8217;un HTLC ne peut être utilisé en toute sécurité (pour un paiement complet) qu&#8217;une seule fois.
+Si un hachage de paiement est à nouveau utilisé et traverse un nœud qui a déjà vu le secret de paiement pour ce hachage, il peut alors simplement retirer les fonds et collecter le montant total du paiement sans le transférer !
+Nous pouvons utiliser ce fait pour renforcer la protection contre les rejeux en exigeant que le <em>hachage de paiement</em> soit inclus dans notre calcul HMAC en tant que données associées.
+Avec cette étape supplémentaire, tenter de rejouer un paquet oignon nécessite également que l&#8217;expéditeur s&#8217;engage à utiliser le <em>même</em> hachage de paiement.
+Par conséquent, en plus de la protection normale contre les rejeux, un attaquant risque également de perdre la totalité du HTLC rejoué.</p>
+</div>
+<div class="paragraph data-line-552">
+<p>Une considération avec l&#8217;ensemble toujours croissant de clés de session stockées pour la protection contre les rejeux est : les nœuds sont-ils capables de récupérer cet espace ?
+Dans le cadre du Lightning Network, la réponse est : oui !
+Encore une fois, en raison des attributs uniques de la construction des HTLC, nous pouvons apporter une amélioration supplémentaire par rapport au protocole Sphinx de base.
+Étant donné que les HTLC sont des contrats <em>avec un timelock</em> basés sur la hauteur de bloc absolue, une fois qu&#8217;un HTLC a expiré, le contrat est effectivement définitivement fermé.
+Par conséquent, les nœuds peuvent utiliser cette hauteur d&#8217;expiration CLTV (l&#8217;opérateur CHECKLOCKTIMEVERIFY) comme indicateur pour savoir quand il est sûr de jeter une entrée dans le journal anti-rejeux.</p>
+</div>
+</div>
+</div>
+<div class="sect3 data-line-558">
+<h4 id="_emballage_de_la_charge_utile_du_saut_de_chan">Emballage de la charge utile du saut de Chan</h4>
+<div class="paragraph data-line-560">
+<p>Dans <a href="#chan_onion_wrapping">Envelopper l&#8217;oignon pour Chan</a> nous voyons les étapes utilisées pour envelopper la charge utile du saut de Chan dans l&#8217;oignon. Ce sont les mêmes étapes qu&#8217;Alice a utilisées pour envelopper la charge utile du saut de Dina.</p>
+</div>
+<div id="chan_onion_wrapping" class="imageblock data-line-564">
+<div class="content">
+<img src="images/mtln_1020.png" alt="mtln 1020">
+</div>
+<div class="title">Figure 20. Envelopper l&#8217;oignon pour Chan</div>
+</div>
+<div class="paragraph data-line-566">
+<p>Alice commence avec la charge utile de l&#8217;oignon de 1 300 octets créée pour Dina. Les 65 premiers octets (ou moins) de celle-ci sont la charge utile de Dina obscurcie et le reste est du remplissage. Alice doit faire attention à ne pas écraser la charge utile de Dina.</p>
+</div>
+<div class="paragraph data-line-568">
+<p>Ensuite, Alice doit localiser la clé publique éphémère (qui a été générée au tout début de chaque saut) qui sera ajoutée au paquet de routage de ce saut.</p>
+</div>
+<div class="paragraph data-line-570">
+<p>N&#8217;oubliez pas qu&#8217;au lieu d&#8217;inclure une clé publique éphémère unique (que l&#8217;expéditeur et le nœud intermédiaire utilisent dans une opération ECDH pour générer un secret partagé), Sphinx utilise une seule clé publique éphémère qui est randomisée de manière déterministe à chaque saut.</p>
+</div>
+<div class="paragraph data-line-572">
+<p>Lors du traitement du paquet, Dina utilisera son secret partagé et sa clé publique pour dériver la valeur aveuglante (<code>b_dina</code>) et l&#8217;utilisera pour rerandomiser la clé publique éphémère, dans une opération identique à ce qu&#8217;Alice effectue lors de la construction initiale du paquet.</p>
+</div>
+<div class="paragraph data-line-574">
+<p>Alice ajoute une somme de contrôle HMAC interne à la charge utile de Chan et l&#8217;insère à "au début" (côté gauche) de la charge utile en oignon, déplaçant la charge utile existante vers la droite d&#8217;une longueur égale.
+Rappelez-vous qu&#8217;il y a effectivement <em>deux</em> HMAC utilisés dans le schéma : le HMAC externe et le HMAC interne.
+Dans ce cas, le HMAC <em>interne</em> de Chan est en fait le HMAC <em>externe</em> de Dina.</p>
+</div>
+<div class="paragraph data-line-578">
+<p>Maintenant, la charge utile de Chan est au début de l&#8217;oignon. Quand Chan voit cela, il n&#8217;a aucune idée du nombre de charges utiles avant ou après. Cela ressemble toujours au premier des 20 sauts !</p>
+</div>
+<div class="paragraph data-line-580">
+<p>Ensuite, Alice masque toute la charge utile par XOR avec le flux d&#8217;octets généré à partir de la clé Alice-Chan rho. Seuls Alice et Chan ont cette clé rho, et eux seuls peuvent produire le flux d&#8217;octets pour obscurcir et désobscurcir l&#8217;oignon.
+Enfin, comme nous l&#8217;avons fait à l&#8217;étape précédente, nous calculons le HMAC externe de Chan, qui est ce qu&#8217;il utilisera pour vérifier l&#8217;intégrité du paquet oignon encrypté.</p>
+</div>
+</div>
+<div class="sect3 data-line-583">
+<h4 id="_emballage_de_la_charge_utile_du_saut_de_bob">Emballage de la charge utile du saut de Bob</h4>
+<div class="paragraph data-line-585">
+<p>Dans <a href="#bob_onion_wrapping">Envelopper l&#8217;oignon pour Bob</a> nous voyons les étapes utilisées pour envelopper la charge utile de saut de Bob dans l&#8217;oignon.</p>
+</div>
+<div class="paragraph data-line-587">
+<p>Bon, désormais, c&#8217;est facile !</p>
+</div>
+<div class="paragraph data-line-589">
+<p>Commencer par la charge utile de l&#8217;oignon (obscurcie) contenant les charges utiles de saut de Chan et Dina.</p>
+</div>
+<div class="paragraph data-line-591">
+<p>Obtenir la clé de session pour ce saut dérivée du facteur d&#8217;aveuglement généré par le saut précédent.
+Inclure le HMAC externe du saut précédent comme HMAC interne de ce saut.
+Insérer la charge utile du saut de Bob au début et décaler tout le reste vers la droite, en supprimant un morceau de la taille de la charge utile du saut de Bob à partir de la fin (c&#8217;était du remplissage de toute façon).</p>
+</div>
+<div class="paragraph data-line-595">
+<p>Obscurcir le tout avec une opération XOR avec la clé rho du secret partagé Alice-Bob afin que seul Bob puisse le déballer.</p>
+</div>
+<div class="paragraph data-line-597">
+<p>Calculer le HMAC externe et collez-le à la fin de la charge utile du saut de Bob.</p>
+</div>
+<div id="bob_onion_wrapping" class="imageblock data-line-601">
+<div class="content">
+<img src="images/mtln_1021.png" alt="mtln 1021">
+</div>
+<div class="title">Figure 21. Envelopper l&#8217;oignon pour Bob</div>
+</div>
+</div>
+<div class="sect3 data-line-604">
+<h4 id="_le_paquet_oignon_final">Le paquet oignon final</h4>
+<div class="paragraph data-line-606">
+<p>La charge utile de l&#8217;oignon final est prête à être envoyée à Bob. Alice n&#8217;a pas besoin d&#8217;ajouter d&#8217;autres charges utiles de saut.</p>
+</div>
+<div class="paragraph data-line-608">
+<p>Alice calcule un HMAC pour la charge utile de l&#8217;oignon afin de la sécuriser cryptographiquement avec une somme de contrôle que Bob peut vérifier.</p>
+</div>
+<div class="paragraph data-line-610">
+<p>Alice ajoute une clé de session publique de 33 octets qui sera utilisée par chaque saut pour générer un secret partagé et les clés rho, mu et pad.</p>
+</div>
+<div class="paragraph data-line-612">
+<p>Enfin, Alice met le numéro de version de l&#8217;oignon (0 actuellement) au début. Cela permet de futures mises à niveau du format de paquet oignon.</p>
+</div>
+<div class="paragraph data-line-614">
+<p>Le résultat peut être vu dans <a href="#onion_packet_2">Le paquet oignon</a>.</p>
+</div>
+<div id="onion_packet_2" class="imageblock data-line-618">
+<div class="content">
+<img src="images/mtln_1015.png" alt="mtln 1015">
+</div>
+<div class="title">Figure 22. Le paquet oignon</div>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-620">
+<h3 id="_envoi_de_loignon">Envoi de l&#8217;oignon</h3>
+<div class="paragraph data-line-622">
+<p>Dans cette section, nous verrons comment le paquet oignon est transmis et comment les HTLC sont déployés le long du chemin.</p>
+</div>
+<div class="sect3 data-line-624">
+<h4 id="_le_message_update_add_htlc">Le message update_add_htlc</h4>
+<div class="paragraph data-line-626">
+<p>Les paquets oignon sont envoyés dans le cadre du message update_add_htlc. Si vous vous souvenez de <a href="#update_add_htlc">[update_add_htlc]</a>, dans <a href="#channel_operation">[channel_operation]</a>, nous avons vu que le contenu du message update_add_htlc est le suivant :</p>
+</div>
+<div class="listingblock data-line-628">
+<div class="content">
+<pre>[channel_id:channel_id]
+[u64:id]
+[u64:amount_msat]
+[sha256:payment_hash]
+[u32:cltv_expiry]
+[1366*byte:onion_routing_packet]</pre>
+</div>
+</div>
+<div class="paragraph data-line-637">
+<p>Vous vous souviendrez que ce message est envoyé par un partenaire de canal pour demander à l&#8217;autre partenaire de canal d&#8217;ajouter un HTLC. C&#8217;est ainsi qu&#8217;Alice demandera à Bob d&#8217;ajouter un HTLC pour payer Dina. Vous comprenez maintenant le but du dernier champ, onion_routing_packet, qui fait 1 366 octets de long. C&#8217;est le paquet oignon entièrement emballé que nous venons de construire !</p>
+</div>
+</div>
+<div class="sect3 data-line-639">
+<h4 id="_alice_envoie_loignon_à_bob">Alice envoie l&#8217;oignon à Bob</h4>
+<div class="paragraph data-line-641">
+<p>Alice enverra le message update_add_htlc à Bob. Voyons ce que ce message contiendra :</p>
+</div>
+<div class="dlist data-line-643">
+<dl>
+<dt class="hdlist1">channel_id</dt>
+<dd>
+<p>Ce champ contient l&#8217;ID du canal Alice-Bob, qui dans notre exemple est 0000031e192ca1 (voir <a href="#alice_dina_path_detail">Un chemin détaillé construit à partir d&#8217;informations sur les canaux et les nœuds</a>).</p>
+</dd>
+<dt class="hdlist1">id</dt>
+<dd>
+<p>L&#8217;ID de ce HTLC dans ce canal, commençant à 0.</p>
+</dd>
+<dt class="hdlist1">amount_msat</dt>
+<dd>
+<p>Le montant du HTLC : 50 200 000 millisatoshis.</p>
+</dd>
+<dt class="hdlist1">payment_hash</dt>
+<dd>
+<p>Le hachage RIPEMD160(SHA-256) du paiement :</p>
+<div class="paragraph data-line-651">
+<p>9e017f6767971ed7cea17f98528d5f5c0ccb2c71.</p>
+</div>
+</dd>
+<dt class="hdlist1">cltv_expiry</dt>
+<dd>
+<p>Le délai d&#8217;expiration pour le HTLC sera de 700 058. Alice ajoute 20 blocs à l&#8217;expiration définie dans la charge utile de Bob selon le cltv_expiry_delta négocié par Bob.</p>
+</dd>
+<dt class="hdlist1">onion_routing_packet</dt>
+<dd>
+<p>Le dernier paquet oignon qu&#8217;Alice a construit avec toutes les charges utiles de sauts !</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3 data-line-657">
+<h4 id="_bob_vérifie_loignon">Bob vérifie l&#8217;oignon</h4>
+<div class="paragraph data-line-659">
+<p>Comme nous l&#8217;avons vu dans <a href="#channel_operation">[channel_operation]</a>, Bob ajoutera le HTLC aux transactions d&#8217;engagement et mettra à jour l&#8217;état du canal avec Alice.</p>
+</div>
+<div class="paragraph data-line-661">
+<p>Bob déballera l&#8217;oignon qu&#8217;il a reçu d&#8217;Alice comme suit :</p>
+</div>
+<div class="olist arabic data-line-663">
+<ol class="arabic">
+<li class="data-line-663">
+<p>Bob prend la clé de session du paquet oignon et en déduit le secret partagé de Alice-Bob.</p>
+</li>
+<li class="data-line-665">
+<p>Bob génère la clé mu à partir du secret partagé et l&#8217;utilise pour vérifier la somme de contrôle HMAC du paquet oignon.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-667">
+<p>Maintenant que Bob a généré la clé partagée et vérifié le HMAC, il peut commencer à déballer la charge utile de l&#8217;oignon de 1 300 octets à l&#8217;intérieur du paquet oignon. L&#8217;objectif est que Bob récupère sa propre charge utile de saut, puis transmette l&#8217;oignon restant au saut suivant.</p>
+</div>
+<div class="paragraph data-line-669">
+<p>Si Bob extrait et supprime sa charge utile de saut, l&#8217;oignon restant ne sera pas de 1 300 octets, il sera plus court ! Ainsi, le prochain saut saura qu&#8217;il n&#8217;est pas le premier saut et pourra détecter la longueur du chemin. Pour éviter cela, Bob doit ajouter plus de remplissage pour remplir l&#8217;oignon.</p>
+</div>
+</div>
+<div class="sect3 data-line-671">
+<h4 id="_bob_génère_du_remplissage">Bob génère du remplissage</h4>
+<div class="paragraph data-line-673">
+<p>Bob génère du remplissage d&#8217;une manière légèrement différente d&#8217;Alice, mais en suivant le même principe général.</p>
+</div>
+<div class="paragraph data-line-675">
+<p>Tout d&#8217;abord, Bob <em>allonge</em> la charge utile de l&#8217;oignon de 1 300 octets et les remplit avec des valeurs 0. Maintenant, le paquet oignon fait 2 600 octets, la première moitié contenant les données envoyées par Alice et la moitié suivante contenant des zéros. Cette opération est illustrée dans <a href="#bob_extends">Bob allonge la charge utile de l&#8217;oignon de 1 300 octets (remplis de zéros)</a>.</p>
+</div>
+<div id="bob_extends" class="imageblock data-line-679">
+<div class="content">
+<img src="images/mtln_1023.png" alt="Bob allonge la charge utile de l&#8217;oignon de 1 300 octets (remplis de zéros)">
+</div>
+<div class="title">Figure 23. Bob allonge la charge utile de l&#8217;oignon de 1 300 octets (remplis de zéros)</div>
+</div>
+<div class="paragraph data-line-681">
+<p>Cet espace vide sera obscurci et se transformera en "remplissage" par le même processus que Bob utilise pour désobscurcir sa propre charge utile de saut. Voyons comment cela fonctionne.</p>
+</div>
+</div>
+<div class="sect3 data-line-684">
+<h4 id="bobDeobfuscates">Bob désobscurcit sa charge utile de saut</h4>
+<div class="paragraph data-line-686">
+<p>Ensuite, Bob générera la clé rho à partir de la clé partagée Alice-Bob. Il l&#8217;utilisera pour générer un flux de 2 600 octets, en utilisant l&#8217;algorithme ChaCha20.</p>
+</div>
+<div class="admonitionblock tip data-line-689">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-690">
+<p>Les 1 300 premiers octets du flux d&#8217;octets générés par Bob sont exactement les mêmes que ceux générés par Alice à l&#8217;aide de la clé rho.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-693">
+<p>Ensuite, Bob applique les 2 600 octets du flux d&#8217;octets rho à la charge utile de l&#8217;oignon de 2 600 octets avec une opération XOR au niveau des bits.</p>
+</div>
+<div class="paragraph data-line-695">
+<p>Les 1 300 premiers octets seront désobscurcis par cette opération XOR, car c&#8217;est la même opération qu&#8217;Alice a appliquée et XOR est involutif. Ainsi, Bob va <em>révéler</em> sa charge utile de saut suivie de quelques données qui semblent brouillées.</p>
+</div>
+<div class="paragraph data-line-697">
+<p>Dans le même temps, l&#8217;application du flux d&#8217;octets rho aux 1 300 zéros qui ont été ajoutés à la charge utile de l&#8217;oignon les transformera en données de remplissage apparemment aléatoires. Cette opération est illustrée dans <a href="#bob_deobfuscates">Bob désobscurcit l&#8217;oignon, obscurcit le remplissage</a>.</p>
+</div>
+<div id="bob_deobfuscates" class="imageblock data-line-701">
+<div class="content">
+<img src="images/mtln_1024.png" alt="Bob désobscurcit l&#8217;oignon, obscurcit le remplissage">
+</div>
+<div class="title">Figure 24. Bob désobscurcit l&#8217;oignon, obscurcit le remplissage</div>
+</div>
+</div>
+<div class="sect3 data-line-703">
+<h4 id="_bob_extrait_le_hmac_externe_pour_le_prochain_saut">Bob extrait le HMAC externe pour le prochain saut</h4>
+<div class="paragraph data-line-705">
+<p>Rappelez-vous qu&#8217;un HMAC interne est inclus pour chaque saut, et qu&#8217;il deviendra ensuite le HMAC externe pour le <em>prochain</em> saut.
+Dans ce cas, Bob extrait le HMAC interne (il a déjà vérifié l&#8217;intégrité du paquet encrypté avec le HMAC externe) et le met de côté car il l&#8217;ajoutera au paquet désobscurci pour permettre à Chan de vérifier le HMAC de son paquet encrypté.</p>
+</div>
+</div>
+<div class="sect3 data-line-708">
+<h4 id="_bob_supprime_sa_charge_utile_et_décale_loignon_vers_la_gauche">Bob supprime sa charge utile et décale l&#8217;oignon vers la gauche</h4>
+<div class="paragraph data-line-710">
+<p>Maintenant, Bob peut retirer sa charge utile de saut du début de l&#8217;oignon et décaler vers la gauche les données restantes. Une quantité de données égale à la charge utile du saut de Bob de la seconde moitié, les 1 300 octets de remplissage, sera maintenant déplacée dans l&#8217;espace de la charge utile de l&#8217;oignon. Ceci est illustré dans <a href="#bob_removes_shifts">Bob supprime la charge utile du saut et décale le reste vers la gauche, comblant le vide avec un nouveau remplissage</a>.</p>
+</div>
+<div class="paragraph data-line-712">
+<p>Maintenant, Bob peut conserver la première moitié des 1 300 octets et ignorer l&#8217;allongement de 1 300 octets (le remplissage).</p>
+</div>
+<div class="paragraph data-line-714">
+<p>Bob a maintenant un paquet oignon de 1 300 octets à envoyer au saut suivant. Il est presque identique à la charge utile d&#8217;oignon qu&#8217;Alice avait créée pour Chan, sauf que les 65 derniers octets de remplissage environ ont été mis là par Bob et seront différents.</p>
+</div>
+<div id="bob_removes_shifts" class="imageblock data-line-718">
+<div class="content">
+<img src="images/mtln_1025.png" alt="Bob supprime la charge utile du saut et décale le reste vers la gauche, comblant le vide avec un nouveau remplissage">
+</div>
+<div class="title">Figure 25. Bob supprime la charge utile du saut et décale le reste vers la gauche, comblant le vide avec un nouveau remplissage</div>
+</div>
+<div class="paragraph pagebreak-before data-line-721">
+<p>Personne ne peut faire la différence entre le remplissage mis là par Alice et le remplissage mis là par Bob. Le remplissage est du remplissage ! Ce sont tous des octets aléatoires de toute façon. Notez que si Bob (ou l&#8217;un des autres alias de Bob) est présent dans la route à deux endroits distincts, ils peuvent faire la différence car le protocole de base utilise toujours le même hachage de paiement sur toute la route. Les paiements par trajets multiples atomiques ("Atomic multipath payments" ou "AMP" en anglais) et les Point Time-Locked Contracts (PTLC) éliminent le vecteur de corrélation en randomisant l&#8217;identifiant de paiement sur chaque route/saut.</p>
+</div>
+</div>
+<div class="sect3 data-line-723">
+<h4 id="_bob_construit_le_nouveau_paquet_oignon">Bob construit le nouveau paquet oignon</h4>
+<div class="paragraph data-line-725">
+<p>Bob copie maintenant la charge utile d&#8217;oignon dans le paquet oignon, ajoute le HMAC externe pour Chan, rerandomise la clé de session (de la même manière qu&#8217;Alice, l&#8217;expéditrice, l&#8217;a fait) avec l&#8217;opération de multiplication de courbe elliptique et ajoute un nouvel octet de version.</p>
+</div>
+<div class="paragraph data-line-727">
+<p>Pour rerandomiser la clé de session, Bob calcule d&#8217;abord le facteur d&#8217;aveuglement pour son saut, en utilisant sa clé publique de nœud et le secret partagé qu&#8217;il a dérivé :</p>
+</div>
+<div class="listingblock data-line-728">
+<div class="content">
+<pre class="highlight"><code>b_bob = SHA-256(P_bob || shared_secret_bob)</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-732">
+<p>Avec ceci généré, Bob rerandomise maintenant la clé de session en effectuant une multiplication EC (courbe elliptique) en utilisant sa clé de session et le facteur d&#8217;aveuglement :</p>
+</div>
+<div class="listingblock data-line-733">
+<div class="content">
+<pre class="highlight"><code>session_key_chan = session_key_bob * b_bob</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-737">
+<p>La clé publique <code>session_key_chan</code> sera ensuite ajoutée au début du paquet oignon pour être traitée par Chan.</p>
+</div>
+</div>
+<div class="sect3 data-line-739">
+<h4 id="_bob_vérifie_les_détails_du_htlc">Bob vérifie les détails du HTLC</h4>
+<div class="paragraph data-line-741">
+<p>La charge utile du saut de Bob contient les instructions nécessaires pour créer un HTLC pour Chan.</p>
+</div>
+<div class="paragraph data-line-743">
+<p>Dans la charge utile du saut, Bob trouve un short_channel_id, amt_to_forward et cltv_expiry.</p>
+</div>
+<div class="paragraph data-line-745">
+<p>Tout d&#8217;abord, Bob vérifie s&#8217;il a un canal avec cet ID court. Il découvre qu&#8217;il a un tel canal avec Chan.</p>
+</div>
+<div class="paragraph data-line-747">
+<p>Ensuite, Bob confirme que le montant sortant (50 100 satoshis) est inférieur au montant entrant (50 200 satoshis) et que, par conséquent, les attentes de Bob en matière de frais sont satisfaites.</p>
+</div>
+<div class="paragraph data-line-749">
+<p>De même, Bob vérifie que le cltv_expiry sortant est inférieur au cltv_expiry entrant, donnant à Bob suffisamment de temps pour réclamer le HTLC entrant en cas de violation.</p>
+</div>
+</div>
+<div class="sect3 data-line-751">
+<h4 id="_bob_envoie_le_update_add_htlc_à_chan">Bob envoie le update_add_htlc à Chan</h4>
+<div class="paragraph data-line-753">
+<p>Bob construit maintenant un HTLC à envoyer à Chan, comme suit :</p>
+</div>
+<div class="dlist data-line-755">
+<dl>
+<dt class="hdlist1">channel_id</dt>
+<dd>
+<p>Ce champ contient l&#8217;ID du canal Bob-Chan, qui dans notre exemple est 000004040a61f0 (voir <a href="#alice_dina_path_detail">Un chemin détaillé construit à partir d&#8217;informations sur les canaux et les nœuds</a>).</p>
+</dd>
+<dt class="hdlist1">id</dt>
+<dd>
+<p>L&#8217;ID de ce HTLC dans ce canal, commençant à 0.</p>
+</dd>
+<dt class="hdlist1">amount_msat</dt>
+<dd>
+<p>Le montant du HTLC : 50 100 000 millisatoshis.</p>
+</dd>
+<dt class="hdlist1">payment_hash</dt>
+<dd>
+<p>Le hachage RIPEMD160(SHA-256) du paiement :</p>
+<div class="paragraph data-line-763">
+<p>9e017f6767971ed7cea17f98528d5f5c0&amp;#x200b;ccb2c71.</p>
+</div>
+<div class="paragraph data-line-765">
+<p>C&#8217;est le même que le hachage de paiement provenant du HTLC d&#8217;Alice.</p>
+</div>
+</dd>
+<dt class="hdlist1">cltv_expiry</dt>
+<dd>
+<p>Le délai d&#8217;expiration pour le HTLC sera de 700 038.</p>
+</dd>
+<dt class="hdlist1">onion_routing_packet</dt>
+<dd>
+<p>Le paquet oignon que Bob a reconstruit après avoir supprimé sa charge utile de saut.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3 data-line-771">
+<h4 id="_chan_transmet_loignon">Chan transmet l&#8217;oignon</h4>
+<div class="paragraph data-line-773">
+<p>Chan répète exactement le même processus que Bob :</p>
+</div>
+<div class="olist arabic data-line-775">
+<ol class="arabic">
+<li class="data-line-775">
+<p>Chan reçoit le update_add_htlc et traite la demande de HTLC, en l&#8217;ajoutant aux transactions d&#8217;engagement.</p>
+</li>
+<li class="data-line-777">
+<p>Chan génère la clé partagée Alice-Chan et la sous-clé mu.</p>
+</li>
+<li class="data-line-779">
+<p>Chan vérifie le paquet oignon HMAC, puis extrait la <span class="keep-together">charge utile</span> de 1 300 octets.</p>
+</li>
+<li class="data-line-781">
+<p>Chan allonge la charge utile de l&#8217;oignon avec 1 300 octets supplémentaires, en remplissant cette partie avec des zéros.</p>
+</li>
+<li class="data-line-783">
+<p>Chan utilise la clé rho pour produire 2 600 octets.</p>
+</li>
+<li class="data-line-785">
+<p>Chan utilise le flux d&#8217;octets généré avec XOR et désobscurcit la charge utile de l&#8217;oignon. Simultanément, l&#8217;opération XOR obscurcit les 1 300 zéros supplémentaires, les transformant en remplissage.</p>
+</li>
+<li class="data-line-787">
+<p>Chan extrait le HMAC interne de la charge utile, qui deviendra le HMAC externe pour Dina.</p>
+</li>
+<li class="data-line-789">
+<p>Chan supprime sa charge utile de saut et décale vers la gauche la charge utile d&#8217;oignon de la même longueur. Une partie du remplissage généré dans les 1 300 octets allongés se déplace dans les 1 300 octets de la première moitié, devenant une partie de la charge utile de l&#8217;oignon.</p>
+</li>
+<li class="data-line-791">
+<p>Chan construit le paquet oignon pour Dina avec cette charge utile d&#8217;oignon.</p>
+</li>
+<li class="data-line-793">
+<p>Chan construit un message update_add_htlc pour Dina et y insère le paquet oignon.</p>
+</li>
+<li class="data-line-795">
+<p>Chan envoie le update_add_htlc à Dina.</p>
+</li>
+<li class="data-line-797">
+<p>Chan rerandomise la clé de session comme Bob l&#8217;a fait dans le saut précédent pour Dina.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3 data-line-799">
+<h4 id="_dina_reçoit_la_charge_utile_finale">Dina reçoit la charge utile finale</h4>
+<div class="paragraph data-line-801">
+<p>Lorsque Dina reçoit le message update_add_htlc de Chan, elle sait grâce au payment_hash qu&#8217;il s&#8217;agit d&#8217;un paiement pour elle. Elle sait qu&#8217;elle est le dernier saut de l&#8217;oignon.</p>
+</div>
+<div class="paragraph data-line-803">
+<p>Dina suit exactement le même processus que Bob et Chan pour vérifier et déballer l&#8217;oignon, sauf qu&#8217;elle ne construit pas de nouveau remplisseur et ne transmet rien. Au lieu de cela, Dina répond à Chan avec update_fulfill_htlc pour réclamer le HTLC. Le update_fulfill_htlc remonte le long du chemin jusqu&#8217;à ce qu&#8217;il atteigne Alice. Tous les HTLC sont réclamés et les soldes des canaux sont mis à jour. Le paiement est terminé !</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-805">
+<h3 id="_retourner_des_erreurs">Retourner des erreurs</h3>
+<div class="paragraph data-line-807">
+<p>Jusqu&#8217;à présent, nous avons examiné la propagation vers l&#8217;avant de l&#8217;oignon établissant les HTLC et la propagation vers l&#8217;arrière du secret de paiement qui dénoue les HTLC une fois le paiement réussi.</p>
+</div>
+<div class="paragraph data-line-809">
+<p>Il existe une autre fonction très importante du routage en oignon : le <em>retour d&#8217;erreur</em>. S&#8217;il y a un problème avec le paiement, l&#8217;oignon ou les sauts, nous devons propager une erreur vers l&#8217;arrière pour informer tous les nœuds de l&#8217;échec et dénouer tous les HTLC.</p>
+</div>
+<div class="paragraph data-line-811">
+<p>Les erreurs se répartissent généralement en trois catégories : les échecs d&#8217;oignon, les échecs de nœud et les échecs de canal. Celles-ci peuvent en outre être subdivisées en erreurs permanentes et transitoires. Enfin, certaines erreurs contiennent des mises à jour de canal pour faciliter les futures tentatives de livraison de paiement.</p>
+</div>
+<div class="admonitionblock note data-line-814">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-815">
+<p>Contrairement aux messages du protocole pair-à-pair (P2P) (défini dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/02-peer-protocol.md" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/02-peer-protocol.md">BOLT #2: Peer Protocol for Channel Management</a>), les erreurs ne sont pas envoyées sous forme de messages P2P mais sont enveloppées dans des paquets de retour d&#8217;oignon et suivent l&#8217;inverse du chemin d&#8217;oignon (rétropropagation).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-818">
+<p>Le retour d&#8217;erreur est défini dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#returning-errors" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#returning-errors">BOLT #4: Onion Routing, Returning Errors</a>.</p>
+</div>
+<div class="paragraph data-line-820">
+<p>Les erreurs sont encodées par le nœud de retour (celui qui a découvert une erreur) dans un <em>paquet de retour</em> comme suit :</p>
+</div>
+<div class="listingblock data-line-822">
+<div class="content">
+<pre>    [32*byte:hmac]
+    [u16:failure_len]
+    [failure_len*byte:failuremsg]
+    [u16:pad_len]
+    [pad_len*byte:pad]</pre>
+</div>
+</div>
+<div class="paragraph data-line-830">
+<p>La somme de contrôle de vérification HMAC du paquet de retour est calculée avec la clé um, générée à partir du secret partagé établi par l&#8217;oignon.</p>
+</div>
+<div class="admonitionblock tip data-line-833">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph data-line-834">
+<p>Le nom de clé um est l&#8217;inverse du nom mu, indiquant le même usage mais dans le sens opposé (rétropropagation).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-837">
+<p>Ensuite, le nœud de retour génère une clé ammag (inverse du mot "gamma") et obscurcit le paquet de retour en utilisant une opération XOR avec un flux d&#8217;octets généré à partir de ammag.</p>
+</div>
+<div class="paragraph data-line-839">
+<p>Enfin, le nœud de retour envoie le paquet de retour au saut à partir duquel il a reçu l&#8217;oignon original.</p>
+</div>
+<div class="paragraph data-line-841">
+<p>Chaque saut recevant une erreur générera une clé ammag et obscurcira à nouveau le paquet de retour en utilisant une opération XOR avec le flux d&#8217;octets de ammag.</p>
+</div>
+<div class="paragraph data-line-843">
+<p>Finalement, l&#8217;expéditeur (nœud d&#8217;origine) reçoit un paquet de retour. Il générera ensuite les clés ammag et um pour chaque saut et désobscurcira l&#8217;erreur de retour avec  XOR de manière itérative jusqu&#8217;à ce qu&#8217;il révèle le paquet de retour.</p>
+</div>
+<div class="sect3 data-line-846">
+<h4 id="failure_messages">Messages d&#8217;échec</h4>
+<div class="paragraph data-line-848">
+<p>Le message failuremsg est défini dans <a href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#failure-messages" data-href="https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#failure-messages">BOLT #4: Onion Routing, Failure Messages</a>.</p>
+</div>
+<div class="paragraph data-line-850">
+<p>Un message d&#8217;échec se compose d&#8217;un code d'échec sur deux octets suivi des données applicables à ce type d&#8217;échec.</p>
+</div>
+<div class="paragraph data-line-852">
+<p>L&#8217;octet supérieur du failure_code est un ensemble d&#8217;indicateurs binaires qui peuvent être combinés (avec un OR binaire) :</p>
+</div>
+<div class="dlist data-line-855">
+<dl>
+<dt class="hdlist1">0x8000 (<code>BADONION</code>)</dt>
+<dd>
+<p>Oignon non décomposable encrypté par le pair expéditeur</p>
+</dd>
+<dt class="hdlist1">0x4000 (<code>PERM</code>)</dt>
+<dd>
+<p>Défaillance permanente (autrement transitoire)</p>
+</dd>
+<dt class="hdlist1">0x2000 (<code>NODE</code>)</dt>
+<dd>
+<p>Défaillance de nœud (autrement de canal)</p>
+</dd>
+<dt class="hdlist1">0x1000 (<code>UPDATE</code>)</dt>
+<dd>
+<p>Nouvelle mise à jour du canal ci-jointe</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph data-line-861">
+<p>Les types de défaillance indiqués dans <a href="#failure_types_table">[failure_types_table]</a> sont actuellement définis.</p>
+</div>
+<div class="paragraph data-line-863">
+<p>Unresolved directive in &lt;stdin&gt; - include::failure_types_table.asciidoc[]</p>
+</div>
+<div class="sect4 data-line-866">
+<h5 id="stuck_payments">Paiements bloqués</h5>
+<div class="paragraph data-line-868">
+<p>Dans l&#8217;implémentation actuelle du Lightning Network, il est possible qu&#8217;une tentative de paiement se trouve <em>bloquée</em> : ni exécutée ni annulée par une erreur. Cela peut se produire en raison d&#8217;un bogue sur un nœud intermédiaire, d&#8217;un nœud qui se déconnecte lors de la gestion des HTLC ou d&#8217;un nœud malveillant retenant des HTLC sans signaler d&#8217;erreur. Dans tous ces cas, le HTLC ne peut pas être résolu avant son expiration. Le timelock (CLTV) qui est défini sur chaque HTLC permet de résoudre cette condition (parmi les autres défaillances de routage HTLC et de canaux possibles).</p>
+</div>
+<div class="paragraph data-line-870">
+<p>Cependant, cela signifie que l&#8217;expéditeur du HTLC doit attendre jusqu&#8217;à l&#8217;expiration, et les fonds engagés dans ce HTLC restent indisponibles jusqu&#8217;à l&#8217;expiration du HTLC. De plus, l&#8217;expéditeur <em>ne peut pas réessayer</em> ce même paiement, car s&#8217;il le fait, il court le risque <em>qu&#8217;à la fois</em> le paiement original et le paiement réessayé réussissent — le destinataire est payé deux fois. En effet, une fois envoyé, un HTLC ne peut pas être "annulé" par l&#8217;expéditeur — il doit échouer ou expirer. Les paiements bloqués, bien que rares, créent une expérience utilisateur indésirable, où le porte-monnaie de l&#8217;utilisateur ne peut pas payer ou annuler un paiement.</p>
+</div>
+<div class="paragraph data-line-872">
+<p>Une solution proposée à ce problème est appelée <em>paiements sans blocage</em>, et elle dépend des Point Time-Locked Contracts (PTLC), qui sont des contrats de paiement qui utilisent une primitive cryptographique différente de celle des HTLC (c&#8217;est-à-dire l&#8217;ajout de points sur la courbe elliptique au lieu d&#8217;un hachage et d&#8217;une préimage secrète). Les PTLC sont compliqués avec ECDSA mais beaucoup plus faciles avec les fonctionnalités de signature Taproot et Schnorr de Bitcoin, qui ont récemment été verrouillées pour une activation en novembre 2021. Il est prévu que les PTLC soient implémentés dans le Lightning Network après l&#8217;activation de ces fonctionnalités Bitcoin.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-875">
+<h3 id="keysend">Les paiements spontanés Keysend</h3>
+<div class="paragraph data-line-877">
+<p>Dans le flux de paiement décrit plus haut dans le chapitre, nous avons supposé que Dina
+reçoive une facture d&#8217;Alice "hors bande" ou qu&#8217;elle l&#8217;obtienne via un mécanisme
+sans rapport avec le protocole (généralement copier/coller ou scan d&#8217;un code QR). Cette caractéristique
+signifie que le processus de paiement se déroule toujours en deux étapes : d&#8217;abord, l&#8217;expéditeur
+obtient une facture, et deuxièmement, utilise le hachage de paiement (encodé dans la facture) pour
+router avec succès un HTLC. L&#8217;aller-retour supplémentaire nécessaire pour obtenir une facture
+avant d&#8217;effectuer un paiement peut être un goulet d&#8217;étranglement dans les applications qui impliquent
+la diffusion des micropaiements via Lightning. Et si nous pouvions simplement "pousser" un paiement
+spontanément, sans avoir à obtenir une facture du destinataire
+au préalable ? Le protocole <code>keysend</code> est une extension de bout en bout (seulement l&#8217;expéditeur et
+le récepteur en sont conscients) du protocole Lightning qui permet des "push" spontanés
+de paiements.</p>
+</div>
+<div class="sect3 data-line-890">
+<h4 id="_enregistrements_tlv_doignon_personnalisés">Enregistrements TLV d&#8217;oignon personnalisés</h4>
+<div class="paragraph data-line-892">
+<p>Le protocole Lightning moderne utilise l&#8217;encodage TLV (Type-Length-Value) dans
+l&#8217;oignon pour coder les informations qui indiquent à chaque nœud <em>où</em> et <em>comment</em>
+transmettre le paiement. Tirant parti du format TLV, chaque élément d&#8217;information de routage
+(comme le nœud suivant auquel passer le HTLC) se voit attribuer un type (ou clé) spécifique
+encodé sous la forme d&#8217;un entier <code>BigSize</code> de longueur variable (de la taille maximum d&#8217;un entier
+64 bits). Ces types "essentiels" (valeurs inversées en dessous de <code>65536</code>) sont définis
+dans BOLT #4, avec le reste des détails de routage en oignon. Les types d&#8217;oignon avec une
+valeur supérieure à <code>65536</code> sont destinés à être utilisés par des porte-monnaie et des applications
+comme "enregistrements personnalisés".</p>
+</div>
+<div class="paragraph data-line-902">
+<p>Les enregistrements personnalisés permettent aux applications de paiement de joindre des métadonnées supplémentaires ou
+un contexte à un paiement sous forme de paires clé/valeur dans l&#8217;oignon. Étant donné que les enregistrements personnalisés
+sont inclus dans la charge utile d&#8217;oignon elle-même, comme tous les autres contenus de saut, les
+enregistrements sont encryptés de bout en bout. Comme les enregistrements personnalisés consomment effectivement une
+partie du paquet d&#8217;oignon de taille fixe de 1300 octets, encodant chaque clé et
+valeur de chaque enregistrement personnalisé réduit la quantité d&#8217;espace disponible pour l&#8217;encodage
+du reste de la route. En pratique, cela signifie que plus l&#8217;espace d&#8217;oignon utilisé pour les enregistrements personnalisés est important, plus l&#8217;itinéraire devra être court. Étant donné que chaque paquet
+HTLC a une taille fixe, les enregistrements personnalisés n&#8217;ajoutent pas de données supplémentaires à un
+HTLC ; au lieu de cela, ils réaffectent des octets qui auraient été remplis de données aléatoires
+autrement.</p>
+</div>
+</div>
+<div class="sect3 data-line-913">
+<h4 id="_envoi_et_réception_de_paiements_keysend">Envoi et réception de paiements Keysend</h4>
+<div class="paragraph data-line-915">
+<p>Un paiement <code>keysend</code> inverse le flux typique d&#8217;un HTLC où le destinataire
+révèle une préimage secrète à l&#8217;expéditeur. Au lieu de cela, l&#8217;expéditeur inclut la
+préimage <em>dans</em> l&#8217;oignon pour le destinataire, et achemine le HTLC vers le
+destinataire. Le destinataire décrypte ensuite la charge utile de l&#8217;oignon et utilise la préimage
+incluse (qui <em>doit</em> correspondre au hachage de paiement du HTLC) pour régler le
+paiement. Par conséquent, les paiements <code>keysend</code> peuvent être effectués sans d&#8217;abord
+obtenir d&#8217;une facture du récepteur, car la préimage est "poussée" vers
+le destinataire. Un paiement <code>keysend</code> utilise un type d&#8217;enregistrement personnalisé TLV de <code>5482373484</code>
+pour encoder une valeur de préimage de 32 octets.</p>
+</div>
+</div>
+<div class="sect3 data-line-925">
+<h4 id="_keysend_et_enregistrements_personnalisés_dans_les_applications_lightning">Keysend et enregistrements personnalisés dans les applications Lightning</h4>
+<div class="paragraph data-line-927">
+<p>De nombreuses applications de diffusion de paiement Lightning utilisent le protocole "keysend" pour continuellement
+diffuser des satoshis vers une destination identifiée par sa clé publique dans le réseau.
+Généralement, une application inclura également des métadonnées telles qu&#8217;une
+note de pourboire / don ou d&#8217;autres informations au niveau de l&#8217;application en plus de
+l&#8217;enregistrement <code>keysend</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-933">
+<h3 id="_conclusion">Conclusion</h3>
+<div class="paragraph data-line-935">
+<p>Le protocole de routage en oignon du Lightning Network est adapté du protocole Sphinx pour mieux répondre aux besoins d&#8217;un réseau de paiement. En tant que tel, il offre une énorme amélioration de la confidentialité et de la contre-surveillance par rapport à la blockchain Bitcoin publique et transparente.</p>
+</div>
+<div class="paragraph data-line-937">
+<p>Dans <a href="#path_finding">[path_finding]</a> nous verrons comment la combinaison du routage basé sur la source et du routage en oignon est utilisée par Alice pour trouver un bon chemin et router le paiement vers Dina. Pour trouver un chemin, Alice doit d&#8217;abord se renseigner sur la topologie du réseau, qui est le sujet de <a href="#gossip">[gossip]</a>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes">
+<hr>
+<div class="footnote" id="_footnotedef_1">
+<a href="#_footnoteref_1">1</a>. George Danezis and Ian Goldberg, "Sphinx: A Compact and Provably Secure Mix Format," in <em>IEEE Symposium on Security and Privacy</em> (New York: IEEE, 2009), 269–282.
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2023-04-28 02:38:06 -0400
+</div>
+</div>
+</body>
+</html>
