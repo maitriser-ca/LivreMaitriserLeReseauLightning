@@ -1,0 +1,937 @@
+[[onion_routing]]
+== Le routage en oignon
+
+((("onion routing", id="ix_10_onion_routing-asciidoc0", range="startofrange")))Dans ce chapitre, nous décrirons le mécanisme de routage en oignon du Lightning Network. L'invention du _routage en oignon_ précède le Lightning Network de 25 ans ! Le routage en oignon a été inventé par des chercheurs de l'U.S. Navy en tant que protocole de sécurité des communications. Le routage en oignon est surtout utilisé par Tor, une surcouche d'Internet routée en oignon qui permet aux chercheurs, aux militants, aux agents du renseignement et à tout le monde d'utiliser Internet de manière privée et anonyme.
+
+Dans ce chapitre, nous nous intéressons à la partie "Source-based onion routing (SPHINX)" (Routage en oignon basé sur la source) de l'architecture du protocole Lightning, mise en évidence par un contour épais au centre (couche de routage) de <<LN_protocol_onion_highlight>>.
+
+[[LN_protocol_onion_highlight]]
+.Routage en oignon dans la suite de protocoles Lightning
+image::images/mtln_1001.png["Routage en oignon dans la suite de protocoles Lightning"]
+
+Le routage en oignon décrit une méthode de communication encryptée dans laquelle un expéditeur de message construit des _couches d'encryptage imbriquées_ successives qui sont "épluchées" par chaque nœud intermédiaire, jusqu'à ce que la couche la plus au centre soit livrée au destinataire prévu. Le nom "routage en oignon" décrit cette utilisation de l'encryptage en couches qui épluche une couche à la fois, comme la peau d'un oignon.
+
+Chacun des nœuds intermédiaires ne peut "éplucher" qu'une couche et voir qui est le suivant sur le chemin de communication. Le routage en oignon garantit que personne, à l'exception de l'expéditeur, ne connaît la destination ou la longueur du chemin de communication. Chaque intermédiaire ne connaît que le saut précédent et suivant.
+
+Le Lightning Network utilise une implémentation du protocole de routage en oignon basé sur pass:[<em>Sphinx</em>],footnote:[George Danezis and Ian Goldberg, "Sphinx: A Compact and Provably Secure Mix Format," in _IEEE Symposium on Security and Privacy_ (New York: IEEE, 2009), 269–282.] développé en 2009 par George Danezis et Ian Goldberg.
+
+La mise en œuvre du routage en oignon dans le Lightning Network est définie dans https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md[BOLT #4: Onion Routing Protocol].
+
+=== Un exemple physique illustrant le routage en oignon
+
+((("onion routing","physical example", id="ix_10_onion_routing-asciidoc1", range="startofrange")))Il existe de nombreuses façons de décrire le routage en oignon, mais l'une des plus simples consiste à utiliser l'équivalent physique d'enveloppes scellées. Une enveloppe représente une couche de cryptage, permettant uniquement au destinataire nommé de l'ouvrir et d'en lire le contenu.
+
+Disons qu'Alice veut envoyer une lettre secrète à Dina, indirectement via des intermédiaires.
+
+==== Sélection d'un chemin
+
+((("onion routing","selecting a path")))Le Lightning Network utilise le _routage basé sur la source_, ce qui signifie que le chemin de paiement est sélectionné et spécifié par l'expéditeur, et uniquement par l'expéditeur. Dans cet exemple, la lettre secrète d'Alice à Dina sera l'équivalent d'un paiement. Pour s'assurer que la lettre parvienne à Dina, Alice créera un chemin d'elle à Dina, en utilisant Bob et Chan comme intermédiaires.
+
+[TIP]
+====
+Il peut y avoir de nombreux chemins qui permettent à Alice d'atteindre Dina. Nous expliquerons le processus de sélection du chemin _optimum_ dans <<path_finding>>. Pour l'instant, nous supposerons que le chemin sélectionné par Alice utilise Bob et Chan comme intermédiaires pour atteindre Dina.
+====
+
+[role="pagebreak-before"]
+Pour rappel, le chemin sélectionné par Alice est illustré dans <<alice_dina_path>>.
+
+[[alice_dina_path]]
+.Chemin : d'Alice à Bob à Chan à Dina
+image::images/mtln_1002.png["D'Alice à Bob à Chan à Dina"]
+
+Voyons comment Alice peut utiliser ce chemin sans révéler d'informations aux intermédiaires Bob et Chan.
+
+.Routage basé sur la source
+****
+((("source-based routing")))Le routage basé sur la source n'est pas la manière dont les paquets sont généralement acheminés sur Internet aujourd'hui, bien que le routage à la source ait été possible au début.
+Le routage Internet est basé sur la _commutation de paquets_ ("packet switching" en anglais) à chaque nœud de routage intermédiaire. Un paquet IPv4, par exemple, comprend les adresses IP de l'expéditeur et du destinataire, et chaque autre nœud de routage IP décide comment transférer chaque paquet vers la destination.
+Cependant, le manque de confidentialité dans un tel mécanisme de routage, où chaque nœud intermédiaire voit l'expéditeur et le destinataire, en fait un mauvais choix pour une utilisation dans un réseau de paiements.
+****
+
+==== Construire les couches
+
+((("onion routing","building the layers", id="ix_10_onion_routing-asciidoc2", range="startofrange")))Alice commence par écrire une lettre secrète à Dina. Elle scelle ensuite la lettre à l'intérieur d'une enveloppe et écrit "Pour Dina" à l'extérieur (voir <<dina_envelope>>). L'enveloppe représente le cryptage avec la clé publique de Dina afin que seule Dina puisse ouvrir l'enveloppe et lire la lettre.
+
+[[dina_envelope]]
+.La lettre secrète de Dina, scellée dans une enveloppe
+image::images/mtln_1003.png["La lettre secrète de Dina, scellée dans une enveloppe"]
+
+La lettre de Dina sera remise à Dina par Chan, qui est juste avant Dina sur le "chemin". Donc, Alice met l'enveloppe de Dina dans une enveloppe adressée à Chan (voir <<chan_envelope>>). La seule partie que Chan peut lire est la destination (les instructions de routage) : "Pour Dina". En scellant ceci à l'intérieur d'une enveloppe adressée à Chan représente le cryptage avec la clé publique de Chan afin que seul Chan puisse lire l'adresse de l'enveloppe. Chan ne peut toujours pas ouvrir l'enveloppe de Dina. Tout ce qu'il voit, ce sont les instructions à l'extérieur (l'adresse).
+
+[[chan_envelope]]
+.L'enveloppe de Chan, contenant l'enveloppe scellée de Dina
+image::images/mtln_1004.png["L'enveloppe de Chan, contenant l'enveloppe scellée de Dina"]
+
+Maintenant, cette lettre sera remise à Chan par Bob. Alors Alice le met dans une enveloppe adressée à Bob (voir <<bob_envelope>>). Comme précédemment, l'enveloppe représente un message encrypté pour Bob que seul Bob peut lire. Bob ne peut lire que l'extérieur de l'enveloppe de Chan (l'adresse), il sait donc qu'il doit l'envoyer à Chan.
+
+[[bob_envelope]]
+.L'enveloppe de Bob, contenant l'enveloppe scellée de Chan
+image::images/mtln_1005.png["L'enveloppe de Bob, contenant l'enveloppe scellée de Chan"]
+
+Maintenant, si nous pouvions regarder à travers les enveloppes (avec des rayons X !), nous verrions les enveloppes imbriquées les unes dans les autres, comme illustré dans <<nested_envelopes>>. (((range="endofrange", startref="ix_10_onion_routing-asciidoc2")))
+
+[[nested_envelopes]]
+.Enveloppes imbriquées
+image::images/mtln_1006.png[Enveloppes imbriquées]
+
+==== Éplucher les couches
+
+((("onion routing","peeling the layers")))Alice a maintenant une enveloppe qui dit "Pour Bob" à l'extérieur. Elle représente un message encrypté que seul Bob peut ouvrir (décrypter). Alice va maintenant commencer le processus en envoyant ceci à Bob. L'ensemble du processus est illustré dans <<sending_nested_envelopes>>.
+
+[[sending_nested_envelopes]]
+.Envoi des enveloppes
+image::images/mtln_1007.png[Envoi des enveloppes]
+
+Comme vous pouvez le voir, Bob reçoit l'enveloppe d'Alice. Il sait que cela vient d'Alice, mais ne sait pas si Alice est l'expéditeur d'origine ou simplement quelqu'un qui transmet des enveloppes. Il l'ouvre pour trouver une enveloppe à l'intérieur qui dit "Pour Chan". Puisqu'elle est adressée à Chan, Bob ne peut pas l'ouvrir. Il ne sait pas ce qu'il y a dedans et ne sait pas si Chan reçoit une lettre ou une autre enveloppe à faire suivre. Bob ne sait pas si Chan est le destinataire final ou non. Bob transmet l'enveloppe à Chan.
+
+Chan reçoit l'enveloppe de Bob. Il ne sait pas que cela vient d'Alice. Il ne sait pas si Bob est un intermédiaire ou l'expéditeur d'une lettre. Chan ouvre l'enveloppe et trouve une autre enveloppe à l'intérieur adressée "Pour Dina", qu'il ne peut pas ouvrir. Chan la transmet à Dina, ne sachant pas si Dina est la destinataire finale.
+
+Dina reçoit une enveloppe de Chan. En l'ouvrant, elle trouve une lettre à l'intérieur, alors maintenant elle sait qu'elle est la destinataire prévue de ce message. Elle lit la lettre, sachant qu'aucun des intermédiaires ne sait d'où elle vient et que personne d'autre n'a lu sa lettre secrète !
+
+C'est l'essence du routage en oignon. L'expéditeur enveloppe un message dans plusieurs couches, spécifiant exactement comment il sera acheminé et empêchant tous les intermédiaires d'obtenir des informations sur le chemin ou la charge utile. Chaque intermédiaire épluche une couche, ne voit qu'une adresse de transfert et ne connaît rien d'autre que le saut précédent et suivant dans le chemin.
+
+Examinons maintenant les détails de la mise en œuvre du routage en oignon dans le Lightning Network.(((range="endofrange", startref="ix_10_onion_routing-asciidoc1")))
+
+=== Introduction au routage en oignon des HTLC
+
+((("hash time-locked contracts (HTLCs)","onion routing basics", id="ix_10_onion_routing-asciidoc3", range="startofrange")))((("onion routing","HTLCs", id="ix_10_onion_routing-asciidoc4", range="startofrange")))Le routage en oignon dans le Lightning Network semble complexe à première vue, mais une fois que vous avez compris le concept de base, c'est vraiment très simple.
+
+D'un point de vue pratique, Alice indique à chaque nœud intermédiaire quel HTLC mettre en place avec le nœud suivant sur le chemin.
+
+((("origin node")))Le premier nœud, qui est l'expéditeur du paiement ou Alice dans notre exemple, est appelé le _nœud d'origine_. ((("final node")))Le dernier nœud, qui est le destinataire du paiement ou Dina dans notre exemple, est appelé le _nœud final_.
+
+((("hop")))Chaque nœud intermédiaire, ou Bob et Chan dans notre exemple, est appelé un _saut_. Chaque saut doit établir un _HTLC sortant_ vers le prochain saut. Les informations communiquées à chaque saut par Alice sont appelées _charge utile de saut_, "hop payload" en anglais, ou _données de saut_, "hop data" en anglais. Le message qui est acheminé d'Alice à Dina est appelé un _oignon_ et se compose de messages _hop payload_ ou _hop data_ encryptés à chaque saut.
+
+Maintenant que nous connaissons la terminologie utilisée dans le routage en oignon de Lightning, reformulons ce qu'Alice doit faire :  Alice doit construire un oignon avec des données de saut, indiquant à chaque saut comment construire un HTLC sortant pour envoyer un paiement au nœud final (Dina).
+
+==== Alice choisit le chemin
+
+((("onion routing","selecting a path")))Grâce à <<routing>> nous savons qu'Alice enverra un paiement de 50 000 satoshis à Dina via Bob et Chan. Ce paiement est transmis via une série de HTLC, comme illustré dans <<alice_dina_htlc_path>>.
+
+[[alice_dina_htlc_path]]
+.Chemin de paiements avec des HTLC d'Alice à Dina
+image::images/mtln_1008.png[Chemin de paiements avec des HTLC d'Alice à Dina]
+
+Comme nous le verrons dans <<gossip>>, Alice est capable de construire ce chemin vers Dina car les nœuds Lightning annoncent leurs canaux à l'ensemble du Lightning Network à l'aide du protocole de bavardage de Lightning. Après l'annonce initiale du canal, Bob et Chan ont chacun envoyé un message supplémentaire `channel_update` avec leurs frais de routage et leurs attentes en matière de timelock pour le routage des paiements.
+
+D'après les annonces et les mises à jour, Alice connaît les informations suivantes sur les canaux entre Bob, Chan et Dina :
+
+* Un +short_channel_id+ (ID de canal court) pour chaque canal, qu'Alice peut utiliser pour référencer le canal lors de la construction du chemin
+
+* Un +cltv_expiry_delta+ (delta de timelock), qu'Alice peut ajouter au temps d'expiration pour chaque HTLC
+
+* Un +fee_base_msat+ et un +fee_proportional_millionths+, qu'Alice peut utiliser pour calculer les frais de routage totaux attendus par ce nœud pour le relais sur ce canal.
+
+En pratique, d'autres informations sont également échangées, telles que les HTLC les plus grands (`htlc_maximum_msat`) et les plus petits (`htlc_minimum_msat`) qu'un canal transportera, mais ceux-ci ne sont pas utilisés aussi directement lors de la construction de la route en oignon que les champs précédents.
+
+Ces informations sont utilisées par Alice pour identifier les nœuds, les canaux, les frais et les timelocks pour le chemin détaillé suivant illustré dans <<alice_dina_path_detail>>.
+
+[[alice_dina_path_detail]]
+.Un chemin détaillé construit à partir d'informations sur les canaux et les nœuds
+image::images/mtln_1009.png[Un chemin détaillé construit à partir d'informations sur les canaux et les nœuds]
+
+Alice connaît déjà son propre canal vers Bob et n'a donc pas besoin de cette information pour construire le chemin. Notez également qu'Alice n'a pas eu besoin d'une mise à jour du canal de Dina car elle a la mise à jour de Chan pour ce dernier canal du chemin.
+
+==== Alice construit les charges utiles
+
+((("onion routing","payload construction", id="ix_10_onion_routing-asciidoc5", range="startofrange")))Alice peut utiliser deux formats possibles pour les informations communiquées à chaque saut : ((("hop data")))un ancien format de longueur fixe appelé _hop data_ et un format plus flexible basé sur Type-Length-Value (TLV) appelé _hop payload_. Le format de message TLV est expliqué plus en détail dans <<tlv>>. Il offre une flexibilité en permettant d'ajouter des champs au protocole à volonté.
+
+[NOTE]
+====
+Les deux formats sont spécifiés dans https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-structure[BOLT #4: Onion Routing Protocol, Packet Structure].
+====
+
+Alice commencera à construire les données de saut à partir de la fin du chemin en reculant : Dina, Chan, puis Bob.
+
+===== Charge utile du nœud final pour Dina
+
+((("final node")))Alice construit d'abord la charge utile qui sera livrée à Dina. Dina ne construira pas de "HTLC sortant", car Dina est le nœud final et le destinataire du paiement. Pour cette raison, la charge utile pour Dina est différente de toutes les autres (elle utilise des zéros pour tout le `short_channel_id`), mais seule Dina le saura car elle sera cryptée dans la couche la plus au centre de l'oignon. Il s'agit essentiellement de la "lettre secrète pour Dina" que nous avons vue dans notre exemple d'enveloppes physiques.
+
+La charge utile de saut pour Dina doit correspondre aux informations de la facture générée par Dina pour Alice et contiendra (au moins) les champs suivants dans le format TLV :
+
++amt_to_forward+:: Le montant de ce paiement en millisatoshis. S'il ne s'agit que d'une partie d'un paiement en plusieurs parties, le montant est inférieur au total. Sinon, il s'agit d'un paiement unique et complet, égal au montant de la facture et à la valeur +total_msat+.
+
++outgoing_cltv_value+:: Le délai d'expiration du paiement défini par la valeur +min_final_cltv_expiry+ dans la facture.
+
++payment_secret+:: Une valeur secrète spéciale de 256 bits de la facture, permettant à Dina de reconnaître ce paiement entrant. Cela empêche également une classe d'attaque par sondage qui rendait auparavant les factures à valeur nulle non sécurisées. Le sondage par les nœuds intermédiaires est atténué car cette valeur est cryptée _uniquement_ pour le destinataire, ce qui signifie qu'ils ne peuvent pas reconstruire un paquet final qui "semble" légitime.
+
++total_msat+:: Le montant total correspondant à la facture. Ceci peut être omis s'il n'y a qu'une seule partie, auquel cas il est supposé correspondre à +amt_to_forward+ et doit être égal au montant de la facture.
+
+La facture qu'Alice a reçue de Dina spécifiait le montant de 50 000 satoshis, soit 50 000 000 millisatoshis. Dina a spécifié l'expiration minimale du paiement +min_final_cltv_expiry+ à 18 blocs (3 heures, étant donné 10 minutes en moyenne par bloc Bitcoin). Au moment où Alice tente d'effectuer le paiement, disons que la blockchain Bitcoin a enregistré 700 000 blocs. Alice doit donc définir la valeur +outgoing_cltv_value+ sur une hauteur de bloc _minimum_ de 700 018.
+
+((("hop payload", id="ix_10_onion_routing-asciidoc6", range="startofrange")))Alice construit la charge utile du saut pour Dina comme suit :
+
+----
+amt_to_forward : 50,000,000
+outgoing_cltv_value: 700,018
+payment_secret: fb53d94b7b65580f75b98f10...03521bdab6d519143cd521d1b3826
+total_msat: 50,000,000
+----
+
+Alice la sérialise au format TLV, comme indiqué (de manière simplifiée) dans <<dina_onion_payload>>.
+
+[[dina_onion_payload]]
+.La charge utile de Dina est construite par Alice
+image::images/mtln_1010.png[La charge utile de Dina est construite par Alice]
+
+===== Charge utile de saut pour Chan
+
+Ensuite, Alice construit la charge utile de saut pour Chan. Cela indiquera à Chan comment configurer un HTLC sortant vers Dina.
+
+La charge utile de saut pour Chan comprend trois champs : +short_channel_id+, +amt_to_forward+ et +outgoing_cltv_value+ :
+
+----
+short_channel_id: 010002010a42be
+amt_to_forward: 50,000,000
+outgoing_cltv_value: 700,018
+----
+
+Alice sérialise cette charge utile au format TLV, comme illustré (de manière simplifiée) dans <<chan_onion_payload>>.
+
+[[chan_onion_payload]]
+.La charge utile de Chan est construite par Alice
+image::images/mtln_1011.png[La charge utile de Chan est construite par Alice]
+
+===== Charge utile de saut pour Bob
+
+Enfin, Alice construit la charge utile de saut pour Bob, qui contient également les trois mêmes champs que la charge utile de saut pour Chan, mais avec des valeurs différentes :
+
+----
+short_channel_id: 000004040a61f0
+amt_to_forward: 50,100,000
+outgoing_cltv_value: 700,038
+----
+
+Comme vous pouvez le voir, le champ +amt_to_forward+ est de 50 100 000 millisatoshis ou 50 100 satoshis. C'est parce que Chan s'attend à des frais de 100 satoshis pour acheminer un paiement à Dina. Pour que Chan "gagne" ces frais de routage, le HTLC entrant de Chan doit être supérieur de 100 satoshis au HTLC sortant de Chan. Puisque le HTLC entrant de Chan est le HTLC sortant de Bob, les instructions à Bob reflètent les frais que Chan gagne. En termes simples, il faut dire à Bob d'envoyer 50 100 satoshis à Chan, afin que Chan puisse envoyer 50 000 satoshis et garder 100 satoshis.
+
+De même, Chan s'attend à un delta de timelock de 20 blocs. Ainsi, le HTLC entrant de Chan doit expirer 20 blocs _plus tard_ que le HTLC sortant de Chan. Pour y parvenir, Alice dit à Bob de faire expirer son HTLC sortant vers Chan à une hauteur de bloc 700 038 — 20 blocs plus tard que le HTLC de Chan vers Dina.
+
+[TIP]
+====
+Les attentes en termes de delta de frais et de timelock pour un canal sont définies par la différence entre les HTLC entrants et sortants. Étant donné que le HTLC entrant est créé par le _nœud précédent_, le delta de frais et de timelock est défini dans la charge utile de l'oignon pour ce nœud précédent. On explique à Bob comment créer un HTLC qui répond aux attentes de Chan en matière de frais et timelock.
+====
+
+Alice sérialise cette charge utile au format TLV, comme illustré (de manière simplifiée) dans <<bob_onion_payload>>.
+
+[[bob_onion_payload]]
+.La charge utile de Bob est construite par Alice
+image::images/mtln_1012.png[La charge utile de Bob est construite par Alice]
+
+===== Charges utiles de saut finies
+
+Alice a maintenant construit les charges utiles de trois sauts qui seront enveloppées dans un oignon. Une vue simplifiée des charges utiles est présentée dans <<onion_hop_payloads>>.(((range="endofrange", startref="ix_10_onion_routing-asciidoc6"))) (((range="endofrange", startref="ix_10_onion_routing-asciidoc5")))
+
+[[onion_hop_payloads]]
+.Charges utiles de saut pour tous les sauts
+image::images/mtln_1013.png[Charges utiles de saut pour tous les sauts]
+
+[role="pagebreak-before less_space"]
+==== Génération de clés
+
+((("keys","generating for onion routing", id="ix_10_onion_routing-asciidoc7", range="startofrange")))((("keys","onion routing and", id="ix_10_onion_routing-asciidoc8", range="startofrange")))((("onion routing","key generation", id="ix_10_onion_routing-asciidoc9", range="startofrange")))Alice doit maintenant générer plusieurs clés qui serviront à encrypter les différentes couches de l'oignon.
+
+Avec ces clés, Alice peut atteindre un degré élevé de confidentialité et d'intégrité :
+
+* Alice peut encrypter chaque couche de l'oignon afin que seul le destinataire prévu puisse le lire.
+* Chaque intermédiaire peut vérifier que le message n'est pas modifié.
+* Personne sur le chemin ne saura qui a envoyé cet oignon ni où il va. Alice ne révèle pas son identité en tant qu'expéditeur ou l'identité de Dina en tant que destinataire du paiement.
+* Chaque saut n'est renseigné que le saut précédent et suivant.
+* Personne ne peut savoir quelle est la longueur du chemin, ni où ils se trouvent sur le chemin.
+
+[WARNING]
+====
+Comme un oignon haché, les détails techniques suivants peuvent vous faire monter les larmes aux yeux. N'hésitez pas à passer à la section suivante si vous êtes confus. Revenez à ceci et lisez https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction[BOLT #4: Onion Routing, Packet Construction], si vous voulez pour apprendre davantage.
+====
+
+
+((("shared secret (ss)")))La base de toutes les clés utilisées dans l'oignon est un _secret partagé_ qu'Alice et Bob peuvent générer indépendamment à l'aide de l'algorithme Elliptic Curve Diffie–Hellman (ECDH). À partir du secret partagé (ss), ils peuvent générer indépendamment quatre clés supplémentaires nommées ++rho++, ++mu++, ++um++ et ++pad++ :
+
+++rho++:: Utilisé pour générer un flux d'octets aléatoires à partir d'un encryptage de flux (utilisé comme
+CSPRNG). Ces octets sont utilisés pour encrypter/décrypter le corps du message ainsi que
+des octet zéro de remplissage durant le traitement des paquets Sphinx.
+
+++mu++:: Utilisé pour le code d'authentification de message basé sur le hachage (HMAC) pour la vérification de l'intégrité/authenticité.
+
+++um++:: Utilisé pour le rapport d'erreurs.
+
+++pad++:: Utilisé pour générer des octets de remplissage pour remplir l'oignon afin qu'il ait une longueur fixe.
+
+La relation entre les différentes clés et leur génération est schématisée dans <<onion_keygen>>.
+
+[[onion_keygen]]
+.Génération de clés d'oignon
+image::images/mtln_1014.png[Génération de clés d'oignon]
+
+[[session_key]]
+===== La clé de session d'Alice
+
+((("session key")))Pour éviter de révéler son identité, Alice n'utilise pas la clé publique de son propre nœud pour construire l'oignon. Au lieu de cela, Alice crée une clé temporaire de 32 octets (256 bits) appelée _clé privée de session_ et la _clé publique de session_ correspondante. Cela sert "d'identité" temporaire et de clé _pour cet oignon uniquement_. À partir de cette clé de session, Alice construira toutes les autres clés qui seront utilisées dans cet oignon.
+
+[[keygen_details]]
+===== Détails de génération de la clé
+La génération de clés, la génération d'octets aléatoires, les clés éphémères et la façon dont elles sont utilisées dans la construction de paquets sont spécifiées dans trois sections de BOLT #4 :
+
+* https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#key-generation[Key Generation]
+* https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#pseudo-random-byte-stream[Random Byte Stream]
+* https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction[Packet Construction]
+
+Par souci de simplicité et pour éviter d'être trop technique, nous n'avons pas inclus ces détails dans le livre. Référez-vous aux liens précédents si vous voulez voir ces fonctionnements internes.
+
+[[shared_secret]]
+===== Génération d'un secret partagé
+
+((("shared secret (ss)")))Un détail important qui semble presque magique est la possibilité pour Alice de créer un _secret partagé_ avec un autre nœud simplement en connaissant leurs clés publiques. ((("Diffie-Hellman Key Exchange (DHKE)", id="ix_10_onion_routing-asciidoc10", range="startofrange")))Ceci est basé sur l'invention de l'échange de clés Diffie-Hellman (DH) dans les années 1970 qui a révolutionné cryptographie. Le routage Lightning en oignon utilise la courbe elliptique Diffie-Hellman (ECDH) sur la courbe +secp256k1+ de Bitcoin. C'est une astuce tellement cool que nous essayons de l'expliquer en termes simples dans <<ecdh_explained>>.
+
+
+// To editor: Maybe put this in an appendix instead of a sidebar?
+
+[[ecdh]]
+[[ecdh_explained]]
+.Courbe elliptique Diffie–Hellman expliquée
+****
+((("ECDH (Elliptic Curve Diffie–Hellman)")))((("Elliptic Curve Diffie–Hellman (ECDH)")))Supposons que la clé privée d'Alice est _a_ et que la clé privée de Bob est _b_. En utilisant la courbe elliptique, Alice et Bob multiplient chacun leur clé privée par le point générateur _G_ pour produire leurs clés publiques _A_ et _B_, respectivement :
+
+++++
+<ul class="simplelist">
+<li><em>A</em> = <em>aG</em></li>
+<li><em>B</em> = <em>bG</em></li>
+</ul>
+++++
+
+Alice et Bob peuvent désormais utiliser _l'échange de clés Elliptic Curve Diffie–Hellman_ pour créer un secret partagé _ss_, une valeur qu'ils peuvent tous les deux calculer indépendamment sans échanger aucune information.
+
+Le secret partagé _ss_ est calculé par chacun en multipliant sa propre clé privée par la clé publique de _l'autre_, de sorte que :
+
+++++
+<ul class="simplelist">
+<li><em>ss</em> = <em>aB</em> = <em>bA</em></li>
+</ul>
+++++
+
+Mais pourquoi ces deux multiplications donneraient-elles la même valeur _ss_ ?
+Suivez notre démonstration mathématique qui prouve que c'est possible :
+
+++++
+<ul class="simplelist">
+<li><em>ss</em></li>
+<li>= <em>aB</em></li>
+</ul>
+++++
+
+calculé par Alice qui connaît à la fois _a_ (sa clé privée) et _B_ (la clé publique de Bob)
+
+++++
+<ul class="simplelist">
+<li>= <em>a</em>(<em>bG</em>)</li>
+</ul>
+++++
+
+car on sait que _B_ = _bG_, on substitue
+
+++++
+<ul class="simplelist">
+<li> = (<em>ab</em>)<em>G</em></li>
+</ul>
+++++
+
+à cause de l'associativité, nous pouvons déplacer les parenthèses
+
+++++
+<ul class="simplelist">
+<li>= (<em>ba</em>)<em>G</em></li>
+</ul>
+++++
+
+car _xy_ = _yx_ (la courbe est un groupe abélien)
+
+++++
+<ul class="simplelist">
+<li>= <em>b</em>(<em>aG</em>)</li>
+</ul>
+++++
+
+à cause de l'associativité, nous pouvons déplacer les parenthèses
+
+++++
+<ul class="simplelist">
+<li>= <em>bA</em></li>
+</ul>
+++++
+
+et nous pouvons remplacer _aG_ par _A_.
+
+Le résultat _bA_ peut être calculé indépendamment par Bob qui connaît _b_ (sa clé privée) et _A_ (la clé publique d'Alice).
+
+Nous avons donc démontré que :
+
+++++
+<ul class="simplelist">
+<li><em>ss</em> = <em>aB</em> (Alice peut calculer ceci)</li>
+<li><em>ss</em> = <em>bA</em> (Bob peut calculer ceci)</li>
+</ul>
+++++
+
+Ainsi, ils peuvent chacun calculer indépendamment _ss_ qu'ils peuvent utiliser comme clé partagée pour encrypter symétriquement les secrets entre eux deux sans communiquer le secret partagé.(((range="endofrange", startref="ix_10_onion_routing-asciidoc10")))
+
+****
+
+Une caractéristique unique de Sphinx en tant que format de paquet mix-net est que, plutôt que d'inclure une clé de session distincte pour chaque saut de la route, ce qui augmenterait considérablement la taille du paquet mix-net, ((("blinding scheme"))) un schéma intelligent de _d'aveuglement_ est utilisé pour randomiser de manière déterministe la clé de session pour chaque saut.
+
+En pratique, cette petite astuce nous permet de garder le paquet oignon aussi compact que possible tout en conservant les propriétés de sécurité souhaitées.
+
+La clé de session pour le saut `i` est dérivée à l'aide de la clé publique du nœud et du secret partagé dérivé du saut `i – 1` :
+```
+session_key_i = session_key_{i-1} * SHA-256(node_pubkey_{i-1} || shared_secret_{i-1})
+```
+
+En d'autres termes, nous prenons la clé de session du saut précédent et la multiplions par une valeur dérivée de la clé publique et du secret partagé dérivé pour ce saut.
+
+Comme la multiplication de courbe elliptique peut être effectuée sur une clé publique sans connaître la clé privée, chaque saut est capable de rerandomiser la clé de session pour le saut suivant de manière déterministe.
+
+Le créateur du paquet oignon connaît tous les secrets partagés (car il a crypté le paquet de manière unique pour chaque saut) et est donc en mesure de dériver tous les facteurs aveuglants.
+
+Cette connaissance leur permet de dériver toutes les clés de session utilisées en amont lors de la génération des paquets.
+
+Notez que le tout premier saut utilise la clé de session d'origine générée car cette clé est utilisée pour lancer l'aveuglement de la clé de session par chaque saut suivant(((range="endofrange", startref="ix_10_onion_routing-asciidoc9")))(((range="endofrange", startref="ix_10_onion_routing-asciidoc8")))(((range="endofrange", startref="ix_10_onion_routing-asciidoc7"))).(((range="endofrange", startref="ix_10_onion_routing-asciidoc4")))(((range="endofrange", startref="ix_10_onion_routing-asciidoc3")))
+
+
+[[wrapping_the_onion]]
+=== Envelopper les couches d'oignon
+
+((("onion routing","wrapping the onion layers", id="ix_10_onion_routing-asciidoc11", range="startofrange")))Le processus d'enveloppement de l'oignon est détaillé dans https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#packet-construction[BOLT #4: Onion Routing, Packet Construction].
+
+Dans cette section, nous décrirons ce processus à un niveau élevé et quelque peu simplifié, en omettant certains détails.
+
+
+[[fixed_length_onions]]
+==== Oignons à longueur fixe
+
+((("onion routing","fixed-length onions")))Nous avons mentionné le fait qu'aucun des nœuds "de saut" ne sait quelle est la longueur du chemin, ni où il se trouve dans le chemin. Comment est-ce possible ?
+
+Si vous disposez d'un ensemble d'instructions de directions, même cryptées, ne pouvez-vous pas déterminer la distance qui vous sépare du début ou de la fin simplement en regardant _où_ vous vous trouvez dans la liste d'instructions de directions ?
+
+L'astuce utilisée dans le routage en oignon est de toujours faire en sorte que le chemin (la liste des directions) ait la même longueur pour chaque nœud. Ceci est réalisé en gardant le paquet oignon de la même longueur à chaque étape.
+
+À chaque saut, la charge utile de saut apparaît au début de la charge utile d'oignon, suivie de _ce qui semble être_ 19 autres charges utiles de saut. Chaque saut se considère comme le premier de 20 sauts.
+
+[TIP]
+====
+La charge utile de l'oignon est de 1 300 octets. Chaque charge utile de saut est composée de 65 octets ou moins (complétée jusqu'à 65 octets si nécessaire). Ainsi, la charge utile totale de l'oignon peut contenir 20 charges utiles de saut (1300 = 20 fois 65). Le chemin routé en oignon maximum est donc de 20 sauts.
+====
+
+Au fur et à mesure que chaque couche est "épluchée", davantage de données de remplissage (essentiellement des données "déchet") sont ajoutées à la fin de la charge utile de l'oignon afin que le saut suivant obtienne un oignon de la même taille et soit à nouveau le "premier saut" dans l'oignon.
+
+La taille de l'oignon est de 1 366 octets, structurés comme illustré dans <<onion_packet>> :
+
+1 octet :: Un octet de version
+33 octets:: Une clé de session publique compressée (<<session_key>>) à partir de laquelle le secret partagé par saut (<<shared_secret>>) peut être généré sans révéler l'identité d'Alice
+1 300 octets:: La _charge utile de l’oignon_ réelle contenant les instructions pour chaque saut
+32 octets:: Une somme de contrôle d'intégrité HMAC
+
+[[onion_packet]]
+.Le paquet oignon
+image::images/mtln_1015.png[]
+
+Une caractéristique unique de Sphinx en tant que format de paquet mix-net est que, plutôt que d'inclure une clé de session distincte pour chaque saut de la route, ce qui augmenterait considérablement la taille du paquet mix-net, un schéma intelligent de _d'aveuglement_ est utilisé pour randomiser de manière déterministe la clé de session pour chaque saut.
+
+En pratique, cette petite astuce nous permet de garder le paquet oignon aussi compact que possible tout en conservant les propriétés de sécurité souhaitées.
+
+==== Emballage de l'oignon (Résumé)
+
+((("onion routing","outline of wrapping process")))Voici le processus d'emballage de l'oignon, résumé ci-dessous. Revenez à cette liste lorsque nous explorerons chaque étape avec notre exemple dans le monde réel.
+
+Pour chaque saut, l'expéditeur (Alice) répète le même processus :
+
+1. Alice génère le secret partagé par saut et les clés ++rho++, ++mu++ et ++pad++.
+
+2. Alice génère 1 300 octets de remplissage et remplit le champ de charge utile de l'oignon avec ces 1 300 octets de remplissage.
+
+3. Alice calcule le HMAC pour la charge utile du saut (des zéros pour le saut final).
+
+4. Alice calcule la longueur de la charge utile du saut + HMAC + l'espace nécessaire pour stocker la longueur elle-même.
+
+5. Alice décale vers la droite la charge utile de l'oignon de l'espace nécessaire calculé pour s'adapter à la charge utile du saut. Les données de "remplissage" les plus à droite sont supprimées, laissant suffisamment d'espace sur la gauche pour la charge utile.
+
+6. Alice insère la longueur + la charge utile de saut + HMAC au début du champ de charge utile dans l'espace créé par le déplacement du remplissage.
+
+7. Alice utilise la clé ++rho++ pour générer un remplissage unique de 1 300 octets.
+
+8. Alice obscurcit toute la charge utile de l'oignon en effectuant une opération XOR avec les octets générés à partir de ++rho++.
+
+9. Alice calcule le HMAC de la charge utile de l’oignon, en utilisant la clé ++mu++.
+
+10. Alice ajoute la clé publique de session (afin que le saut puisse calculer le secret partagé).
+
+11. Alice ajoute le numéro de version.
+
+12. Alice réaveugle de manière déterministe la clé de session en utilisant une valeur dérivée en hachant le secret partagé et la clé publique du saut précédent.
+
+Ensuite, Alice répète le processus. Les nouvelles clés sont calculées, la charge utile de l'oignon est décalée (en supprimant plus de déchets), la nouvelle charge utile de saut est ajoutée au début et toute la charge utile de l'oignon est encrypté avec le flux d'octets ++rho++ pour le saut suivant.
+
+Pour le saut final, le HMAC inclus à l'étape 3 au-dessus des instructions en texte brut est en fait _entièrement des zéros_.
+Le dernier saut utilise ce signal pour déterminer qu'il s'agit bien du dernier saut de la route.
+Il est également possible d'utiliser le fait que le `short_chan_id` inclus dans la charge utile pour indiquer le "prochain saut" est entièrement constitué de zéros.
+
+Notez qu'à chaque phase la clé ++mu++ est utilisée pour générer un HMAC sur le paquet oignon _encrypté_ (du point de vue du nœud traitant la charge utile), ainsi que sur le contenu du paquet avec une seule couche d'encryptage retirée.
+Ce HMAC externe permet au nœud traitant le paquet de vérifier l'intégrité du paquet oignon (aucun octet modifié).
+Le HMAC interne est ensuite révélé lors de l'inverse de la routine "décaler et encrypter" décrite précédemment, qui sert de HMAC _externe_ pour le saut suivant.
+
+==== Emballage de la charge utile du saut de Dina
+
+((("onion routing","wrapping hop payloads", id="ix_10_onion_routing-asciidoc12", range="startofrange")))Pour rappel, l'oignon est enveloppé en commençant par la fin du chemin à partir de Dina, le nœud final ou destinataire. Le chemin est ensuite construit en sens inverse jusqu'à l'expéditeur, Alice.
+
+Alice commence par un champ vide de 1 300 octets, la _charge utile de l’oignon_ de longueur fixe. Ensuite, elle remplit la charge utile d'oignon avec un "remplissage" de flux d'octets pseudo-aléatoirement généré à partir de la clé ++pad++.
+
+Ceci est illustré dans <<onion_payload_filler>>.
+
+[NOTE]
+====
+La génération de flux d'octets aléatoires utilise l'algorithme ChaCha20, comme un générateur de nombres pseudo-aléatoires cryptographiques sécurisés (CSPRNG). Un tel algorithme générera un flux déterministe, long et non répétitif d'octets apparemment aléatoires à partir d'une graine initiale. Les détails sont spécifiés dans https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#pseudo-random-byte-stream[BOLT #4: Onion Routing, Pseudo Random Byte Stream].
+====
+
+[[onion_payload_filler]]
+.Remplissement de la charge utile d'oignon avec un flux d'octets aléatoire
+image::images/mtln_1016.png[]
+
+Alice va maintenant insérer la charge utile de saut de Dina par le côté gauche du tableau de 1 300 octets, en décalant le remplissage vers la droite et en supprimant tout ce qui déborde. Ceci est visualisé dans <<onion_add_dina>>.
+
+[[onion_add_dina]]
+.Ajout de la charge utile de saut de Dina
+image::images/mtln_1017.png[]
+
+Une autre façon de voir cela est qu'Alice mesure la longueur de la charge utile de saut de Dina, déplace le remplissage vers la droite pour créer un espace égal sur le côté gauche de la charge utile de l'oignon et insère la charge utile de Dina dans cet espace.
+
+La ligne suivante, nous voyons le résultat : la charge utile de l'oignon de 1 300 octets contient la charge utile de saut de Dina, puis le flux d'octets de remplissage occupant le reste de l'espace.
+
+Ensuite, Alice obscurcit toute la charge utile de l'oignon afin que _seule Dina_ puisse la lire.
+
+Pour ce faire, Alice génère un flux d'octets à l'aide de la clé ++rho++ (que Dina connaît également). Alice utilise un ou exclusif au niveau des bits (XOR) entre les bits de la charge utile de l'oignon et le flux d'octets créé à partir de ++rho++. Le résultat apparaît comme un flux d'octets aléatoires (ou encryptés) d'une longueur de 1 300 octets. Cette étape est illustrée dans <<onion_obfuscate_dina>>.
+
+[[onion_obfuscate_dina]]
+.Obscurcissement de la charge utile de l'oignon
+image::images/mtln_1018.png[]
+
+L'une des propriétés de XOR est que si vous le faites deux fois, vous revenez aux données d'origine. Comme nous le verrons dans <<bobDeobfuscates>>, si Dina applique la même opération XOR avec le flux d'octets généré à partir de ++rho++, il révélera la charge utile originale de l'oignon.
+
+[TIP]
+====
+XOR est une fonction _involutive_, ce qui signifie que si elle est appliquée deux fois, elle se défait par elle-même. Plus précisément XOR(XOR(_a_, _b_), _b_) = _a_. Cette propriété est largement utilisée dans la cryptographie à clé symétrique.
+====
+
+Parce que seules Alice et Dina ont la clé ++rho++ (dérivée du secret partagé d'Alice et Dina), elles seules peuvent le faire. En fait, cela crypte la charge utile de l'oignon pour les seuls yeux de Dina.
+
+Enfin, Alice calcule un code d'authentification du message basé sur le hachage (HMAC) pour la charge utile de Dina, qui utilise la clé ++mu++ comme clé d'initialisation. Ceci est illustré dans <<dina_hop_payload_hmac>>.
+
+[[dina_hop_payload_hmac]]
+.Ajout d'une somme de contrôle d'intégrité HMAC à la charge utile de saut de Dina
+image::images/mtln_1019.png[]
+
+===== Protection et détection d'attaques par rejeu pour le routage en oignon
+
+((("onion routing","replay protection/detection")))Le HMAC agit comme une somme de contrôle sécurisée et aide Dina à vérifier l'intégrité de la charge utile du saut. Le HMAC de 32 octets est ajouté à la charge utile de saut de Dina.
+((("encrypt-then-mac")))Notez que nous calculons le HMAC sur les données _encryptées_ plutôt que sur les données en texte brut.
+Ceci est connu sous le nom de _encrypt-then-mac_ en anglais (traduit littéralement "encrypter-puis-mac") et est la méthode recommandée pour utiliser un MAC, car il fournit à la fois l'intégrité du texte brut _et_ du texte chiffré.
+
+((("AD (associated data)")))((("associated data (AD)")))Le cryptage authentifié moderne permet également l'utilisation d'un ensemble facultatif d'octets en clair à authentifier également, appelé _données associées_.
+En pratique, il s'agit généralement d'un en-tête de paquet en texte brut ou d'autres informations auxiliaires.
+En incluant ces données associées dans la charge utile à authentifier (transformée en un MAC), le vérificateur du MAC s'assure que ces données associées n'ont pas été falsifiées (par exemple, substitution de l'en-tête en texte clair d'un paquet encrypté).
+
+Dans le cadre du Lightning Network, ces données associées sont utilisées pour _renforcer_ la protection contre les attaques par rejeu sur ce mécanisme.
+Comme nous l'apprendrons dans ce qui suit, la protection contre les rejeux garantit qu'un attaquant ne peut pas _retransmettre_ (rejouer, ou "replay" en anglais) un paquet sur le réseau et observer son chemin résultant.
+Au lieu de cela, les nœuds intermédiaires peuvent utiliser les mesures de protection contre les rejeux définies pour détecter et rejeter un paquet rejoué.
+Le format de paquet Sphinx de base utilise un journal de toutes les clés secrètes éphémères utilisées pour détecter les rejeux.
+Si une clé secrète est réutilisée, le nœud peut la détecter et rejeter le paquet.
+
+La nature des HTLC dans le Lightning Network nous permet de renforcer davantage la protection contre les rejeux en ajoutant une incitation _économique_ supplémentaire.
+N'oubliez pas que le hachage de paiement d'un HTLC ne peut être utilisé en toute sécurité (pour un paiement complet) qu'une seule fois.
+Si un hachage de paiement est à nouveau utilisé et traverse un nœud qui a déjà vu le secret de paiement pour ce hachage, il peut alors simplement retirer les fonds et collecter le montant total du paiement sans le transférer !
+Nous pouvons utiliser ce fait pour renforcer la protection contre les rejeux en exigeant que le _hachage de paiement_ soit inclus dans notre calcul HMAC en tant que données associées.
+Avec cette étape supplémentaire, tenter de rejouer un paquet oignon nécessite également que l'expéditeur s'engage à utiliser le _même_ hachage de paiement.
+Par conséquent, en plus de la protection normale contre les rejeux, un attaquant risque également de perdre la totalité du HTLC rejoué.
+
+Une considération avec l'ensemble toujours croissant de clés de session stockées pour la protection contre les rejeux est : les nœuds sont-ils capables de récupérer cet espace ?
+Dans le cadre du Lightning Network, la réponse est : oui !
+Encore une fois, en raison des attributs uniques de la construction des HTLC, nous pouvons apporter une amélioration supplémentaire par rapport au protocole Sphinx de base.
+Étant donné que les HTLC sont des contrats _avec un timelock_ basés sur la hauteur de bloc absolue, une fois qu'un HTLC a expiré, le contrat est effectivement définitivement fermé.
+Par conséquent, les nœuds peuvent utiliser cette hauteur d'expiration CLTV (l'opérateur CHECKLOCKTIMEVERIFY) comme indicateur pour savoir quand il est sûr de jeter une entrée dans le journal anti-rejeux.
+
+==== Emballage de la charge utile du saut de Chan
+
+Dans <<chan_onion_wrapping>> nous voyons les étapes utilisées pour envelopper la charge utile du saut de Chan dans l'oignon. Ce sont les mêmes étapes qu'Alice a utilisées pour envelopper la charge utile du saut de Dina.
+
+[[chan_onion_wrapping]]
+.Envelopper l'oignon pour Chan
+image::images/mtln_1020.png[]
+
+Alice commence avec la charge utile de l'oignon de 1 300 octets créée pour Dina. Les 65 premiers octets (ou moins) de celle-ci sont la charge utile de Dina obscurcie et le reste est du remplissage. Alice doit faire attention à ne pas écraser la charge utile de Dina.
+
+Ensuite, Alice doit localiser la clé publique éphémère (qui a été générée au tout début de chaque saut) qui sera ajoutée au paquet de routage de ce saut.
+
+N'oubliez pas qu'au lieu d'inclure une clé publique éphémère unique (que l'expéditeur et le nœud intermédiaire utilisent dans une opération ECDH pour générer un secret partagé), Sphinx utilise une seule clé publique éphémère qui est randomisée de manière déterministe à chaque saut.
+
+Lors du traitement du paquet, Dina utilisera son secret partagé et sa clé publique pour dériver la valeur aveuglante (`b_dina`) et l'utilisera pour rerandomiser la clé publique éphémère, dans une opération identique à ce qu'Alice effectue lors de la construction initiale du paquet.
+
+Alice ajoute une somme de contrôle HMAC interne à la charge utile de Chan et l'insère à "au début" (côté gauche) de la charge utile en oignon, déplaçant la charge utile existante vers la droite d'une longueur égale.
+Rappelez-vous qu'il y a effectivement _deux_ HMAC utilisés dans le schéma : le HMAC externe et le HMAC interne.
+Dans ce cas, le HMAC _interne_ de Chan est en fait le HMAC _externe_ de Dina.
+
+Maintenant, la charge utile de Chan est au début de l'oignon. Quand Chan voit cela, il n'a aucune idée du nombre de charges utiles avant ou après. Cela ressemble toujours au premier des 20 sauts !
+
+Ensuite, Alice masque toute la charge utile par XOR avec le flux d'octets généré à partir de la clé Alice-Chan ++rho++. Seuls Alice et Chan ont cette clé ++rho++, et eux seuls peuvent produire le flux d'octets pour obscurcir et désobscurcir l'oignon.
+Enfin, comme nous l'avons fait à l'étape précédente, nous calculons le HMAC externe de Chan, qui est ce qu'il utilisera pour vérifier l'intégrité du paquet oignon encrypté.
+
+==== Emballage de la charge utile du saut de Bob
+
+Dans <<bob_onion_wrapping>> nous voyons les étapes utilisées pour envelopper la charge utile de saut de Bob dans l'oignon.
+
+Bon, désormais, c'est facile !
+
+Commencer par la charge utile de l'oignon (obscurcie) contenant les charges utiles de saut de Chan et Dina.
+
+Obtenir la clé de session pour ce saut dérivée du facteur d'aveuglement généré par le saut précédent.
+Inclure le HMAC externe du saut précédent comme HMAC interne de ce saut.
+Insérer la charge utile du saut de Bob au début et décaler tout le reste vers la droite, en supprimant un morceau de la taille de la charge utile du saut de Bob à partir de la fin (c'était du remplissage de toute façon).
+
+Obscurcir le tout avec une opération XOR avec la clé ++rho++ du secret partagé Alice-Bob afin que seul Bob puisse le déballer.
+
+Calculer le HMAC externe et collez-le à la fin de la charge utile du saut de Bob.(((range="endofrange", startref="ix_10_onion_routing-asciidoc12")))
+
+[[bob_onion_wrapping]]
+.Envelopper l'oignon pour Bob
+image::images/mtln_1021.png[]
+
+
+==== Le paquet oignon final
+
+((("onion routing","final onion packet")))La charge utile de l'oignon final est prête à être envoyée à Bob. Alice n'a pas besoin d'ajouter d'autres charges utiles de saut.
+
+Alice calcule un HMAC pour la charge utile de l'oignon afin de la sécuriser cryptographiquement avec une somme de contrôle que Bob peut vérifier.
+
+Alice ajoute une clé de session publique de 33 octets qui sera utilisée par chaque saut pour générer un secret partagé et les clés ++rho++, ++mu++ et ++pad++.
+
+Enfin, Alice met le numéro de version de l'oignon (+0+ actuellement) au début. Cela permet de futures mises à niveau du format de paquet oignon.
+
+Le résultat peut être vu dans <<onion_packet_2>>.(((range="endofrange", startref="ix_10_onion_routing-asciidoc11")))
+
+[[onion_packet_2]]
+.Le paquet oignon
+image::images/mtln_1015.png[]
+
+=== Envoi de l'oignon
+
+((("onion routing","sending the onion", id="ix_10_onion_routing-asciidoc13", range="startofrange")))Dans cette section, nous verrons comment le paquet oignon est transmis et comment les HTLC sont déployés le long du chemin.
+
+==== Le message update_add_htlc
+
+((("onion routing","update_add_htlc message")))((("update_add_htlc message")))Les paquets oignon sont envoyés dans le cadre du message +update_add_htlc+. Si vous vous souvenez de <<update_add_htlc>>, dans <<channel_operation>>, nous avons vu que le contenu du message +update_add_htlc+ est le suivant :
+
+----
+[channel_id:channel_id]
+[u64:id]
+[u64:amount_msat]
+[sha256:payment_hash]
+[u32:cltv_expiry]
+[1366*byte:onion_routing_packet]
+----
+
+Vous vous souviendrez que ce message est envoyé par un partenaire de canal pour demander à l'autre partenaire de canal d'ajouter un HTLC. C'est ainsi qu'Alice demandera à Bob d'ajouter un HTLC pour payer Dina. Vous comprenez maintenant le but du dernier champ, +onion_routing_packet+, qui fait 1 366 octets de long. C'est le paquet oignon entièrement emballé que nous venons de construire !
+
+==== Alice envoie l'oignon à Bob
+
+Alice enverra le message +update_add_htlc+ à Bob. Voyons ce que ce message contiendra :
+
++channel_id+:: Ce champ contient l'ID du canal Alice-Bob, qui dans notre exemple est +0000031e192ca1+ (voir <<alice_dina_path_detail>>).
+
++id+:: L'ID de ce HTLC dans ce canal, commençant à +0+.
+
++amount_msat+:: Le montant du HTLC : 50 200 000 millisatoshis.
+
++payment_hash+:: Le hachage RIPEMD160(SHA-256) du paiement :
++
++9e017f6767971ed7cea17f98528d5f5c0ccb2c71+.
+
++cltv_expiry+:: Le délai d'expiration pour le HTLC sera de 700 058. Alice ajoute 20 blocs à l'expiration définie dans la charge utile de Bob selon le +cltv_expiry_delta+ négocié par Bob.
+
++onion_routing_packet+:: Le dernier paquet oignon qu'Alice a construit avec toutes les charges utiles de sauts !
+
+==== Bob vérifie l'oignon
+
+Comme nous l'avons vu dans <<channel_operation>>, Bob ajoutera le HTLC aux transactions d'engagement et mettra à jour l'état du canal avec Alice.
+
+Bob déballera l'oignon qu'il a reçu d'Alice comme suit :
+
+1. Bob prend la clé de session du paquet oignon et en déduit le secret partagé de Alice-Bob.
+
+2. Bob génère la clé ++mu++ à partir du secret partagé et l'utilise pour vérifier la somme de contrôle HMAC du paquet oignon.
+
+Maintenant que Bob a généré la clé partagée et vérifié le HMAC, il peut commencer à déballer la charge utile de l'oignon de 1 300 octets à l'intérieur du paquet oignon. L'objectif est que Bob récupère sa propre charge utile de saut, puis transmette l'oignon restant au saut suivant.
+
+Si Bob extrait et supprime sa charge utile de saut, l'oignon restant ne sera pas de 1 300 octets, il sera plus court ! Ainsi, le prochain saut saura qu'il n'est pas le premier saut et pourra détecter la longueur du chemin. Pour éviter cela, Bob doit ajouter plus de remplissage pour remplir l'oignon.
+
+==== Bob génère du remplissage
+
+Bob génère du remplissage d'une manière légèrement différente d'Alice, mais en suivant le même principe général.
+
+Tout d'abord, Bob _allonge_ la charge utile de l'oignon de 1 300 octets et les remplit avec des valeurs +0+. Maintenant, le paquet oignon fait 2 600 octets, la première moitié contenant les données envoyées par Alice et la moitié suivante contenant des zéros. Cette opération est illustrée dans <<bob_extends>>.
+
+[[bob_extends]]
+.Bob allonge la charge utile de l'oignon de 1 300 octets (remplis de zéros)
+image::images/mtln_1023.png["Bob allonge la charge utile de l'oignon de 1 300 octets (remplis de zéros)"]
+
+Cet espace vide sera obscurci et se transformera en "remplissage" par le même processus que Bob utilise pour désobscurcir sa propre charge utile de saut. Voyons comment cela fonctionne.
+
+[[bobDeobfuscates]]
+==== Bob désobscurcit sa charge utile de saut
+
+Ensuite, Bob générera la clé ++rho++ à partir de la clé partagée Alice-Bob. Il l'utilisera pour générer un flux de 2 600 octets, en utilisant l'algorithme ChaCha20.
+
+[TIP]
+====
+Les 1 300 premiers octets du flux d'octets générés par Bob sont exactement les mêmes que ceux générés par Alice à l'aide de la clé ++rho++.
+====
+
+Ensuite, Bob applique les 2 600 octets du flux d'octets ++rho++ à la charge utile de l'oignon de 2 600 octets avec une opération XOR au niveau des bits.
+
+Les 1 300 premiers octets seront désobscurcis par cette opération XOR, car c'est la même opération qu'Alice a appliquée et XOR est involutif. Ainsi, Bob va _révéler_ sa charge utile de saut suivie de quelques données qui semblent brouillées.
+
+Dans le même temps, l'application du flux d'octets ++rho++ aux 1 300 zéros qui ont été ajoutés à la charge utile de l'oignon les transformera en données de remplissage apparemment aléatoires. Cette opération est illustrée dans <<bob_deobfuscates>>.
+
+[[bob_deobfuscates]]
+.Bob désobscurcit l'oignon, obscurcit le remplissage
+image::images/mtln_1024.png["Bob désobscurcit l'oignon, obscurcit le remplissage"]
+
+==== Bob extrait le HMAC externe pour le prochain saut
+
+Rappelez-vous qu'un HMAC interne est inclus pour chaque saut, et qu'il deviendra ensuite le HMAC externe pour le _prochain_ saut.
+Dans ce cas, Bob extrait le HMAC interne (il a déjà vérifié l'intégrité du paquet encrypté avec le HMAC externe) et le met de côté car il l'ajoutera au paquet désobscurci pour permettre à Chan de vérifier le HMAC de son paquet encrypté.
+
+==== Bob supprime sa charge utile et décale l'oignon vers la gauche
+
+Maintenant, Bob peut retirer sa charge utile de saut du début de l'oignon et décaler vers la gauche les données restantes. Une quantité de données égale à la charge utile du saut de Bob de la seconde moitié, les 1 300 octets de remplissage, sera maintenant déplacée dans l'espace de la charge utile de l'oignon. Ceci est illustré dans <<bob_removes_shifts>>.
+
+Maintenant, Bob peut conserver la première moitié des 1 300 octets et ignorer l'allongement de 1 300 octets (le remplissage).
+
+Bob a maintenant un paquet oignon de 1 300 octets à envoyer au saut suivant. Il est presque identique à la charge utile d'oignon qu'Alice avait créée pour Chan, sauf que les 65 derniers octets de remplissage environ ont été mis là par Bob et seront différents.
+
+[[bob_removes_shifts]]
+.Bob supprime la charge utile du saut et décale le reste vers la gauche, comblant le vide avec un nouveau remplissage
+image::images/mtln_1025.png["Bob supprime la charge utile du saut et décale le reste vers la gauche, comblant le vide avec un nouveau remplissage"]
+
+[role="pagebreak-before"]
+Personne ne peut faire la différence entre le remplissage mis là par Alice et le remplissage mis là par Bob. Le remplissage est du remplissage ! Ce sont tous des octets aléatoires de toute façon. Notez que si Bob (ou l'un des autres alias de Bob) est présent dans la route à deux endroits distincts, ils peuvent faire la différence car le protocole de base utilise toujours le même hachage de paiement sur toute la route. Les paiements par trajets multiples atomiques ("Atomic multipath payments" ou "AMP" en anglais) et les Point Time-Locked Contracts (PTLC) éliminent le vecteur de corrélation en randomisant l'identifiant de paiement sur chaque route/saut.
+
+==== Bob construit le nouveau paquet oignon
+
+Bob copie maintenant la charge utile d'oignon dans le paquet oignon, ajoute le HMAC externe pour Chan, rerandomise la clé de session (de la même manière qu'Alice, l'expéditrice, l'a fait) avec l'opération de multiplication de courbe elliptique et ajoute un nouvel octet de version.
+
+Pour rerandomiser la clé de session, Bob calcule d'abord le facteur d'aveuglement pour son saut, en utilisant sa clé publique de nœud et le secret partagé qu'il a dérivé :
+```
+b_bob = SHA-256(P_bob || shared_secret_bob)
+```
+
+Avec ceci généré, Bob rerandomise maintenant la clé de session en effectuant une multiplication EC (courbe elliptique) en utilisant sa clé de session et le facteur d'aveuglement :
+```
+session_key_chan = session_key_bob * b_bob
+```
+
+La clé publique `session_key_chan` sera ensuite ajoutée au début du paquet oignon pour être traitée par Chan.
+
+==== Bob vérifie les détails du HTLC
+
+La charge utile du saut de Bob contient les instructions nécessaires pour créer un HTLC pour Chan.
+
+Dans la charge utile du saut, Bob trouve un +short_channel_id+, +amt_to_forward+ et +cltv_expiry+.
+
+Tout d'abord, Bob vérifie s'il a un canal avec cet ID court. Il découvre qu'il a un tel canal avec Chan.
+
+Ensuite, Bob confirme que le montant sortant (50 100 satoshis) est inférieur au montant entrant (50 200 satoshis) et que, par conséquent, les attentes de Bob en matière de frais sont satisfaites.
+
+De même, Bob vérifie que le +cltv_expiry+ sortant est inférieur au +cltv_expiry+ entrant, donnant à Bob suffisamment de temps pour réclamer le HTLC entrant en cas de violation.
+
+==== Bob envoie le update_add_htlc à Chan
+
+Bob construit maintenant un HTLC à envoyer à Chan, comme suit :
+
++channel_id+:: Ce champ contient l'ID du canal Bob-Chan, qui dans notre exemple est +000004040a61f0+ (voir <<alice_dina_path_detail>>).
+
++id+:: L'ID de ce HTLC dans ce canal, commençant à +0+.
+
++amount_msat+:: Le montant du HTLC : 50 100 000 millisatoshis.
+
++payment_hash+:: Le hachage RIPEMD160(SHA-256) du paiement :
++
++9e017f6767971ed7cea17f98528d5f5c0&#x200b;ccb2c71+. 
++
+C'est le même que le hachage de paiement provenant du HTLC d'Alice.
+
++cltv_expiry+:: Le délai d'expiration pour le HTLC sera de 700 038.
+
++onion_routing_packet+:: Le paquet oignon que Bob a reconstruit après avoir supprimé sa charge utile de saut.
+
+==== Chan transmet l'oignon
+
+Chan répète exactement le même processus que Bob :
+
+1. Chan reçoit le +update_add_htlc+ et traite la demande de HTLC, en l'ajoutant aux transactions d'engagement.
+
+2. Chan génère la clé partagée Alice-Chan et la sous-clé ++mu++.
+
+3. Chan vérifie le paquet oignon HMAC, puis extrait la pass:[<span class="keep-together">charge utile</span>] de 1 300 octets.
+
+4. Chan allonge la charge utile de l'oignon avec 1 300 octets supplémentaires, en remplissant cette partie avec des zéros.
+
+5. Chan utilise la clé ++rho++ pour produire 2 600 octets.
+
+6. Chan utilise le flux d'octets généré avec XOR et désobscurcit la charge utile de l'oignon. Simultanément, l'opération XOR obscurcit les 1 300 zéros supplémentaires, les transformant en remplissage.
+
+7. Chan extrait le HMAC interne de la charge utile, qui deviendra le HMAC externe pour Dina.
+
+8. Chan supprime sa charge utile de saut et décale vers la gauche la charge utile d'oignon de la même longueur. Une partie du remplissage généré dans les 1 300 octets allongés se déplace dans les 1 300 octets de la première moitié, devenant une partie de la charge utile de l'oignon.
+
+9. Chan construit le paquet oignon pour Dina avec cette charge utile d'oignon.
+
+10. Chan construit un message +update_add_htlc+ pour Dina et y insère le paquet oignon.
+
+11. Chan envoie le +update_add_htlc+ à Dina.
+
+12. Chan rerandomise la clé de session comme Bob l'a fait dans le saut précédent pour Dina.
+
+==== Dina reçoit la charge utile finale
+
+Lorsque Dina reçoit le message +update_add_htlc+ de Chan, elle sait grâce au +payment_hash+ qu'il s'agit d'un paiement pour elle. Elle sait qu'elle est le dernier saut de l'oignon.
+
+Dina suit exactement le même processus que Bob et Chan pour vérifier et déballer l'oignon, sauf qu'elle ne construit pas de nouveau remplisseur et ne transmet rien. Au lieu de cela, Dina répond à Chan avec +update_fulfill_htlc+ pour réclamer le HTLC. Le +update_fulfill_htlc+ remonte le long du chemin jusqu'à ce qu'il atteigne Alice. Tous les HTLC sont réclamés et les soldes des canaux sont mis à jour. Le paiement est terminé !(((range="endofrange", startref="ix_10_onion_routing-asciidoc13")))
+
+=== Retourner des erreurs
+
+((("error return","onion routing and", id="ix_10_onion_routing-asciidoc14", range="startofrange")))((("onion routing","returning errors", id="ix_10_onion_routing-asciidoc15", range="startofrange")))Jusqu'à présent, nous avons examiné la propagation vers l'avant de l'oignon établissant les HTLC et la propagation vers l'arrière du secret de paiement qui dénoue les HTLC une fois le paiement réussi.
+
+Il existe une autre fonction très importante du routage en oignon : le _retour d'erreur_. S'il y a un problème avec le paiement, l'oignon ou les sauts, nous devons propager une erreur vers l'arrière pour informer tous les nœuds de l'échec et dénouer tous les HTLC.
+
+Les erreurs se répartissent généralement en trois catégories : les échecs d'oignon, les échecs de nœud et les échecs de canal. Celles-ci peuvent en outre être subdivisées en erreurs permanentes et transitoires. Enfin, certaines erreurs contiennent des mises à jour de canal pour faciliter les futures tentatives de livraison de paiement.
+
+[NOTE]
+====
+Contrairement aux messages du protocole pair-à-pair (P2P) (défini dans https://github.com/lightningnetwork/lightning-rfc/blob/master/02-peer-protocol.md[BOLT #2: Peer Protocol for Channel Management]), les erreurs ne sont pas envoyées sous forme de messages P2P mais sont enveloppées dans des paquets de retour d'oignon et suivent l'inverse du chemin d'oignon (rétropropagation).
+====
+
+Le retour d'erreur est défini dans https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#returning-errors[BOLT #4: Onion Routing, Returning Errors].
+
+Les erreurs sont encodées par le nœud de retour (celui qui a découvert une erreur) dans un _paquet de retour_ comme suit :
+
+----
+    [32*byte:hmac]
+    [u16:failure_len]
+    [failure_len*byte:failuremsg]
+    [u16:pad_len]
+    [pad_len*byte:pad]
+----
+
+La somme de contrôle de vérification HMAC du paquet de retour est calculée avec la clé ++um++, générée à partir du secret partagé établi par l'oignon.
+
+[TIP]
+====
+Le nom de clé ++um++ est l'inverse du nom ++mu++, indiquant le même usage mais dans le sens opposé (rétropropagation).
+====
+
+Ensuite, le nœud de retour génère une clé +ammag+ (inverse du mot "gamma") et obscurcit le paquet de retour en utilisant une opération XOR avec un flux d'octets généré à partir de +ammag+.
+
+Enfin, le nœud de retour envoie le paquet de retour au saut à partir duquel il a reçu l'oignon original.
+
+Chaque saut recevant une erreur générera une clé +ammag+ et obscurcira à nouveau le paquet de retour en utilisant une opération XOR avec le flux d'octets de +ammag+.
+
+Finalement, l'expéditeur (nœud d'origine) reçoit un paquet de retour. Il générera ensuite les clés +ammag+ et ++um++ pour chaque saut et désobscurcira l'erreur de retour avec  XOR de manière itérative jusqu'à ce qu'il révèle le paquet de retour.
+
+[[failure_messages]]
+==== Messages d'échec
+
+((("error return","failure messages", id="ix_10_onion_routing-asciidoc16", range="startofrange")))((("failure messages, onion routing and", id="ix_10_onion_routing-asciidoc17", range="startofrange")))Le message +failuremsg+ est défini dans https://github.com/lightningnetwork/lightning-rfc/blob/master/04-onion-routing.md#failure-messages[BOLT #4: Onion Routing, Failure Messages].
+
+Un message d'échec se compose d'un +code d'échec+ sur deux octets suivi des données applicables à ce type d'échec.
+
+L'octet supérieur du +failure_code+ est un ensemble d'indicateurs binaires qui peuvent être combinés (avec un OR binaire) :
+
+
+0x8000 (`BADONION`):: Oignon non décomposable encrypté par le pair expéditeur
+0x4000 (`PERM`):: Défaillance permanente (autrement transitoire)
+0x2000 (`NODE`):: Défaillance de nœud (autrement de canal)
+0x1000 (`UPDATE`):: Nouvelle mise à jour du canal ci-jointe
+
+
+Les types de défaillance indiqués dans <<failure_types_table>> sont actuellement définis.
+
+include::failure_types_table.asciidoc[]
+
+[[stuck_payments]]
+===== Paiements bloqués
+
+((("onion routing","stuck payments")))((("stuck payments")))Dans l'implémentation actuelle du Lightning Network, il est possible qu'une tentative de paiement se trouve _bloquée_ : ni exécutée ni annulée par une erreur. Cela peut se produire en raison d'un bogue sur un nœud intermédiaire, d'un nœud qui se déconnecte lors de la gestion des HTLC ou d'un nœud malveillant retenant des HTLC sans signaler d'erreur. Dans tous ces cas, le HTLC ne peut pas être résolu avant son expiration. Le timelock (CLTV) qui est défini sur chaque HTLC permet de résoudre cette condition (parmi les autres défaillances de routage HTLC et de canaux possibles).
+
+Cependant, cela signifie que l'expéditeur du HTLC doit attendre jusqu'à l'expiration, et les fonds engagés dans ce HTLC restent indisponibles jusqu'à l'expiration du HTLC. De plus, l'expéditeur _ne peut pas réessayer_ ce même paiement, car s'il le fait, il court le risque _qu'à la fois_ le paiement original et le paiement réessayé réussissent — le destinataire est payé deux fois. En effet, une fois envoyé, un HTLC ne peut pas être "annulé" par l'expéditeur — il doit échouer ou expirer. Les paiements bloqués, bien que rares, créent une expérience utilisateur indésirable, où le porte-monnaie de l'utilisateur ne peut pas payer ou annuler un paiement.
+
+((("Point Time-Locked Contract (PTLC)")))((("PTLC (Point Time-Locked Contract)")))((("stuckless payments")))Une solution proposée à ce problème est appelée _paiements sans blocage_, et elle dépend des Point Time-Locked Contracts (PTLC), qui sont des contrats de paiement qui utilisent une primitive cryptographique différente de celle des HTLC (c'est-à-dire l'ajout de points sur la courbe elliptique au lieu d'un hachage et d'une préimage secrète). Les PTLC sont compliqués avec ECDSA mais beaucoup plus faciles avec les fonctionnalités de signature Taproot et Schnorr de Bitcoin, qui ont récemment été verrouillées pour une activation en novembre 2021. Il est prévu que les PTLC soient implémentés dans le Lightning Network après l'activation de ces fonctionnalités Bitcoin(((range="endofrange", startref="ix_10_onion_routing-asciidoc17")))(((range="endofrange", startref="ix_10_onion_routing-asciidoc16"))).(((range="endofrange", startref="ix_10_onion_routing-asciidoc15")))(((range="endofrange", startref="ix_10_onion_routing-asciidoc14")))
+
+[[keysend]]
+=== Les paiements spontanés Keysend
+
+((("keysend spontaneous payments")))((("onion routing","keysend spontaneous payments")))Dans le flux de paiement décrit plus haut dans le chapitre, nous avons supposé que Dina
+reçoive une facture d'Alice "hors bande" ou qu'elle l'obtienne via un mécanisme
+sans rapport avec le protocole (généralement copier/coller ou scan d'un code QR). Cette caractéristique
+signifie que le processus de paiement se déroule toujours en deux étapes : d'abord, l'expéditeur
+obtient une facture, et deuxièmement, utilise le hachage de paiement (encodé dans la facture) pour
+router avec succès un HTLC. L'aller-retour supplémentaire nécessaire pour obtenir une facture
+avant d'effectuer un paiement peut être un goulet d'étranglement dans les applications qui impliquent
+la diffusion des micropaiements via Lightning. Et si nous pouvions simplement "pousser" un paiement
+spontanément, sans avoir à obtenir une facture du destinataire
+au préalable ? Le protocole `keysend` est une extension de bout en bout (seulement l'expéditeur et
+le récepteur en sont conscients) du protocole Lightning qui permet des "push" spontanés
+de paiements.
+
+==== Enregistrements TLV d'oignon personnalisés
+
+((("onion routing","custom onion TLV records")))((("Type-Length-Value (TLV) format","custom onion TLV records")))Le protocole Lightning moderne utilise l'encodage TLV (Type-Length-Value) dans
+l'oignon pour coder les informations qui indiquent à chaque nœud _où_ et _comment_
+transmettre le paiement. Tirant parti du format TLV, chaque élément d'information de routage
+(comme le nœud suivant auquel passer le HTLC) se voit attribuer un type (ou clé) spécifique
+encodé sous la forme d'un entier `BigSize` de longueur variable (de la taille maximum d'un entier
+64 bits). Ces types "essentiels" (valeurs inversées en dessous de `65536`) sont définis
+dans BOLT #4, avec le reste des détails de routage en oignon. Les types d'oignon avec une
+valeur supérieure à `65536` sont destinés à être utilisés par des porte-monnaie et des applications
+comme "enregistrements personnalisés".
+
+Les enregistrements personnalisés permettent aux applications de paiement de joindre des métadonnées supplémentaires ou
+un contexte à un paiement sous forme de paires clé/valeur dans l'oignon. Étant donné que les enregistrements personnalisés
+sont inclus dans la charge utile d'oignon elle-même, comme tous les autres contenus de saut, les
+enregistrements sont encryptés de bout en bout. Comme les enregistrements personnalisés consomment effectivement une
+partie du paquet d'oignon de taille fixe de 1300 octets, encodant chaque clé et
+valeur de chaque enregistrement personnalisé réduit la quantité d'espace disponible pour l'encodage
+du reste de la route. En pratique, cela signifie que plus l'espace d'oignon utilisé pour les enregistrements personnalisés est important, plus l'itinéraire devra être court. Étant donné que chaque paquet
+HTLC a une taille fixe, les enregistrements personnalisés n'ajoutent pas de données supplémentaires à un
+HTLC ; au lieu de cela, ils réaffectent des octets qui auraient été remplis de données aléatoires
+autrement.
+
+==== Envoi et réception de paiements Keysend
+
+((("onion routing","sending/receiving keysend payments")))Un paiement `keysend` inverse le flux typique d'un HTLC où le destinataire
+révèle une préimage secrète à l'expéditeur. Au lieu de cela, l'expéditeur inclut la
+préimage _dans_ l'oignon pour le destinataire, et achemine le HTLC vers le
+destinataire. Le destinataire décrypte ensuite la charge utile de l'oignon et utilise la préimage
+incluse (qui _doit_ correspondre au hachage de paiement du HTLC) pour régler le
+paiement. Par conséquent, les paiements `keysend` peuvent être effectués sans d'abord
+obtenir d'une facture du récepteur, car la préimage est "poussée" vers
+le destinataire. Un paiement `keysend` utilise un type d'enregistrement personnalisé TLV de `5482373484`
+pour encoder une valeur de préimage de 32 octets.
+
+==== Keysend et enregistrements personnalisés dans les applications Lightning
+
+((("onion routing","keysend and custom records in Lightning applications")))De nombreuses applications de diffusion de paiement Lightning utilisent le protocole "keysend" pour continuellement
+diffuser des satoshis vers une destination identifiée par sa clé publique dans le réseau.
+Généralement, une application inclura également des métadonnées telles qu'une
+note de pourboire / don ou d'autres informations au niveau de l'application en plus de
+l'enregistrement `keysend`.
+
+=== Conclusion
+
+Le protocole de routage en oignon du Lightning Network est adapté du protocole Sphinx pour mieux répondre aux besoins d'un réseau de paiement. En tant que tel, il offre une énorme amélioration de la confidentialité et de la contre-surveillance par rapport à la blockchain Bitcoin publique et transparente.(((range="endofrange", startref="ix_10_onion_routing-asciidoc0")))
+
+Dans <<path_finding>> nous verrons comment la combinaison du routage basé sur la source et du routage en oignon est utilisée par Alice pour trouver un bon chemin et router le paiement vers Dina. Pour trouver un chemin, Alice doit d'abord se renseigner sur la topologie du réseau, qui est le sujet de <<gossip>>.

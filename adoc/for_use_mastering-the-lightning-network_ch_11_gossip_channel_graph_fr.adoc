@@ -1,0 +1,488 @@
+[[gossip]]
+== Bavardage et le graphe des canaux
+
+((("channel graph", id="ix_11_gossip_channel_graph-asciidoc0", range="startofrange")))((("gossip protocol", id="ix_11_gossip_channel_graph-asciidoc1", range="startofrange")))Dans ce chapitre, nous décrirons le protocole de bavardage ("gossip" en anglais) du Lightning Network et comment il est utilisé par les nœuds pour construire et maintenir un graphe des canaux. Nous passerons également en revue le mécanisme d'amorçage DNS utilisé pour trouver des pairs avec lesquels "bavarder".
+
+La section "Routing fees and Gossip relaying" (traduit en "Relayage des frais de routage et des bavardages") est mise en évidence par un contour épais recouvrant la couche de routage et la couche pair-à-pair dans <<LN_protocol_gossip_highlight>>.
+
+[[LN_protocol_gossip_highlight]]
+.Le protocole de bavardage dans la suite de protocoles Lightning
+image::images/mtln_1101.png["Le protocole de bavardage dans la suite de protocoles Lightning"]
+
+Comme nous l'avons déjà appris, le Lightning Network utilise un protocole de routage en oignon basé sur la source pour envoyer un paiement de l'expéditeur au destinataire.
+Pour cela, le nœud émetteur doit pouvoir construire un chemin de canaux de paiement qui le relie au destinataire, comme nous le verrons dans <<path_finding>>.
+Ainsi, l'expéditeur doit être en mesure de cartographier le Lightning Network en construisant un graphe des canaux.
+Le _graphe des canaux_ est l'ensemble interconnecté de canaux annoncés publiquement et les nœuds que ces canaux relient entre eux.
+
+Comme les canaux sont adossés par une transaction de financement qui est sur la chaîne, on pourrait croire à tort que les nœuds Lightning pourraient simplement extraire les canaux existants de la blockchain Bitcoin.
+Cependant, cela n'est possible que dans une certaine mesure.
+((("P2WSH (Pay-to-Witness-Script-Hash)")))((("Pay-to-Witness-Script-Hash (P2WSH)")))Les transactions de financement sont des adresses Pay-to-Witness-Script-Hash (P2WSH) et la nature du script (un multisig 2-de-2) ne sera révélée qu'une fois la sortie de la transaction de financement dépensée.
+Même si la nature du script était connue, il est important de se rappeler que tous les scripts multisig 2-de-2 ne correspondent pas à des canaux de paiement.
+
+Il y a encore d'autres raisons pour lesquelles il n'est pas forcément utile de consulter la blockchain Bitcoin.
+Par exemple, sur le Lightning Network, les clés Bitcoin utilisées pour signer font l'objet d'une rotation par les nœuds pour chaque canal et chaque mise à jour.
+Ainsi, même si nous pouvions détecter de manière fiable les transactions de financement sur la blockchain Bitcoin, nous ne saurions pas quels deux nœuds du Lightning Network possèdent un canal en particulier.
+
+Le Lightning Network résout ce problème en implémentant un _protocole de bavardage_.
+Les protocoles de bavardage sont typiques des réseaux pair-à-pair (P2P) et permettent aux nœuds de partager des informations avec l'ensemble du réseau avec seulement quelques connexions directes à des pairs.
+Les nœuds Lightning ouvrent des connexions pair-à-pair encryptées entre eux et partagent les informations (bavardages) qu'ils ont reçues d'autres pairs.
+Dès qu'un nœud souhaite partager des informations, par exemple sur un canal nouvellement créé, il envoie un message à tous ses pairs.
+Lors de la réception d'un message, un nœud décide si le message reçu était nouveau et, si tel est le cas, transmet les informations à ses pairs.
+Ainsi, si le réseau pair-à-pair est bien connecté, toutes les nouvelles informations nécessaires au fonctionnement du réseau seront éventuellement propagées à tous les autres pairs.
+
+De toute évidence, si un nouveau pair rejoint le réseau pour la première fois, il doit connaître d'autres pairs sur le réseau, afin de pouvoir se connecter aux autres et participer au réseau.
+
+Dans ce chapitre, nous allons explorer exactement _comment_ les nœuds Lightning se découvrent entre eux, découvrent et mettent à jour leur statut de nœud et communiquent entre eux.
+
+Lorsque la plupart font référence à la partie _réseau_ du Lightning Network, ils font référence au _graphe des canaux_ qui est lui-même une structure de données authentifiée unique _ancrée_ dans la blockchain Bitcoin
+de base.
+
+Cependant, le Lightning Network est également un réseau pair-à-pair de nœuds qui diffusent des informations sur les canaux de paiement et les nœuds. Habituellement, pour que deux pairs maintiennent un canal de paiement, ils doivent se parler directement, ce qui signifie qu'il y aura une connexion entre eux.
+Cela suggère que le graphe des canaux est un sous-réseau du réseau pair-à-pair.
+Cependant, ce n'est pas vrai car les canaux de paiement peuvent rester ouverts même si l'un ou les deux pairs se déconnectent temporairement.
+
+Revenons sur certaines des terminologies que nous avons utilisées tout au long du livre, en examinant spécifiquement ce qu'elles signifient en termes de graphe des canaux et de réseau pair-à-pair (voir <<network_terminology>>).
+
+[[network_terminology]]
+.Terminologie des différents réseaux
+[options="header"]
+|===
+| Graphe des canaux  |Réseau pair-à-pair
+|  canal | connexion
+| ouvrir | connecter
+| fermer | déconnecter
+| transaction de financement | connexion TCP/IP encryptée
+| envoyer	|	transmettre
+| paiement |  message
+|===
+
+Étant donné que le Lightning Network est un réseau pair-à-pair, un amorçage initial est nécessaire pour que les pairs se découvrent. Dans ce chapitre, nous suivrons l'histoire d'un nouveau pair se connectant au réseau pour la première fois et examinerons chaque étape du processus d'amorçage, de la découverte initiale des pairs à la synchronisation et à la validation du graphe des canaux.
+
+Dans un premier temps, notre nouveau nœud doit en quelque sorte _découvrir_ au moins _un_ pair qui est déjà connecté au réseau et qui a un graphe des canaux complet (comme nous le verrons plus tard, il n'y a pas de version canonique du graphe des canaux). En utilisant l'un des nombreux protocoles d'amorçage initiaux pour trouver ce premier pair, une fois la connexion établie, notre nouveau
+le pair doit maintenant _télécharger_ et _valider_ le graphe des canaux. Une fois le graphe des canaux entièrement validé, notre nouveau pair est prêt à commencer à ouvrir des canaux et à envoyer des paiements sur le réseau.
+
+Après l'amorçage initial, un nœud du réseau doit continuer à conserver sa vue du graphe des canaux en traitant les nouvelles mises à jour de la politique de routage des canaux, en découvrant et en validant de nouveaux canaux, en supprimant les canaux qui ont été fermés sur la chaîne et enfin en élaguant les canaux qui n'ont pas envoyé un "battement de cœur" approprié pass:[<span class="keep-together">environ</span>] toutes les deux semaines.
+
+À la fin de ce chapitre, vous comprendrez un élément clé de
+du réseau pair-à-pair Lightning Network : à savoir, comment les pairs se découvrent et maintiennent une copie locale (perspective) du graphe des canaux. Nous commencerons par explorer l'histoire d'un nouveau nœud qui vient de démarrer et qui a besoin de trouver d'autres pairs auxquels se connecter sur le réseau.(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc1")))(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc0")))
+
+[role="pagebreak-before less_space"]
+=== Découverte de pairs
+
+((("gossip protocol","peer discovery", id="ix_11_gossip_channel_graph-asciidoc2", range="startofrange")))((("peer discovery", id="ix_11_gossip_channel_graph-asciidoc3", range="startofrange")))Dans cette section, nous allons commencer à suivre un nouveau nœud Lightning qui souhaite rejoindre le réseau en trois étapes :
+
+. Découvrir un ensemble de pairs d'amorçage
+. Télécharger et valider le graphe des canaux
+. Commencer le processus de maintenance continue du graphe des canaux
+
+
+==== Amorçage P2P
+
+((("bootstrapping","P2P")))((("initial peer bootstrapping")))((("P2P bootstrapping")))((("peer discovery","P2P bootstrapping")))Avant faire quoi que ce soit d'autre, notre nouveau nœud doit d'abord découvrir un ensemble de pairs qui font déjà partie du réseau. Nous appelons ce processus l'amorçage initial des pairs, et c'est quelque chose que chaque réseau pair-à-pair doit mettre en œuvre correctement pour garantir un réseau robuste et sain.
+
+L'amorçage de nouveaux pairs sur des réseaux pair-à-pair existants est un problème très bien étudié avec plusieurs solutions connues, chacune avec ses propres compromis distincts. La solution la plus simple à ce problème consiste simplement à embarquer un ensemble de pairs d'amorçage codés en dur dans le logiciel de nœud P2P. C'est simple dans la mesure où chaque nouveau nœud a une liste de pairs d'amorçage dans le logiciel qu'il exécute, mais plutôt fragile étant donné que si l'ensemble de pairs d'amorçage se déconnectent, aucun nouveau nœud ne pourra rejoindre le réseau. En raison de cette fragilité, cette
+option est généralement utilisée comme solution de secours au cas où aucun des autres mécanismes d'amorçage P2P ne fonctionnerait correctement.
+
+((("initial peer discovery")))Plutôt que de coder en dur l'ensemble de pairs d'amorçage ("bootstrap" en anglais) dans le logiciel/exécutable lui-même, nous pouvons à la place permettre aux pairs d'obtenir dynamiquement un nouvel ensemble de pairs d'amorçage qu'ils peuvent utiliser pour rejoindre le réseau. Nous appellerons ce processus _découverte initiale de pairs_. En règle générale, nous tirerons parti
+de protocoles Internet existants pour maintenir et distribuer un ensemble de pairs d'amorçage. Une liste non exhaustive de protocoles qui ont été utilisés dans le passé pour accomplir la découverte initiale des pairs comprend :
+
+  * Domain Name Service (DNS)
+  * Internet Relay Chat (IRC)
+  * Hypertext Transfer Protocol (HTTP)
+
+Semblable au protocole Bitcoin, le principal mécanisme initial de découverte des pairs utilisé dans le Lightning Network se fait via DNS. Étant donné que la découverte initiale des pairs est une tâche critique et universelle pour le réseau, le processus a été _standardisé_ dans https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md[BOLT #10: DNS Bootstrap].
+
+==== Amorçage DNS
+
+((("bootstrapping","DNS", id="ix_11_gossip_channel_graph-asciidoc4", range="startofrange")))((("DNS bootstrapping", id="ix_11_gossip_channel_graph-asciidoc5", range="startofrange")))((("peer discovery","DNS bootstrapping", id="ix_11_gossip_channel_graph-asciidoc6", range="startofrange")))Le https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md[BOLT #10] décrit une manière standardisée la découverte
+de pairs à l'aide de DNS. La version Lightning de l'amorçage basé sur DNS utilise jusqu'à trois types d'enregistrements distincts :
+
+* Enregistrements +SRV+ pour découvrir un ensemble de _clés publiques de nœud_.
+* Enregistrements +A+ pour mapper la clé publique d'un nœud à son adresse +IPv4+ actuelle.
+* Enregistrements +AAA+ pour mapper la clé publique d'un nœud à son adresse +IPv6+ actuelle.
+
+Ceux qui connaissent un peu le protocole DNS connaissent peut-être déjà les types d'enregistrement +A+ (nom vers adresse IPv4) et +AAA+ (nom vers adresse IPv6), mais pas le type +SRV+. Le type d'enregistrement +SRV+ est utilisé par les protocoles construits au-dessus du DNS pour déterminer _l'emplacement_ d'un service spécifié. Dans notre contexte, le service en question est un nœud Lightning donné, et l'emplacement est son adresse IP. Nous devons utiliser ce type d'enregistrement supplémentaire car, contrairement aux nœuds du protocole Bitcoin, nous avons besoin à la fois d'une clé publique _et_ d'une adresse IP pour se connecter à un nœud. Comme on le voit dans <<wire_protocol>>, le protocole d'encryptage de transport utilisé dans le Lightning Network nécessite la connaissance de la clé publique d'un nœud avant de se connecter afin de mettre en œuvre la dissimulation d'identité pour les nœuds du réseau.
+
+===== Flux de travail d'amorçage d'un nouveau pair
+
+Avant de se lancer dans les détails de https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md[BOLT #10], nous allons d'abord décrire le flux de haut niveau d'un nouveau nœud qui souhaite utiliser le BOLT #10 pour rejoindre le réseau.
+
+Tout d'abord, un nœud doit identifier un serveur DNS unique ou un ensemble de serveurs DNS qui comprennent le BOLT #10 afin qu'ils puissent être utilisés pour l'amorçage P2P.
+
+Alors que BOLT # 10 utilise _lseed.bitcoinstats.com_ comme serveur de départ, "seed" en anglais, il n'existe pas d'ensemble "officiel" de seeds DNS à cette fin, mais chacune des principales implémentations conserve son propre seed DNS et interrogent mutuellement les seeds à des fins de redondance. Dans <<dns_seeds>> vous verrez une liste non exhaustive de certains serveurs seed DNS populaires.
+
+[[dns_seeds]]
+.Tableau des serveurs seed DNS connus pour Lightning
+[options="header"]
+|===
+| Serveur DNS     | Gestionnaire
+| _lseed.bitcoinstats.com_ | Christian Decker
+| _nodes.lightning.directory_ | Lightning Labs (Olaoluwa Osuntokun)
+| _soa.nodes.lightning.directory_ | Lightning Labs (Olaoluwa Osuntokun)
+| _lseed.darosior.ninja_ | Antoine Poinsot
+|===
+
+
+Les seeds DNS existent à la fois pour le réseau principal et le réseau de test de Bitcoin. Pour notre
+exemple, nous supposerons l'existence d'un seed DNS BOLT #10 valide sur _nodes.lightning.directory_.
+
+Ensuite, notre nouveau nœud émettra une requête +SRV+ pour obtenir un ensemble de _pairs d'amorçage candidats_. La réponse à notre requête sera une série de clés publiques encodées au format bech32. Étant donné que DNS est un protocole basé sur le texte, nous ne pouvons pas envoyer de données binaires brutes, un schéma de codage est donc requis. BOLT #10 spécifie un encodage bech32 en raison de son utilisation dans l'écosystème Bitcoin en général. Le nombre de clés publiques encodées renvoyées dépend du serveur renvoyant la requête, ainsi que de tous les résolveurs qui se situent entre le client et le serveur faisant autorité.
+
+À l'aide de l'outil de ligne de commande largement disponible +dig+, nous pouvons interroger la version _testnet_ du seed DNS mentionné précédemment avec la commande suivante :
+
+----
+$ dig @8.8.8.8 test.nodes.lightning.directory SRV
+----
+
+Nous utilisons l'argument +@+ pour forcer la résolution via le serveur de noms de Google (avec l'adresse IP 8.8.8.8) car il ne filtre pas les réponses de requêtes SRV volumineuses. À la fin de la commande, nous spécifions que nous souhaitons uniquement renvoyer les enregistrements +SRV+. Un exemple de réponse ressemble à quelque chose comme <<ex1101>>.
+
+[[ex1101]]
+.Interroger le seed DNS pour les nœuds accessibles
+====
+----
+$ dig @8.8.8.8 test.nodes.lightning.directory SRV
+
+; <<>> DiG 9.10.6 <<>> @8.8.8.8 test.nodes.lightning.directory SRV
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43610
+;; flags: qr rd ra; QUERY: 1, ANSWER: 25, AUTHORITY: 0, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;test.nodes.lightning.directory.	IN	SRV
+
+;; ANSWER SECTION:
+test.nodes.lightning.directory.	59 IN	SRV	10 10 9735 <1>
+ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory. <2>
+test.nodes.lightning.directory.	59 IN	SRV	10 10 15735 ln1qtgsl3efj8verd4z27k44xu0a59kncvsarxatahm334exgnuvwhnz8dkhx8.test.nodes.lightning.directory.
+
+ [...]
+
+;; Query time: 89 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8)
+;; WHEN: Thu Dec 31 16:41:07 PST 2020
+----
+<1> Numéro de port TCP sur lequel le nœud LN est joignable.
+<2> Clé publique (ID) encodée de nœud sous la forme d'un nom de domaine virtuel.
+====
+
+Nous avons tronqué la réponse par souci de brièveté et n'affichons que deux des réponses renvoyées. Les réponses contiennent un nom de domaine "virtuel" pour un nœud cible, puis à gauche nous avons le _port TCP_ sur lequel ce nœud peut être atteint. La première réponse utilise le port TCP standard pour le Lightning Network : +9735+. La deuxième réponse utilise un port personnalisé, qui est permis par le protocole.
+
+Ensuite, nous tenterons d'obtenir l'autre information dont nous avons besoin pour nous connecter à un nœud : son adresse IP. Cependant, avant de pouvoir faire cette requête, nous allons d'abord _décoder_ l'encodage bech32 de la clé publique à partir du nom de domaine virtuel :
+
+----
+ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7
+----
+
+En décodant cette chaîne bech32, nous obtenons la clé publique
++secp256k1+ valide suivante :
+
+----
+026c64f5a7f24c6f7f0e1d6ec877f23b2f672fb48967c2545f227d70636395eaf3
+----
+
+Maintenant que nous avons la clé publique brute, nous allons demander au serveur DNS de _résoudre_ l'hôte virtuel donné afin que nous puissions obtenir les informations IP (enregistrement +A+) pour le nœud, comme illustré dans <<ex1102>>.
+
+++++
+<div id="ex1102" data-type="example">
+<h5>Obtention de la dernière adresse IP d'un nœud</h5>
+
+<pre data-type="programlisting">$ dig ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory A
+
+; &lt;&lt;&gt;&gt; DiG 9.10.6 &lt;&lt;&gt;&gt; ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory A
+;; global options: +cmd
+;; Got answer:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 41934
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory. IN A
+
+;; ANSWER SECTION:
+ln1qfkxfad87fxx7lcwr4hvsalj8vhkwta539nuy4zlyf7hqcmrjh40xx5frs7.test.nodes.lightning.directory. 60 IN A <em>X.X.X.X</em> <a class="co" id="comarker1" href="#c01"><img src="callouts/1.png" alt="1"/></a>
+
+;; Query time: 83 msec
+;; SERVER: 2600:1700:6971:6dd0::1#53(2600:1700:6971:6dd0::1)
+;; WHEN: Thu Dec 31 16:59:22 PST 2020
+;; MSG SIZE  rcvd: 138</pre>
+
+<dl class="calloutlist">
+<dt><a class="co" id="c01" href="#comarker1"><img src="callouts/1.png" alt="1"/></a></dt>
+<dd><p>Le serveur DNS renvoie une adresse IP <code><em>X.X.X.X</em></code> . Nous l'avons remplacé par des X dans le texte ici afin d'éviter de présenter une véritable adresse IP.</p></dd>
+</dl></div>
+++++
+
+Dans la commande précédente, nous avons interrogé le serveur afin d'obtenir une adresse IPv4 pass:[<span class="keep-together">(enregistrement <code>A</code>)</span>] pour notre nœud cible (remplacé par ++__X.X.X.X__++ dans l'exemple précédent). Maintenant que nous avons la clé publique brute, l'adresse IP et le port TCP, nous pouvons nous connecter au protocole de transport des nœuds sur :
+
+----
+026c64f5a7f24c6f7f0e1d6ec877f23b2f672fb48967c2545f227d70636395eaf3@X.X.X.X:9735
+----
+
+L'interrogation de l'enregistrement DNS +A+ actuel pour un nœud donné peut également être utilisée pour rechercher le _dernier_ ensemble d'adresses. De telles requêtes peuvent être utilisées pour synchroniser plus rapidement les dernières informations d'adressage d'un nœud, par rapport à l'attente des mises à jour d'adresse sur le réseau de bavardage (voir <<node_announcement>>).
+
+À ce stade de notre parcours, notre nouveau nœud Lightning a trouvé son premier
+pair et établit sa première connexion ! Nous pouvons maintenant commencer la deuxième phase du nouvel amorçage de nœud : la synchronisation et la validation du graphe des canaux.
+
+Tout d'abord, nous allons explorer davantage les subtilités de BOLT #10 pour approfondir la façon dont les choses fonctionnent sous le capot.(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc6")))(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc5")))(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc4")))
+
+==== Options de requête SRV
+
+Le standard https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md[BOLT #10] est hautement extensible en raison de son utilisation des
+sous-domaines imbriqués comme couche de communication pour des options de requête supplémentaires. Le
+protocole d'amorçage permet aux clients de spécifier davantage le _type_ de nœuds qu'ils tentent de récupérer par rapport aux valeurs par défaut récupérant un sous-ensemble aléatoire de nœuds dans les réponses à la requête.
+
+Le schéma de sous-domaine des options de requête utilise une série de paires clé-valeur où la clé est une _lettre unique_ et l'ensemble de texte restant est la valeur. Les types de requêtes suivants existent dans la version actuelle du document de standard https://github.com/lightningnetwork/lightning-rfc/blob/master/10-dns-bootstrap.md[BOLT #10] :
+
++r+:: L'octet _royaume_ ("realm" en anglais) qui est utilisé pour déterminer pour quelles requêtes de chaîne ou de royaume doivent être renvoyées. En l'état, la seule valeur de cette clé est +0+ qui désigne "Bitcoin".
+
++a+:: Permet aux clients de filtrer les nœuds renvoyés en fonction des _types_ d'adresses qu'ils annoncent. Par exemple, cela peut être utilisé pour obtenir uniquement des nœuds qui annoncent une adresse IPv6 valide. La valeur qui suit ce type est basée sur un champ de bits qui _indexe_ dans l'ensemble des _types_ d'adresses spécifiés qui sont définis dans https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md[BOLT #7]. La valeur par défaut de ce champ est +6+, qui représente à la fois IPv4 et IPv6 (les bits 1 et 2 sont définis).
+
++l+:: Une clé publique de nœud valide sérialisée au format compressé. Cela permet à un client d'interroger un nœud spécifié plutôt que de recevoir un ensemble de nœuds aléatoires.
+
++n+:: Le nombre d'enregistrements à renvoyer. La valeur par défaut de ce champ est +25+.
+
+Un exemple de requête avec des options de requête supplémentaires ressemble à ceci :
+
+----
+r0.a2.n10.nodes.lightning.directory
+----
+
+En décomposant la requête une paire clé-valeur à la fois, nous obtenons les
+informations suivantes :
+
++r0+:: La requête cible le domaine Bitcoin
++a2+:: La requête veut que seules les adresses IPv4 soient renvoyées
++n10+:: La requête demande que 10 enregistrements soient retournés
+
+Essayez vous-même quelques combinaisons des différentes options à l'aide de l'outil de ligne de commande DNS +dig+(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc3")))(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc2"))) :
+
+----
+dig @8.8.8.8 r0.a6.nodes.lightning.directory SRV
+----
+
+=== Le graphe des canaux
+
+((("channel graph","structure of")))Maintenant que notre nouveau nœud est capable d'utiliser le protocole d'amorçage DNS pour se connecter à son tout premier pair, il peut commencer à synchroniser le graphe des canaux ! Cependant, avant de synchroniser le graphe des canaux, nous devrons savoir exactement _ce_ que nous entendons par graphe des canaux. Dans cette section, nous explorerons la _structure_ précise du graphe des canaux et examinerons les aspects uniques du graphe des canaux par rapport à la structure de données "graphe" abstraite typique qui est bien connue/utilisée dans le domaine de l'informatique.
+
+==== Un graphe orienté
+
+((("channel graph","directed graph")))((("directed graph")))Un _graphe_ en informatique est une structure de données spéciale composée de sommets (généralement appelés nœuds) et d'arêtes (également appelées sous forme de liens). Deux nœuds peuvent être reliés par une ou plusieurs arêtes. Le graphe des canaux est également _dirigé_ étant donné qu'un paiement peut circuler dans les deux sens sur une arête donnée (un canal). Un exemple de _graphe orienté_ est illustré dans <<directed_graph>>.
+
+[[directed_graph]]
+.Un graphe orienté
+image::images/mtln_1102.png["Un graphe orienté"]
+
+Dans le contexte du Lightning Network, nos sommets sont les nœuds Lightning, nos arêtes étant les canaux de paiement reliant ces nœuds. Comme nous nous intéressons au _routage de paiements_, dans notre modèle, un nœud sans arête (pas de canal de paiement) n'est pas considéré comme faisant partie du graphe car il n'est pas utile.
+
+Étant donné que les canaux eux-mêmes sont des UTXO (adresses financées multisig 2-de-2), nous pouvons voir le graphe des canaux comme un sous-ensemble spécial de l'ensemble d'UTXO de Bitcoin, auquel nous pouvons ajouter des informations supplémentaires (les nœuds, etc.) pour arriver à la structure de superposition finale, qui est le graphe des canaux. Cet ancrage des composants fondamentaux du graphe des canaux dans la
+blockchain Bitcoin de base signifie qu'il est impossible de _falsifier_ un graphe des canaux valide, cela a des propriétés utiles en matière de prévention du spam comme nous le verrons plus tard.
+
+=== Messages du protocole de bavardage
+
+((("channel graph","gossip protocol messages", id="ix_11_gossip_channel_graph-asciidoc7", range="startofrange")))((("gossip protocol","messages", id="ix_11_gossip_channel_graph-asciidoc8", range="startofrange")))Les informations du graphe des canaux sont propagées sur le Lightning Network P2P sous la forme de trois messages, qui sont décrits dans https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md[BOLT #7] :
+
++node_announcement+:: Le sommet de notre graphe qui communique la clé publique d'un nœud, ainsi que la façon d'atteindre le nœud par Internet et quelques métadonnées supplémentaires décrivant l'ensemble des _fonctionnalités_ prises en charge par le nœud.
+
++channel_announcement+:: Une preuve ancrée dans la blockchain de l'existence d'un canal entre deux nœuds individuels. N'importe quel tiers peut vérifier cette preuve pour s'assurer qu'un canal _réel_ est effectivement annoncé. Semblable à +node_announcement+, ce message contient également des informations décrivant les _capacités_ du canal, ce qui est utile lors d'une tentative d'acheminement d'un paiement.
+
++channel_update+:: Une _paire_ de structures qui décrit l'ensemble des politiques de routage pour un canal donné. Les messages +channel_update+ arrivent en tant qu'une _paire_ car un canal est une arête dirigée, de sorte que chaque côté du canal peut spécifier sa propre politique de routage personnalisée.
+
+Il est important de noter que chaque composant du graphe des canaux est _authentifié_, ce qui permet à un tiers de s'assurer que le propriétaire d'un canal/mise à jour/nœud est bien celui qui envoie une mise à jour. Cela fait effectivement du graphe des canaux un type unique de _structure de données authentifiée_ qui ne peut pas être contrefaite. Pour l'authentification, nous utilisons une signature numérique +secp256k1+ ECDSA (ou une série de signatures) sur le digest sérialisé du message lui-même. Nous n'entrerons pas dans les détails du framing/de la sérialisation du système de messagerie utilisés dans le Lightning Network dans ce chapitre, car nous couvrirons ces informations dans <<wire_protocol>>.
+
+Avec la structure de haut niveau du graphe des canaux établie, nous allons maintenant plonger dans la structure précise de chacun des trois messages utilisés pour bavarder au sujet du graphe des canaux. Nous expliquerons également comment on peut également vérifier chaque message et composant du graphe des canaux.
+
+[[node_announcement]]
+==== Le message node_announcement
+
+((("gossip protocol","node_announcement message", id="ix_11_gossip_channel_graph-asciidoc9", range="startofrange")))((("node_announcement message", id="ix_11_gossip_channel_graph-asciidoc10", range="startofrange")))Premièrement, nous avons le message +node_announcement+, qui sert deux principaux
+buts :
+
+1. Annoncer les informations de connexion afin que d'autres nœuds puissent se connecter à un nœud soit pour amorcer le réseau, soit pour tenter d'établir un nouveau canal de paiement avec ce nœud.
+
+2. Communiquer l'ensemble des caractéristiques (capacités) au niveau du protocole qu'un nœud comprend/prend en charge. La négociation des fonctionnalités entre les nœuds permet aux développeurs d'ajouter de nouvelles fonctionnalités de manière indépendante et de les prendre en charge avec n'importe quel autre nœud sur une base d'une participation volontaire ("opt-in" en anglais).
+
+Contrairement aux annonces de canaux, les annonces de nœuds ne sont pas ancrées dans
+la blockchain de base. Par conséquent, les annonces de nœud sont
+considérées comme valides uniquement si elles se sont propagées avec une annonce de canal correspondante. En d'autres termes, nous rejetons toujours les nœuds sans canaux de paiement pour nous assurer qu'un pair malveillant ne peut pas inonder le réseau avec de faux nœuds qui ne font pas partie du graphe des canaux.
+
+===== La structure du message node_announcement
+
+((("node_announcement message","structure")))Le message  +node_announcement+ est composé des
+champs suivants :
+
++signature+:: Une signature ECDSA valide qui couvre le digest sérialisé de tous les champs répertoriés ci-dessous. Cette signature doit correspondre à la clé publique du nœud annoncé.
+
++features+:: Un vecteur de bits qui décrit l'ensemble des fonctionnalités de protocole que ce nœud comprend. Nous couvrirons ce champ plus en détail dans <<feature_bits>> sur l'extensibilité du protocole Lightning. À un niveau élevé, ce champ porte un ensemble de bits qui représentent les fonctionnalités qu'un nœud comprend. Par exemple, un nœud peut signaler qu'il comprend le tout dernier type de canal.
+
++timestamp+:: Un horodatage codé par époque Unix. Cela permet aux clients d'appliquer un ordre partiel aux mises à jour de l'annonce d'un nœud.
+
++node_id+:: La clé publique +secp256k1+ à laquelle appartient cette annonce de nœud. Il ne peut y avoir qu'un seul +node_announcement+ pour un nœud donné dans le graphe des canaux à un instant donné. Par conséquent, un +node_announcement+ peut remplacer un +node_announcement+ antérieure pour le même nœud s'il porte un horodatage plus grand (plus tard).
+
++rgb_color+:: Un champ qui permet à un nœud de spécifier une couleur RVB ("RGB" en anglais) à lui associer, souvent utilisé dans les visualisations de graphes de canaux et les répertoires de nœuds.
+
++alias+:: Une chaîne UTF-8 servant de surnom pour un nœud donné. Notez qu'il n'est pas nécessaire que ces alias soient globalement uniques et qu'ils ne sont en aucun cas vérifiés. Par conséquent, ils ne doivent pas être considérés comme une forme d'identité — ils peuvent être facilement usurpés.
+
++adresses+:: Un ensemble d'adresses publiques accessibles sur Internet qui doivent être associées à un nœud donné. Dans la version actuelle du protocole, quatre types d'adresses sont pris en charge : IPv4 (type : 1), IPv6 (type : 2), Tor v2 (type : 3) et Tor v3 (type : 4). Dans le message +node_announcement+, chacun de ces types d'adresse est désigné par un type entier qui est inclus entre parenthèses après le type d'adresse.
+
+===== Validation des annonces de nœud
+
+((("node_announcement message","validating")))La validation d'une +node_announcement+ entrante est simple. Les affirmations suivantes doivent être confirmées lors de l'examen d'une annonce de nœud :
+
+  * Si un +node_announcement+ existant pour ce nœud est déjà connu, alors le champ +timestamp+ d'un nouveau +node_announcement+ entrant doit être supérieur au précédent.
+
+    * Avec cette contrainte, nous appliquons un niveau forcé de "fraîcheur".
+
+  * Si aucun +node_announcement+ n'existe pour le nœud donné, alors un +channel_announcement+ existant qui fait référence au nœud donné (nous y reviendrons plus tard) doit déjà exister dans son graphe local des canaux.
+
+  * La +signature+ incluse doit être une signature ECDSA valide vérifiée à l'aide de la clé publique +node_id+ incluse et du double hachage SHA-256 de l'encodage brut du message (moins la signature et l'en-tête de trame) comme message.
+
+  * Toutes les +adresses+ incluses doivent être triées par ordre croissant en fonction de leur identifiant d'adresse.
+
+  * Les octets +alias+ inclus doivent être une chaîne UTF-8 valide.(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc10")))(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc9")))
+
+==== Le message channel_announcement
+
+((("channel_announcement message", id="ix_11_gossip_channel_graph-asciidoc11", range="startofrange")))((("gossip protocol","channel_announcement message", id="ix_11_gossip_channel_graph-asciidoc12", range="startofrange")))Ensuite, nous avons le message +channel_announcement+, qui est utilisé pour _annoncer_ un nouveau canal _public_ à l'ensemble du réseau. Notez que l'annonce d'un canal est _facultative_. Un canal ne doit être annoncé que s'il est destiné à être utilisé pour le routage sur le Lightning Network. Les nœuds de routage actifs peuvent souhaiter annoncer tous leurs canaux. Cependant, certains nœuds comme les nœuds mobiles n'ont probablement pas le
+temps de disponibilité ou le désir d'être un nœud de routage actif. En conséquence, ces
+nœuds mobiles (qui utilisent généralement des clients légers pour se connecter au réseau P2P de Bitcoin) peuvent à la place avoir des canaux purement _non annoncés_ (privés).
+
+===== Canaux (privées) non annoncés
+
+((("channel_announcement message","unannounced (private) channels")))((("unannounced channels")))Un canal non annoncé ne fait pas partie du graphe des canaux publics connus, mais peut toujours être utilisé pour envoyer/recevoir des paiements. Un lecteur avisé peut maintenant se demander comment un canal qui ne fait pas partie du graphe des canaux publiques peut recevoir des paiements. La solution à ce problème est un ensemble "d'aides au pathfinding" que nous appelons conseils de routage. Comme nous le verrons dans <<invoices>>, les factures créées par des nœuds avec des canaux non annoncés incluront des informations pour aider l'expéditeur à les acheminer, en supposant que le nœud a au moins un seul canal avec un nœud de routage public existant.
+
+En raison de l'existence de canaux non annoncés, la taille _réelle_ du graphe des canaux (à la fois les composants publics et privés) est inconnue.
+
+===== Localisation d'un canal sur la blockchain Bitcoin
+
+((("blockchain","locating a channel on the Bitcoin blockchain")))((("channel_announcement message","locating a channel on the Bitcoin blockchain")))Comme mentionné précédemment, le graphe des canaux est authentifié grâce à son utilisation de la cryptographie à clés publiques, ainsi que de la blockchain Bitcoin comme système de prévention du spam. Pour qu'un nœud accepte un nouveau +channel_announcement+, l'annonce doit _prouver_ que le canal existe réellement dans la blockchain Bitcoin. Ce système de preuve ajoute un coût initial à l'ajout d'une nouvelle entrée au graphe des canaux (les frais de chaîne qu'il faut payer pour créer l'UTXO du canal). En conséquence, nous atténuons le spam et veillons à ce qu'un nœud malhonnête sur le réseau ne puisse pas remplir gratuitement la mémoire d'un nœud honnête avec de faux canaux.
+
+Étant donné que nous devons construire une preuve de l'existence d'un canal, une
+question naturelle qui se pose est la suivante : comment "désigner" ou référencer un canal donné pour le vérificateur ? Étant donné qu'un canal de paiement est ancré dans une sortie de transaction non dépensée (voir <<utxo>>), une première idée pourrait être d'essayer d'abord d'annoncer le point de sortie complet (+txid:index+) du canal. Étant donné que le point de sortie est unique au monde et confirmé sur la chaîne, cela semble être une bonne idée ; cependant, cela présente un inconvénient : le vérificateur doit conserver une copie complète de l'ensemble des UTXO pour vérifier les canaux. Cela fonctionne bien pour les nœuds complets Bitcoin, mais les clients qui s'appuient sur une vérification légère ne conservent généralement pas un ensemble complet des UTXO. Car nous souhaitons nous assurer que nous pouvons prendre en charge les nœuds mobiles sur le Lightning Network, nous sommes obligés de trouver une autre solution.
+
+Et si plutôt que de référencer un canal par son UTXO, on le référençait en fonction de sa "localisation" sur la chaîne ? Pour ce faire, nous aurons besoin d'un schéma qui nous permette de référencer un bloc donné, puis une transaction dans ce bloc, et enfin une sortie spécifique créée par cette transaction. Un tel identifiant est décrit dans https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md[BOLT #7] et est appelé _short channel ID_ (identifiant de canal court), ou +scid+.
+Le +scid+ est utilisé dans +channel_announcement+ (et +channel_update+) ainsi que dans le paquet de routage encrypté en oignon inclus dans les HTLC, comme nous l'avons appris dans <<onion_routing>>.
+
+[[short_channel_id]]
+[[scid]]
+===== L'identifiant de canal court
+
+((("blockchain","short channel ID")))Sur la base des informations précédentes, nous avons trois informations que nous devons encoder pour référencer de manière unique un canal donné. Parce que nous désirons une représentation compacte, nous allons essayer d'encoder les informations dans un entier _simple_. Notre format d'entier de choix est un entier 64 bits non signé, compris dans 8 octets.
+
+Tout d'abord, la hauteur du bloc. En utilisant 3 octets (24 bits), nous pouvons encoder 16 777 216 blocs. Cela nous laisse 5 octets pour encoder respectivement l'index de transaction et l'index de sortie. Nous utiliserons les 3 octets suivants
+pour encoder l'index de transaction _dans_ un bloc. C'est plus que suffisant étant donné qu'il est seulement possible de fixer des dizaines de milliers de transactions dans un bloc aux tailles de bloc actuelles. Cela nous laisse 2 octets pour encoder l'index de sortie du canal dans la transaction.
+
+Notre format final de +scid+ ressemble à :
+----
+block_height (3 octets) || transaction_index (3 octets) || output_index (2 octets)
+----
+
+En utilisant des techniques de compression de bits, nous encodons d'abord les 3 octets les plus significatifs en tant que hauteur de bloc, les 3 octets suivants en tant qu'index de transaction et les 2 octets les moins significatifs en tant qu'index de sortie qui crée l'UTXO du canal.
+
+Un ID de canal court peut être représenté par un seul entier
+(+695313561322258433+) ou comme une chaîne de caractères plus : +632384x1568x1+. Ici, nous voyons que le canal a été extrait dans le bloc +632384+, était la ++1568++ème transaction dans le bloc, avec la sortie de canal comme deuxième sortie (les UTXO sont indexés à partir zéro) produite par la transaction.
+
+Maintenant que nous sommes en mesure de pointer succinctement vers une sortie de financement d'un canal donné sur la chaîne, nous pouvons examiner la structure complète du message +channel_announcement+, et déterminer comment vérifier la preuve d'existence incluse dans le message.
+
+===== La structure du message channel_announcement
+
+((("channel_announcement message","message structure")))Un +channel_announcement+ communique principalement deux choses :
+
+1. Une preuve qu'un canal existe entre le nœud A et le nœud B, les deux nœuds contrôlant les clés multisig dans la sortie de ce canal.
+
+2. L'ensemble des capacités du canal (les types de HTLC qu'il peut router, etc.).
+
+Lors de la description de la preuve, nous ferons généralement référence au nœud +1+ et au nœud +2+. Parmi les deux nœuds qu'un canal connecte, le "premier" nœud est le nœud qui a un codage de clé publique "inférieur" lorsque l'on compare la clé publique des deux nœuds au format compressé encodé en hexadécimal dans l'ordre lexicographique. De même, en plus d'une clé publique de nœud sur le réseau, chaque nœud doit également contrôler une clé publique au sein de la blockchain Bitcoin.
+
+Comme pour le message +node_announcement+, toutes les signatures incluses dans le message +channel_announcement+ doivent être signées/vérifiées par rapport à l'encodage brut du message (moins l'en-tête) qui suit _après_ la signature finale (car il n'est pas possible pour une signature numérique de se signer elle-même).
+
+Cela étant précisé, un message +channel_announcement+ contient les champs suivants :
+
++node_signature_1+:: La signature du premier nœud sur le digest du message.
+
++node_signature_2+:: La signature du deuxième nœud sur le digest du message.
+
++bitcoin_signature_1+:: La signature de la clé multisig (dans la sortie de financement) du premier nœud sur le digest du message.
+
++bitcoin_signature_2+:: La signature de la clé multisig (dans la sortie de financement) du deuxième nœud sur le digest du message.
+
++features+:: Un vecteur de bits de fonctionnalités qui décrit l'ensemble des fonctionnalités au niveau du protocole prises en charge par ce canal.
+
++chain_hash+:: Un hachage de 32 octets qui est généralement le hachage du bloc de genèse de la blockchain (par exemple, le réseau principal Bitcoin) dans laquelle le canal a été ouvert.
+
++short_channel_id+:: Le +scid+ qui localise de manière unique la sortie de financement du canal donné dans la blockchain.
+
++node_id_1+:: La clé publique du premier nœud du réseau.
+
++node_id_2+:: La clé publique du deuxième nœud du réseau.
+
++bitcoin_key_1+:: La clé multisig brute pour la sortie de financement du canal pour le premier nœud du réseau.
+
++bitcoin_key_2+:: La clé multisig brute pour la sortie de financement du canal pour le deuxième nœud du réseau.
+
+===== Validation de l'annonce de canal
+
+((("channel_announcement message","validation")))Maintenant que nous savons ce que contient un +channel_announcement+, nous pouvons voir comment vérifier l'existence du canal sur la chaîne.
+
+Équipés des informations contenues dans le message +channel_announcement+, tout nœud Lightning (même sans copie complète de la blockchain Bitcoin) peut vérifier l'existence et l'authenticité du canal de paiement.
+
+Tout d'abord, le vérificateur utilisera l'ID de canal court pour trouver quel bloc Bitcoin contient la sortie de financement du canal. Avec les informations de hauteur de bloc, le vérificateur peut demander uniquement ce bloc spécifique à un nœud Bitcoin. Le bloc peut ensuite être relié au bloc de genèse en suivant la chaîne d'en-têtes de blocs à reculons (vérification de la preuve de travail), confirmant qu'il s'agit bien d'un bloc appartenant à la blockchain Bitcoin.
+
+Ensuite, le vérificateur utilise le numéro d'index de transaction pour identifier l'ID de transaction de la transaction qui contient le canal de paiement. Avec la plupart des bibliothèques Bitcoin modernes, il est possible d'accéder à une transaction d'un bloc en utilisant l'index de la transaction à l'intérieur du bloc.
+
+Ensuite, le vérificateur utilise une bibliothèque Bitcoin (dans le langage du vérificateur) pour extraire la transaction pertinente en fonction de son index dans le bloc. Le vérificateur validera la transaction (vérifiant qu'elle est correctement signée et produit le même ID de transaction lorsqu'elle est hachée).
+
+Ensuite, le vérificateur extraira la sortie Pay-to-Witness-Script-Hash (P2WSH) référencée par le numéro d'index de sortie de l'ID de canal court. Il s'agit de l'adresse de la sortie de financement du canal. De plus, le vérificateur s'assurera que la taille du canal présumé correspond à la valeur de la sortie produite à l'index de sortie spécifié.
+
+Enfin, le vérificateur reconstruira le script multisig à partir de +bitcoin_key_1+ et +bitcoin_key_2+ et confirmera qu'il produit la même adresse que celle de la sortie.
+
+Le vérificateur a maintenant vérifié de manière indépendante que le canal de paiement dans l'annonce est financé et confirmé sur la blockchain Bitcoin !(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc12")))(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc11")))
+
+==== Le message channel_update
+
+((("channel_update message")))((("gossip protocol","channel_update message")))Le troisième et dernier message utilisé dans le protocole de bavardage est le message +channel_update+. Deux d'entre eux sont générés pour chaque canal de paiement (un par chaque partenaire de canal) annonçant leurs frais de routage, leurs attentes en matière de timelock et leurs capacités.
+
+Le message +channel_update+ contient également un horodatage (timestamp) permettant à un nœud de mettre à jour ses frais de routage et d'autres attentes et capacités en envoyant un nouveau message +channel_update+ avec un horodatage plus grand (plus tard) qui remplace toutes les mises à jour plus anciennes.
+
+Le message +channel_update+ contient les champs suivants :
+
+
++signature+:: Une signature numérique correspondant à la clé publique du nœud, pour authentifier la source et l'intégrité de la mise à jour du canal
+
++chain_hash+:: Le hachage du bloc genèse de la chaîne contenant le canal
+
++short_channel_id+:: L'identifiant court du canal pour identifier le canal
+
++timestamp+:: L'horodatage de cette mise à jour, pour permettre aux destinataires de séquencer les mises à jour et de remplacer les anciennes mises à jour
+
++message_flags+:: Un champ de bits indiquant la présence de champs supplémentaires dans le message +channel_update+
+
++channel_flags+:: Un champ composé de bits indiquant la direction du canal et d'autres options du canal
+
++cltv_expiry_delta+:: Les attentes en termes de delta de timelock de ce nœud pour le routage (voir <<onion_routing>>)
+
++htlc_minimum_msat+:: Le montant minimum des HTLC qui seront acheminés
+
++fee_base_msat+:: Les frais de base qui seront facturés pour le routage
+
++fee_proportional_millionths+:: Le taux de frais proportionnel qui sera facturé pour le routage
+
++htlc_maximum_msat+ (+option_channel_htlc_max+):: Le montant maximum qui sera acheminé
+
+Un nœud qui reçoit le message +channel_update+ peut attacher ces métadonnées à l'arête du graphe des canaux pour activer le pathfinding, comme nous le verrons dans <<path_finding>>.(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc8")))(((range="endofrange", startref="ix_11_gossip_channel_graph-asciidoc7")))
+
+=== Maintenance continue du graphe des canaux
+
+((("channel graph","ongoing maintenance")))La construction d'un graphe des canaux n'est pas un événement ponctuel, mais plutôt une activité continue. Au fur et à mesure qu'un nœud s'amorce dans le réseau, il commencera à recevoir des "bavardages", sous la forme des trois messages de mise à jour. Il utilisera ces messages pour commencer immédiatement à construire un graphe validé des canaux.
+
+Plus un nœud reçoit d'informations, meilleure est sa "carte" du Lightning Network et plus il peut être efficace pour le pathfinding et la livraison des paiements.
+
+Un nœud n'ajoutera pas seulement des informations au graphe des canaux. Il gardera également une trace de la dernière fois qu'un canal a été mis à jour et supprimera les canaux "obsolètes" qui n'ont pas été mises à jour depuis plus de deux semaines. Enfin, s'il voit qu'un nœud n'a plus de canal, il supprimera également ce nœud.
+
+Les informations collectées à partir du protocole de bavardage ne sont pas les seules informations pouvant être stockées dans le graphe des canaux. Différentes implémentations de nœuds Lightning peuvent attacher d'autres métadonnées aux nœuds et aux canaux. Par exemple, certaines implémentations de nœuds calculent un "score" qui évalue la "qualité" d'un nœud en tant que pair de routage. Ce score est utilisé dans le cadre du pathfinding pour hiérarchiser ou déprioriser des chemins.
+
+=== Conclusion
+Dans ce chapitre, nous avons appris comment les nœuds Lightning se découvrent
+entre eux, découvrent et mettent à jour l'état de leur nœud et communiquent entre eux. Nous avons appris comment les graphs de canaux sont créés et maintenus, et nous avons exploré quelques façons dont le Lightning Network décourage les mauvais acteurs ou les nœuds malhonnêtes de spammer le réseau.

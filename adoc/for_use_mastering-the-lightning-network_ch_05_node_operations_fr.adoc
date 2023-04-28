@@ -1,0 +1,970 @@
+[[operating_ln_node]]
+[[node_operations]]
+== Exploitation d'un nœud du Lightning Network
+
+((("Lightning node operation", id="ix_05_node_operations-asciidoc0", range="startofrange")))En ayant lu jusqu'ici, vous avez probablement créé une porte-monnaie Lightning. Dans ce chapitre, nous allons aller plus loin et mettre en place un nœud Lightning complet. En plus de la mise en place d'un nœud, nous apprendrons à le faire fonctionner et à le maintenir dans le temps.
+
+Il existe de nombreuses raisons pour lesquelles vous pourriez vouloir installer votre propre nœud Lightning. Ils comprennent :
+
+* Être un participant actif à part entière du Lightning Network, et pas seulement un utilisateur final
+* Pour gérer une boutique en ligne ou recevoir des revenus via des paiements Lightning
+* Pour gagner des revenus grâce aux frais de routage Lightning ou en louant des liquidités de canal
+* Pour développer de nouveaux services, applications ou plug-ins pour le Lightning Network
+* Pour augmenter votre confidentialité financière lors de l'utilisation de Lightning
+* Pour utiliser certaines applications construites sur Lightning, telles que les applications de messagerie instantanée propulsées par Lightning
+* Pour la liberté financière, l'indépendance et la souveraineté
+
+Il y a des coûts associés à l'exécution d'un nœud LN. Vous avez besoin d'un ordinateur, d'une connexion Internet permanente, de beaucoup d'espace disque et de beaucoup de temps !
+Les coûts d'exploitation comprendront des dépenses d'électricité.
+
+Mais les compétences que vous apprendrez de cette expérience sont précieuses et peuvent également être appliquées à une variété d'autres tâches.
+
+Commençons !
+
+[NOTE]
+====
+Il est important que vous définissiez correctement vos propres attentes en se basant sur des faits précis.
+Si vous envisagez d'exploiter un nœud Lightning _uniquement_ pour gagner un revenu en percevant des frais de routage,
+veuillez d'abord faire vos devoirs avec diligence. Diriger une entreprise rentable en exploitant un nœud Lightning n'est
+définitivement _pas_ facile. Calculez tous vos coûts initiaux et continus dans une feuille de calcul. Étudiez attentivement les statistiques du LN.
+Quel est le volume de paiement actuel ? Quel est le volume par nœud ? Quels sont les frais de routage moyens actuels ? Consultez les forums et demandez
+des conseils ou des commentaires d'autres membres de la communauté qui ont déjà acquis une expérience du monde réel. Formez votre propre opinion éclairée uniquement
+_après_ que vous avez fait cet exercice de diligence raisonnable. La plupart des gens trouveront leur motivation pour gérer un nœud non dans un gain financier,
+mais plutôt ailleurs.
+====
+
+=== Choisir votre plateforme
+
+((("Lightning node operation","choosing a platform", id="ix_05_node_operations-asciidoc1", range="startofrange")))Il existe de nombreuses façons d'exécuter un nœud Lightning, allant d'un petit mini PC hébergé dans votre domicile ou un serveur dédié, vers un serveur hébergé dans le cloud. La méthode que vous choisirez dépendra des ressources dont vous disposez et du montant que vous souhaitez dépenser.
+
+[[continuous_operation]]
+==== Pourquoi la fiabilité est-elle importante pour l'exécution d'un nœud Lightning ?
+
+((("Lightning node operation","reliability issues")))((("reliability, Lightning node and")))Dans Bitcoin, le matériel n'est pas particulièrement important à moins que l'on n'exécute spécifiquement un nœud de minage.
+Le logiciel de nœud Bitcoin Core peut être exécuté sur n'importe quelle machine qui répond à ses exigences minimales et n'a pas besoin d'être en ligne pour recevoir des paiements, uniquement pour les envoyer.
+Si un nœud Bitcoin tombe en panne pendant une période prolongée, l'utilisateur peut simplement redémarrer le nœud, et une fois qu'il se connecte au reste du réseau, il se resynchronisera avec la blockchain.
+
+Dans Lightning, cependant, l'utilisateur doit être en ligne à la fois pour envoyer _et_ pour recevoir des paiements. Si le nœud Lightning est hors ligne, il ne peut recevoir aucun paiement de qui que ce soit et ses factures ouvertes ne peuvent donc pas être honorées.
+De plus, les canaux ouverts d'un nœud hors ligne ne peuvent pas être utilisés pour acheminer des paiements. Vos partenaires de canal remarqueront que vous êtes hors ligne et ne pourront pas vous contacter pour acheminer un paiement. Si vous êtes trop souvent hors ligne, ils peuvent considérer que les bitcoins verrouillés dans leurs canaux avec vous est une capacité sous-utilisée et peuvent fermer ces canaux. Nous avons déjà évoqué le cas d'une attaque de protocole dans laquelle votre partenaire de canal tente de vous tromper en soumettant une transaction d'engagement antérieure. Si vous êtes hors ligne et que vos canaux ne sont pas surveillés, la tentative de vol peut réussir et vous n'aurez aucun recours une fois le délai expiré.
+Par conséquent, la fiabilité du nœud est extrêmement importante pour un nœud Lightning.
+
+((("hardware failure")))Il y a aussi les problèmes de panne matérielle et de perte de données. Dans Bitcoin, une panne matérielle peut être un problème trivial si l'utilisateur dispose d'une sauvegarde de sa phrase mnémonique ou de ses clés privées. Le porte-monnaie Bitcoin et le bitcoin à l'intérieur du porte-monnaie peuvent être facilement restaurés à partir des clés privées sur un nouvel ordinateur. La plupart des informations peuvent être retéléchargées depuis la blockchain.
+
+En revanche, sur Lightning, les informations sur les canaux de l'utilisateur, y compris les transactions d'engagement et les secrets de révocation, ne sont pas connues du public et ne sont stockées que sur le matériel de l'utilisateur individuel.
+Ainsi, les pannes logicielles et matérielles du Lightning Network peuvent facilement entraîner une perte de fonds.
+
+==== Types de nœuds Lightning matériels
+
+((("Lightning node operation","types of hardware Lightning nodes")))Il existe trois principaux types de nœuds Lightning matériels :
+
+Ordinateurs à usage général:: Un nœud LN peut être exécuté sur un ordinateur personnel ou un ordinateur portable exécutant Windows, macOS ou Linux. Généralement, il est exécuté au côté d'un nœud Bitcoin.
+Matériel dédié:: Un nœud Lightning peut également être exécuté sur du matériel dédié comme un Raspberry Pi, Rock64 ou un mini PC. Cette configuration exécuterait généralement une pile logicielle, y compris un nœud Bitcoin et d'autres applications. Cette configuration est populaire car le matériel est dédié à l'exécution et à la maintenance du nœud Lightning uniquement et est généralement configuré avec un "assistant" d'installation.
+Matériel préconfiguré:: Un nœud LN peut également être exécuté sur du matériel spécialement conçu, sélectionné et configuré pour cette tâche. Cela comprendrait des solutions de nœuds Lightning "prêtes à l'emploi" qui peuvent être achetées sous forme de kit ou de système clé en main.
+
+==== Exécuté dans le "Cloud"
+
+((("cloud, Lightning node operation in")))((("Lightning node operation","running in the cloud")))((("virtual private server (VPS)")))Les _Serveurs privés virtuels_ ("Virtual Private Server" ou "VPS" en anglais) et les services d'informatique en nuage ("cloud computing" en anglais) tels que Microsoft Azure, Google Cloud, Amazon Web Services (AWS) ou DigitalOcean sont assez abordables et peuvent être mis en place très rapidement. Un nœud Lightning peut être hébergé pour une somme entre 20 $ et 40 $ par mois sur de tels services.
+
+Cependant, comme le dit l'adage, "le &lsquo;cloud&rsquo; n'est que l'ordinateur d'autrui". Utiliser ces services signifie exécuter votre nœud sur les ordinateurs d'autres personnes. Cela comporte des avantages et des inconvénients correspondants. Les principaux avantages sont la commodité, l'efficacité, la disponibilité et peut-être même le coût. L'opérateur cloud gère et exécute le nœud à un haut niveau, vous offrant automatiquement commodité et efficacité. Ils offrent un temps de fonctionnement et une disponibilité excellents, souvent bien meilleurs que ce qu'un individu peut obtenir à la maison. Si vous considérez que le coût de l'électricité pour faire fonctionner un serveur dans de nombreux pays occidentaux est d'environ 10 $ par mois, ajoutez à cela le coût de la bande passante du réseau et du matériel lui-même, l'offre VPS devient financièrement compétitive. Enfin, avec un VPS, vous n'avez pas besoin d'espace pour un PC à la maison et vous n'avez aucun problème avec le bruit ou la chaleur du PC.
+En revanche, il existe plusieurs inconvénients notables. Un nœud Lightning exécuté dans le "cloud" sera toujours moins sécurisé et moins privé qu'un nœud exécuté sur votre propre ordinateur. De plus, ces services d'informatique en nuage sont très centralisés. La grande majorité des nœuds Bitcoin et Lightning fonctionnant sur ces services sont situés dans une poignée de centres de données en Virginie, à Sunnyvale, Seattle, Londres et Francfort. Lorsque les réseaux ou les centres de données de ces fournisseurs ont des problèmes de service, cela affecte des milliers de nœuds sur des réseaux prétendument « décentralisés ».
+
+Si vous avez la possibilité et la capacité d'exécuter un nœud sur votre propre ordinateur à la maison ou au bureau, cela peut être préférable de l'y exécuter
+plutôt que sur le cloud. Néanmoins, si l'exécution de votre propre serveur n'est pas une option, envisagez certainement d'en exécuter un sur un VPS.
+
+==== Exécuter un nœud à la maison
+
+((("Lightning node operation","running a node at home")))Si vous disposez d'une connexion Internet de capacité raisonnable à la maison ou dans votre bureau, vous pouvez certainement y exécuter un nœud Lightning. Toute connexion "haut débit" est suffisante pour exécuter un nœud léger, et une connexion rapide vous permettra également d'exécuter un nœud complet Bitcoin.
+
+Bien que vous puissiez exécuter un nœud Lightning (et même un nœud Bitcoin) sur votre ordinateur portable, cela deviendra rapidement ennuyeux. Ces programmes consomment les ressources de votre ordinateur et doivent fonctionner 24h/24 et 7j/7. Vos applications utilisateur telles que votre navigateur ou votre feuille de calcul seront en concurrence avec les services d'arrière-plan Lightning pour les ressources de votre ordinateur. En d'autres termes, votre navigateur et d'autres charges de travail de bureau seront ralentis.
+Et lorsque votre application de traitement de texte gèle votre ordinateur portable, votre nœud Lightning s'arrête également, vous laissant incapable de recevoir des transactions et potentiellement vulnérable aux attaques. De plus, vous ne devez jamais éteindre votre ordinateur portable.
+Tout cela combiné donne une configuration qui n'est pas idéale. Il en va de même pour votre ordinateur de bureau personnel utilisé quotidiennement.
+
+Au lieu de cela, la plupart des utilisateurs choisiront d'exécuter un nœud sur un ordinateur dédié.
+Heureusement, vous n'avez pas besoin d'un ordinateur de classe "serveur" pour ce faire.
+Vous pouvez exécuter un nœud Lightning sur un ordinateur monocarte, tel qu'un Raspberry Pi ou sur un mini PC (généralement commercialisé comme PC de Home Cinéma).
+Ce sont de simples ordinateurs qui sont couramment utilisés comme hub domotique ou serveur multimédia.
+Ils sont relativement peu coûteux par rapport à un PC ou un ordinateur portable.
+L'avantage d'un appareil dédié en tant que plateforme pour les nœuds Lightning et Bitcoin est qu'il peut fonctionner en continu, silencieusement et discrètement sur votre réseau domestique, caché derrière votre routeur ou votre téléviseur.
+Personne ne saura même que cette petite boîte fait partie d'un système bancaire mondial !
+
+[WARNING]
+====
+L'utilisation d'un nœud sur un système d'exploitation 32 bits et/ou un processeur 32 bits n'est pas recommandée, car le logiciel du nœud peut rencontrer des problèmes de ressources, provoquant un plantage et éventuellement une perte de fonds.
+====
+
+==== Quel matériel est requis pour exécuter un nœud Lightning ?
+
+((("hardware, Lightning node")))((("Lightning node operation","hardware requirements")))Au minimum, les éléments suivants sont requis pour exécuter un nœud Lightning :
+
+CPU:: Une puissance de traitement suffisante est nécessaire pour exécuter un nœud Bitcoin, qui téléchargera et validera en permanence de nouveaux blocs. L'utilisateur doit également tenir compte du téléchargement initial des blocs ("Initial Block Download" ou "IBD" en anglais) lors de la configuration d'un nouveau nœud Bitcoin qui peut prendre de plusieurs heures à plusieurs jours. Un processeur à 2 ou 4 cœurs est recommandé.
+
+RAM:: Un système avec 2 Go de RAM exécutera qu'à peine les nœuds Bitcoin et Lightning. Il fonctionnera beaucoup mieux avec au moins 4 Go de RAM. L'IBD sera particulièrement difficile avec moins de 4 Go de RAM. Plus de 8 Go de RAM sont inutiles car le CPU est le plus grand goulet d'étranglement pour ces types de services, en raison d'opérations cryptographiques telles que la validation de signature.
+
+Unité de stockage:: Il peut s'agir d'un disque dur (HDD) ou d'un disque à semi-conducteurs (SSD).
+Un SSD sera nettement plus rapide (mais plus cher) pour exécuter un nœud.
+La majeure partie du stockage est utilisée par la blockchain Bitcoin, qui fait des centaines de gigaoctets.
+Un compromis équitable (coût pour la complexité) consiste à acheter un petit SSD pour démarrer le système d'exploitation et un disque dur plus grand pour stocker des données volumineuses (principalement des bases de données).
+
+[NOTE]
+====
+Les Raspberry Pis sont un choix courant pour exécuter un logiciel de nœud, en raison du coût et de la disponibilité des pièces.
+Le système d'exploitation qui s'exécute sur l'appareil démarre généralement à partir d'une carte Secure Digital (SD).
+Pour la plupart des cas d'utilisation, ce n'est pas un problème, mais Bitcoin Core est connu pour être lourd en E/S.
+Vous devez vous assurer de placer la blockchain Bitcoin et le répertoire de données Lightning sur un autre lecteur, car des E/S intensives à long terme peuvent entraîner des défaillances avec une carte SD.
+====
+
+Connexion Internet:: Une connexion Internet fiable est nécessaire pour télécharger de nouveaux blocs Bitcoin, ainsi que pour communiquer avec d'autres pairs Lightning. Pendant le fonctionnement, l'utilisation estimée des données varie de 10 à 100 Go par mois, selon la configuration. Au démarrage, un nœud complet Bitcoin télécharge la blockchain complète.
+
+Alimentation:: Une alimentation électrique fiable est nécessaire car les nœuds Lightning doivent être en ligne à tout moment. Une panne de courant entraînera l'échec des paiements en cours. Pour les nœuds de routage à usage intensif, une alimentation de secours ou sans coupure (UPS) est utile en cas de panne de courant.
+Idéalement, vous devriez également connecter votre routeur Internet à cet onduleur.
+
+Sauvegarde:: La sauvegarde est cruciale car une panne peut entraîner une perte de données et donc une perte de fonds.
+Vous devrez envisager une sorte de solution de sauvegarde des données. Il peut s'agir d'une sauvegarde automatisée basée sur le cloud vers un serveur ou un service Web que vous contrôlez. Alternativement, il peut s'agir d'une sauvegarde matérielle locale automatisée, telle qu'un deuxième disque dur. Pour de meilleurs résultats, les sauvegardes locales et distantes peuvent être combinées.
+
+==== Changer de configuration de serveur dans le cloud
+
+((("Lightning node operation","switching server configuration in the cloud")))Lors de la location d'un serveur cloud, il est souvent rentable de modifier la configuration entre deux phases de fonctionnement. Un processeur plus rapide et un stockage plus rapide seront nécessaires pendant l'IBD (par exemple, le premier jour). Une fois la blockchain synchronisée, les exigences en matière de vitesse de processeur et de stockage sont bien inférieures, de sorte que les performances peuvent être réduites à un niveau plus rentable.
+
+Par exemple, sur le cloud d'Amazon, nous utiliserions une RAM de 8 à 16 Go, un processeur à 8 cœurs (par exemple, t3-large ou m3.large) et un SSD de 400 Go plus rapide (plus de 1000 opérations d'entrée/sortie provisionnées par seconde [IOPS]) pour l'IBD, réduisant son temps à seulement 6-8 heures. Une fois cette opération terminée, nous basculerions l'instance de serveur sur une RAM de 2 Go, un processeur à 2 cœurs (par exemple, t3.small) et le stockage sur un disque dur à usage général de 1 To. Cela coûtera à peu près le même prix que si vous l'exécutiez sur le serveur le plus lent tout le temps, mais cela vous permettra d'être opérationnel en moins d'une journée au lieu d'avoir à attendre presque une semaine pour l'IBD.
+
+===== Stockage permanent des données (lecteur)
+
+((("data storage")))((("Lightning node operation","permanent data storage")))Si vous utilisez un mini PC ou louez un serveur, le stockage peut être la partie la plus chère, coûtant autant comme l'ordinateur et la connectivité (données) additionnés.
+
+Voyons ensemble les différentes options disponibles. Premièrement, il existe deux principaux types de disques, les disques durs et les disques SSD. Les disques durs sont moins chers et les SSD sont plus rapides, mais les deux font le travail.
+
+((("Non-Volatile Memory Express (NVMe)")))((("solid state drives (SSDs)")))((("SSDs (solid state drives)")))Les SSD les plus rapides disponibles aujourd'hui utilisent l'interface NVMe ("Non-Volatile Memory Express" en anglais). Les SSD NVMe sont plus rapides dans les machines haut de gamme, mais aussi plus coûteux.
+Les SSD traditionnels basés sur SATA sont moins chers, mais pas aussi rapides. Les SSD SATA fonctionnent suffisamment bien pour l'installation de votre nœud.
+Les petits ordinateurs peuvent ne pas être en mesure de tirer parti des SSD NVMe.
+Par exemple, le Raspberry Pi 4 ne peut pas en bénéficier à cause de la bande passante limitée de son port USB.
+
+Pour choisir la taille, regardons la blockchain Bitcoin. En août 2021, sa taille est de 360 Go, y compris l'indice de transactions, et augmente d'environ 60 Go par an. Si vous souhaitez avoir une certaine marge disponible pour une croissance future ou pour installer d'autres données sur votre nœud, achetez au moins un disque de 512 Go, ou mieux encore, un disque de 1 To.(((range="endofrange", startref="ix_05_node_operations-asciidoc1")))
+
+[[helpers]]
+=== Utilisation d'un installateur ou d'un assistant
+
+((("helpers (installation/configuration software)", id="ix_05_node_operations-asciidoc2", range="startofrange")))((("Lightning node operation","using an installer or helper", id="ix_05_node_operations-asciidoc3", range="startofrange")))L'installation d'un nœud Lightning ou d'un nœud Bitcoin peut être intimidante si vous n'êtes pas familier avec un environnement de ligne de commande. Heureusement, il existe un certain nombre de projets qui proposent des "assistants", c'est-à-dire des logiciels qui installent et configurent les différents composants pour vous. Vous aurez toujours besoin d'apprendre quelques incantations en ligne de commande pour interagir avec votre nœud, mais la plupart du travail initial est fait pour vous.
+
+==== RaspiBlitz
+
+((("helpers (installation/configuration software)","RaspiBlitz")))((("RaspiBlitz")))L'un des "assistant" les plus populaires et les plus complets est _RaspiBlitz_ (<<RaspiBlitz>>), un projet construit par Christian Rotzoll. Il est destiné à être installé sur un Raspberry Pi 4. RaspiBlitz est livré avec un kit matériel recommandé que vous pouvez construire en quelques heures ou tout au plus un week-end. Si vous assistez à un "hackathon" Lightning dans votre ville, vous verrez probablement de nombreuses personnes travailler sur leur configuration RaspiBlitz, échanger des conseils et s'entraider. Vous pouvez trouver le projet RaspiBlitz sur https://github.com/rootzoll/raspiblitz[GitHub].
+
+En plus d'un nœud Bitcoin et Lightning, RaspiBlitz peut installer un certain nombre de services supplémentaires, tels que :
+
+* Tor (exécuté en tant que service caché)
+* ElectRS (serveur Electrum en Rust)
+* Serveur BTCPay (processeur de paiement en cryptomonnaie)
+* Explorateur BTC RPC (explorateur de blockchain Bitcoin)
+* Ride The Lightning (interface graphique de gestion de nœuds Lightning)
+* LNbits (porte-monnaie Lightning/système de comptes)
+* Spectre Desktop (multisig Trezor, Ledger, porte-monnaie Coldcard et Spectre-DIY)
+* lndmanage (interface de ligne de commande pour la gestion avancée de canaux)
+* Loop (service d'échanges sous-marins)
+* Join Market (service CoinJoin)
+
+[[RaspiBlitz]]
+.Un nœud RaspiBlitz
+image::images/mtln_0501.png[]
+
+==== myNode
+
+((("helpers (installation/configuration software)","myNode")))((("myNode")))https://mynodebtc.com[_myNode_] est un autre projet "d'assistant" open source populaire comprenant beaucoup de logiciels liés au Bitcoin. Il est facile à installer : vous « flashez » le programme d'installation sur une carte SD et démarrez votre mini PC à partir de la carte SD. Vous n'avez besoin d'aucun moniteur pour utiliser myNode car les outils d'administration sont accessibles à distance depuis un navigateur. Si votre mini PC n'a pas d'écran, de souris ou de clavier, vous pouvez le gérer depuis un autre ordinateur ou même depuis votre smartphone. Une fois installé, rendez-vous sur http://mynode.local et créez un porte-monnaie et un nœud Lightning en deux clics.
+
+En plus d'un nœud Bitcoin et Lightning, myNode peut éventuellement installer une variété de services supplémentaires, tels que :
+
+* Ride The Lightning (interface graphique de gestion de nœuds Lightning)
+* OpenVPN (prise en charge du réseau privé virtuel [VPN] pour la gestion à distance ou le porte-monnaie)
+* lndmanage (interface de ligne de commande pour la gestion avancée de canaux)
+* BTC RPC Explorer (un explorateur de blockchain Bitcoin)
+
+==== Umbrel
+
+((("helpers (installation/configuration software)","Umbrel", id="ix_05_node_operations-asciidoc4", range="startofrange")))((("Umbrel", id="ix_05_node_operations-asciidoc5", range="startofrange")))Célèbres pour leur UX/UI (démontrée dans <<umbrel>>), _Umbrel_ fournit un moyen très simple et accessible de faire fonctionner votre nœud Bitcoin et Lightning en un rien de temps, en particulier pour les débutants. Une caractéristique très distinctive est qu'Umbrel utilise Neutrino/SPV pendant l'IBD afin que vous puissiez commencer instantanément à utiliser votre nœud. Une fois que Bitcoin Core est entièrement synchronisé en arrière-plan, il bascule automatiquement et désactive le mode SPV. Umbrel OS prend en charge le Raspberry Pi 4 et peut également être installé sur n'importe quel système d'exploitation basé sur Linux ou sur une machine virtuelle sous macOS ou Windows. Vous pouvez également connecter n'importe quel porte-monnaie prenant en charge Bitcoin Core P2P, Bitcoin Core RPC, le protocole Electrum ou lndconnect.
+
+Il n'est pas nécessaire d'attendre un jour de pluie &mdash; vous pouvez vous rendre directement sur https://getumbrel.com[Umbrel] pour en savoir plus.
+
+[[umbrel]]
+.L'interface Web d'Umbrel
+image::images/mtln_0502.png["L'interface Web d'Umbrel"]
+
+En plus d'un nœud Bitcoin et Lightning, Umbrel a introduit l'App Store Umbrel, où vous pouvez facilement installer des services supplémentaires, tels que :
+
+* Lightning Terminal (interface de gestion de la liquidité de canaux, Loop In et Loop Out)
+* Ride The Lightning (interface graphique de gestion de nœuds Lightning)
+* Spectre Desktop (coordinateur de surveillance uniquement pour les porte-monnaie Bitcoin multisignature et à clé unique)
+* Serveur BTCPay (processeur de paiement en cryptomonnaie)
+* Explorateur BTC RPC (explorateur de blockchain Bitcoin)
+* ThunderHub (surveiller et gérer votre nœud)
+* Sphinx Relay (gestion de la connectivité et du stockage pour le chat Sphinx)
+* mempool.space (visualiseur de mempool et explorateur de blocs)
+* LNbits (porte-monnaie Lightning/système de comptes)
+
+Umbrel est actuellement encore en version bêta et n'est pas considéré comme sécurisé.(((range="endofrange", startref="ix_05_node_operations-asciidoc5")))(((range="endofrange", startref="ix_05_node_operations-asciidoc5")))(((range="endofrange", startref="ix_05_node_operations-asciidoc4")))
+
+==== BTCPay Server
+
+((("BTCPay Server")))((("helpers (installation/configuration software)","BTCPay Server")))Bien qu'elle ne soit pas initialement conçue pour être un "assistant" d'installation, la plateforme de commerce électronique et de paiement _BTCPay Server_ dispose d'un système d'installation incroyablement simple qui utilise des conteneurs Docker et +docker-compose+ pour installer un nœud Bitcoin, un nœud Lightning et une passerelle de paiement, parmi de nombreux autres services. Il peut être installé sur une variété de plateformes matérielles, d'un simple Raspberry Pi 4 (4 Go recommandés) à un mini PC ou un ancien ordinateur portable, de bureau ou un serveur.
+
+https://btcpayserver.org[BTCPay Server] est une plateforme de commerce électronique entièrement hébergée et autonome qui peut être intégrée à de nombreuses plateformes de commerce électronique, telles que WordPress WooCommerce et autres. L'installation du nœud complet n'est qu'une étape de l'installation de la plateforme de commerce électronique.
+Bien qu'initialement développé comme un remplacement fonctionnalité par fonctionnalité du service de paiement commercial _BitPay_ et de son API, il a évolué au-delà pour devenir une plateforme complète pour les services BTC et Lightning liés au commerce électronique. Pour de nombreux vendeurs ou magasins, il s'agit d'une solution clé en main pour le commerce électronique.
+
+En plus d'un nœud Bitcoin et Lightning, BTCPay Server peut également installer une variété de services, notamment :
+
+* Un nœud Lightning `c-lightning` ou LND
+* Prise en charge de Litecoin
+* Prise en charge de Monero
+* Serveur Spark (porte-monnaie Web `c-lightning`)
+* Serveur Charge (API de commerce électronique `c-lightning`)
+* Ride The Lightning (interface graphique Web de gestion de nœuds Lightning)
+* De nombreux forks de BTC
+* BTCTransmuter (service d'automatisation d'événement-action prenant en charge l'échange de devises)
+
+Le nombre de services et de fonctionnalités supplémentaires augmente rapidement, de sorte que la liste précédente n'est qu'un petit sous-ensemble de ce qui est disponible sur la plateforme BTCPay Server.
+
+==== Nœud Bitcoin ou Lightning léger
+
+((("Bitcoin node")))((("helpers (installation/configuration software)","Bitcoin node versus lightweight Lightning node")))Un choix critique pour votre installation sera celui du nœud Bitcoin et de sa configuration. _Bitcoin Core_, l'implémentation de référence, est le choix le plus courant mais pas l'unique choix disponible. Un choix alternatif est _btcd_, qui est une implémentation en langage Go de nœud Bitcoin. btcd prend en charge certaines fonctionnalités utiles pour exécuter un nœud LND Lightning et qui ne sont pas disponibles avec Bitcoin Core.
+
+Une deuxième considération est de savoir si vous exécuterez un nœud Bitcoin _d'archivage_ avec une copie complète de la blockchain (environ 350 Go à la mi-2021) ou une blockchain _réduite_ ("pruned" en anglais) qui ne conserve que les blocs les plus récents. Une blockchain réduite peut vous faire économiser de l'espace disque, mais vous devrez toujours télécharger la blockchain complète au moins une fois (pendant l'IBD). Par conséquent, cela ne vous fera pas économiser de trafic réseau. L'utilisation d'un nœud réduit pour exécuter un nœud Lightning est toujours une possibilité expérimentale et peut ne pas prendre en charge toutes les fonctionnalités. Cependant, de nombreuses personnes exécutent un nœud comme celui-ci avec succès.
+
+((("lightweight Lightning node")))Enfin, vous avez également la possibilité de ne pas exécuter de nœud Bitcoin du tout. Au lieu de cela, vous pouvez utiliser le nœud LND Lightning en mode "léger" ("lightweight" en anglais), en utilisant le protocole Neutrino pour récupérer les informations de la blockchain à partir des nœuds publics Bitcoin exploités par d'autres. L'exécuter ainsi signifie que vous prenez des ressources du réseau Bitcoin sans en offrir en retour. À la place, vous offrez vos ressources et contribuez à la communauté LN. Pour les nœuds Lightning plus petits, cela réduira généralement le trafic réseau par rapport à l'exécution d'un nœud Bitcoin complet.
+
+Gardez à l'esprit que l'exploitation d'un nœud Bitcoin vous permet de prendre en charge d'autres services, en plus et en plus d'un nœud Lightning. Ces autres services peuvent nécessiter un nœud Bitcoin d'archivage (non réduit) et ne peuvent souvent pas fonctionner sans nœud Bitcoin. Considérez dès le départ quels autres services vous pourriez vouloir exécuter maintenant ou à l'avenir pour prendre une décision éclairée sur le type de nœud Bitcoin que vous sélectionnez.
+
+L'essentiel de cette décision est : si vous pouvez vous permettre un disque de plus de 500 Go, exécutez un nœud Bitcoin d'archivage complet. Vous apporterez des ressources au système Bitcoin et aiderez les autres qui n'ont pas les moyens de le faire. Si vous ne pouvez pas vous permettre un disque aussi gros, exécutez un nœud réduit. Si vous ne pouvez pas vous permettre le disque ou la bande passante même pour un nœud élagué, exécutez un nœud LND léger sur Neutrino.
+
+==== Choix du système d'exploitation
+
+((("Lightning node operation","operating system choice")))((("operating system","for Lightning node")))L'étape suivante consiste à sélectionner un système d'exploitation pour votre nœud. La grande majorité des serveurs Internet fonctionnent sur une variante de Linux. Linux est la plateforme de choix pour Internet car il s'agit d'un puissant système d'exploitation open source. Linux, cependant, a une courbe d'apprentissage abrupte et nécessite une familiarité avec un environnement de ligne de commande. C'est souvent intimidant pour les nouveaux utilisateurs.
+
+En fin de compte, la plupart des services peuvent être exécutés sur n'importe quel système d'exploitation POSIX moderne, y compris macOS, Windows et bien sûr Linux. Votre choix doit être davantage motivé par votre familiarité et votre confort avec un système d'exploitation et vos objectifs d'apprentissage. Si vous souhaitez approfondir vos connaissances et apprendre à utiliser un système Linux, c'est une excellente occasion de le faire avec un projet spécifique et un objectif clair. Si vous voulez juste qu'un nœud soit opérationnel, utilisez ce que vous connaissez.
+
+De nos jours, de nombreux services sont également délivrés sous forme de conteneurs, généralement basés sur le système Docker. Ces conteneurs peuvent être déployés sur une variété de systèmes d'exploitation, en faisant abstraction du système d'exploitation sous-jacent. Vous devrez peut-être néanmoins apprendre certaines commandes de la ligne de commande de Linux, car la plupart des conteneurs exécutent une variante de Linux en interne.(((range="endofrange", startref="ix_05_node_operations-asciidoc3")))(((range="endofrange", startref="ix_05_node_operations-asciidoc2")))
+
+=== Choisissez votre implémentation de nœud Lightning
+
+((("Lightning node operation","implementation choice")))Comme pour le choix du système d'exploitation, votre choix d'implémentation de nœud Lightning doit dépendre principalement de votre familiarité avec le langage de programmation et les outils de développement utilisés par les projets. Bien qu'il existe quelques petites différences de fonctionnalités entre les différentes implémentations de nœuds, celles-ci sont relativement mineures et la plupart des implémentations convergent vers les normes communes définies dans les BOLT.
+
+La connaissance du langage de programmation et du système de compilation, en revanche, sont de bonnes bases pour choisir un nœud. En effet, l'installation, la configuration, la maintenance continue et le dépannage impliqueront tous d'interagir avec les différents outils utilisés par le système de compilation. Ceci comprend :
+
+* Utilitaires Make, Autotools et GNU pour `c-lightning`
+* Utilitaires Go pour LND
+* Java/Maven pour Eclair
+
+Le langage de programmation influence non seulement le choix du système de compilation, mais également de nombreux autres aspects du programme. Chaque langage de programmation est livré avec une philosophie de conception complète et affecte de nombreux autres aspects, tels que :
+
+* Format et syntaxe des fichiers de configuration
+* Emplacements des fichiers (dans le système de fichiers)
+* Arguments de ligne de commande et leur syntaxe
+* Formatage des messages d'erreur
+* Bibliothèques pré-requises
+* Interfaces d'appel de procédure à distance (RPC)
+
+Lorsque vous choisissez votre nœud Lightning, vous choisissez également toutes les caractéristiques susmentionnées. Ainsi, votre familiarité avec ces outils et ces philosophies de conception facilitera l'exécution d'un nœud. Ou la rendra plus difficile, si vous vous retrouvez dans un domaine inconnu.
+
+D'un autre côté, s'il s'agit de votre première incursion dans l'environnement de la ligne de commande et des serveurs/services, vous ne serez pas familiarisé avec les implémentations et aurez l'opportunité d'apprendre quelque chose de complètement nouveau. Dans ce cas, vous voudrez peut-être décider en fonction d'un certain nombre d'autres facteurs, tels que :
+
+* Qualité des forums de support et des salons de chat
+* Qualité de la documentation
+* Degré d'intégration avec d'autres outils que vous souhaitez exécuter
+
+Enfin, vous souhaiterez peut-être examiner les performances et la fiabilité des différentes implémentations de nœuds. Ceci est particulièrement important si vous utilisez ce nœud dans un environnement de production et que vous vous attendez à un trafic important et à des exigences de fiabilité élevées. Cela peut être le cas si vous envisagez de faire fonctionner le système de paiement d'une boutique.
+
+=== Installer un nœud Bitcoin ou Lightning
+
+((("Bitcoin node","installation/configuration", id="ix_05_node_operations-asciidoc6", range="startofrange")))((("Lightning node operation","installing Bitcoin node or Lightning node", id="ix_05_node_operations-asciidoc7", range="startofrange")))((("Linux, installing Bitcoin node or Lightning node", id="ix_05_node_operations-asciidoc8", range="startofrange")))Vous avez décidé de ne pas utiliser "d'assistant" d'installation et à la place de plonger dans la ligne de commande d'un système d'exploitation Linux ? C'est une décision courageuse, et nous essaierons de vous aider à la mettre en œuvre. Si vous préférez ne pas essayer de le faire manuellement, envisagez d'utiliser une application qui vous aide à installer le logiciel de nœud ou une solution basée sur un conteneur, comme décrit dans <<helpers>>.
+
+[WARNING]
+====
+Cette section approfondira le sujet avancé de l'administration système à partir de la ligne de commande. L'administration Linux est un ensemble de compétences qui n'entre pas dans le cadre de ce livre. C'est un sujet compliqué et les pièges sont nombreux. Procédez avec prudence !
+====
+
+Dans les prochaines sections, nous décrirons brièvement comment installer et configurer un nœud Bitcoin et Lightning sur un système d'exploitation Linux. Vous devrez consulter les instructions d'installation des applications de nœud Bitcoin et Lightning spécifiques que vous avez décidé d'utiliser. Vous pouvez généralement les trouver dans un fichier appelé _INSTALL_ ou dans le sous-répertoire _docs_ de chaque projet. Nous ne décrirons que certaines des étapes communes qui s'appliquent à tous ces services, et les instructions que nous proposons seront nécessairement incomplètes.
+
+==== Services en arrière-plan
+
+((("background services")))((("Lightning node operation","background services")))Pour ceux qui sont habitués à exécuter des applications sur leur ordinateur de bureau ou leur smartphone, une application a toujours une interface utilisateur graphique même si elle peut s'exécutent parfois en arrière-plan. Les applications de nœud Bitcoin et Lightning sont cependant très différentes. Ces applications n'ont pas d'interface utilisateur graphique intégrée. Au lieu de cela, elles s'exécutent en tant que services _headless_ en arrière-plan, ce qui signifie qu'elles fonctionnent toujours en arrière-plan et n'interagissent pas directement avec l'utilisateur.
+
+Cela peut créer une certaine confusion pour les utilisateurs qui ne sont pas habitués à exécuter des services en arrière-plan. Comment savez-vous si un tel service est actuellement en cours d'exécution ? Comment le démarrer et l'arrêter ? Comment interagissez-vous avec lui ? Les réponses à ces questions dépendent du système d'exploitation que vous utilisez. Pour l'instant, nous supposerons que vous utilisez une variante Linux et y répondrons dans ce contexte.
+
+==== Isolement de processus
+
+((("Lightning node operation","process isolation")))Les services en arrière-plan s'exécutent généralement sous un compte d'utilisateur spécifique pour les isoler du système d'exploitation et les uns des autres. Par exemple, Bitcoin Core est configuré pour s'exécuter en tant qu'utilisateur +bitcoin+. Vous devrez utiliser la ligne de commande pour créer un utilisateur pour chacun des services que vous exécutez.
+
+De plus, si vous avez connecté un lecteur externe, vous devrez indiquer au système d'exploitation de déplacer le répertoire personnel de l'utilisateur sur ce lecteur. En effet, un service comme Bitcoin Core créera des fichiers dans le répertoire personnel de l'utilisateur. Si vous le configurez pour télécharger la blockchain complète de Bitcoin, ces fichiers prendront plusieurs centaines de gigaoctets. Ici, nous supposons que vous avez connecté le lecteur externe et qu'il se trouve sur le chemin _/external_drive/_ du système d'exploitation.
+
+Sur la plupart des systèmes Linux, vous pouvez créer un nouvel utilisateur avec la commande +useradd+, comme ceci :
+
+----
+$ sudo useradd -m -d /external_drive/bitcoin -s /dev/null bitcoin
+----
+
+Les options +m+ et +d+ créent le répertoire personnel de l'utilisateur comme spécifié par _/external_drive/bitcoin_ dans ce cas. L'option +s+ assigne le shell interactif de l'utilisateur. Dans ce cas, nous le définissons sur _/dev/null_ pour désactiver l'utilisation du shell interactif. Le dernier argument est le nom d'utilisateur +bitcoin+ du nouvel utilisateur.
+
+==== Démarrage du nœud
+
+((("Lightning node operation","node startup")))((("startup script")))Pour les services de nœud Bitcoin et Lightning, "l'installation" implique également la création d'un _script de démarrage_ pour s'assurer que le nœud démarre lors du démarrage de l'ordinateur. Le démarrage et l'arrêt des services en arrière-plan sont gérés par un processus du système d'exploitation, qui sous Linux est appelé +init+ ou +systemd+. Vous pouvez généralement trouver un script de démarrage système dans le sous-répertoire +contrib+ de chaque projet. Par exemple, si vous utilisez un système d'exploitation Linux moderne qui utilise + systemd +, vous trouverez un script appelé _bitcoind.service_ qui peut démarrer et arrêter le service de nœud Bitcoin Core.
+
+Voici un exemple de ce à quoi ressemble le script de démarrage d'un nœud Bitcoin, tiré du dépôt de code Bitcoin Core :
+
+.Depuis bitcoin/contrib/init/bitcoind.service
+----
+[Unit]
+Description=Bitcoin daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/bitcoind -daemon \
+                            -pid=/run/bitcoind/bitcoind.pid \
+                            -conf=/etc/bitcoin/bitcoin.conf \
+                            -datadir=/var/lib/bitcoind
+
+# Make sure the config directory is readable by the service user
+PermissionsStartOnly=true
+ExecStartPre=/bin/chgrp bitcoin /etc/bitcoin
+
+# Process management
+####################
+
+Type=forking
+PIDFile=/run/bitcoind/bitcoind.pid
+Restart=on-failure
+TimeoutStopSec=600
+
+# Directory creation and permissions
+####################################
+
+# Run as bitcoin:bitcoin
+User=bitcoin
+Group=bitcoin
+
+# /run/bitcoind
+RuntimeDirectory=bitcoind
+RuntimeDirectoryMode=0710
+
+# /etc/bitcoin
+ConfigurationDirectory=bitcoin
+ConfigurationDirectoryMode=0710
+
+# /var/lib/bitcoind
+StateDirectory=bitcoind
+StateDirectoryMode=0710
+
+[...]
+
+[Install]
+WantedBy=multi-user.target
+----
+
+En tant qu'utilisateur root, installez le script en le copiant dans le dossier de service +systemd+ _/lib/systemd/system/_ puis rechargez +systemd+ :
+
+----
+$ sudo systemctl daemon-reload
+----
+
+[role="pagebreak-before"]
+Ensuite, activez le service :
+
+----
+$ sudo systemctl enable bitcoind
+----
+
+Vous pouvez maintenant démarrer et arrêter le service. Ne le démarrez pas encore, car nous n'avons pas configuré le nœud Bitcoin.
+
+----
+$ sudo systemctl start bitcoind
+$ sudo systemctl stop bitcoind
+----
+
+==== Configuration du nœud
+
+((("Lightning node operation","node configuration")))Pour configurer votre nœud, vous devez créer et référencer un fichier de configuration. Par convention, ce fichier est généralement créé dans _/etc_, sous un répertoire portant le nom du programme. Par exemple, les configurations Bitcoin Core et LND seraient généralement stockées dans _/etc/bitcoin/bitcoin.conf_ et
+_/etc/lnd/lnd.conf_, respectivement.
+
+Ces fichiers de configuration sont des fichiers texte dont chaque ligne exprime une option de configuration et sa valeur. Les valeurs par défaut sont supposées pour tout ce qui n'est pas défini dans le fichier de configuration. Vous pouvez voir quelles options peuvent être définies dans la configuration de deux manières. Tout d'abord, l'exécution de l'application de nœud avec un argument +help+ affichera les options qui peuvent être définies sur la ligne de commande. Ces mêmes options peuvent être définies dans le fichier de configuration. Deuxièmement, vous pouvez généralement trouver un exemple de fichier de configuration, avec toutes les options par défaut, dans le dépôt de code du logiciel.
+
+Vous pouvez trouver un exemple de fichier de configuration dans chacune des images Docker que nous avons utilisées dans <<set_up_a_lightning_node>>. Par exemple, le fichier _code/docker/bitcoind/bitcoind/bitcoin.conf_ :
+
+.Fichier de configuration pour le conteneur Docker bitcoind (code/docker/bitcoind/bitcoind/bitcoin.conf)
+----
+include::code/docker/bitcoind/bitcoind/bitcoin.conf[]
+----
+
+Ce fichier de configuration particulier configure Bitcoin Core pour un fonctionnement en tant que nœud +regtest+ et fournit un nom d'utilisateur et un mot de passe peu sécurisé pour l'accès à distance, vous ne devez donc pas l'utiliser pour la configuration de votre nœud. Cependant, il sert à illustrer la syntaxe d'un fichier de configuration et vous pouvez y apporter des ajustements dans le conteneur Docker pour expérimenter différentes options. Voyez si vous pouvez utiliser la commande +bitcoind -help+ pour comprendre ce que fait chacune des options dans le contexte du réseau Docker que nous avons construit dans <<set_up_a_lightning_node>>.
+
+Souvent, les valeurs par défaut suffisent et, avec quelques modifications, votre logiciel de nœud peut être configuré rapidement. Pour faire fonctionner un nœud Bitcoin Core avec une personnalisation minimale, vous n'avez besoin que de quatre lignes de configuration :
+
+[source, subs="quotes"]
+----
+server=1
+daemon=1
+txindex=1
+rpcuser=_USERNAME_
+rpcpassword=_PASSWORD_
+----
+
+Même l'option +txindex+ n'est pas strictement nécessaire, même si elle garantira que votre nœud Bitcoin crée un index de toutes les transactions, ce qui est requis pour certaines applications. L'option +txindex+ n'est pas requise pour exécuter un nœud Lightning.
+
+Un nœud Lightning `c-lightning` s'exécutant sur le même serveur ne nécessite également que quelques lignes dans la configuration :
+
+[source, subs="quotes"]
+----
+network=mainnet
+bitcoin-rpcuser=_USERNAME_
+bitcoin-rpcpassword=_PASSWORD_
+----
+
+En général, c'est une bonne idée de minimiser le degré de personnalisation de ces systèmes. La configuration par défaut est soigneusement conçue pour prendre en charge les déploiements les plus courants. Si vous modifiez une valeur par défaut, cela peut entraîner des problèmes ultérieurement ou réduire les performances de votre nœud. Bref, ne modifiez que lorsque c'est nécessaire !
+
+==== Configuration réseau
+
+((("Lightning node operation","network configuration", id="ix_05_node_operations-asciidoc9", range="startofrange")))((("network configuration","Lightning node", id="ix_05_node_operations-asciidoc10", range="startofrange"))) La configuration du réseau n'est normalement pas un problème lors de la configuration d'une nouvelle application. Cependant, les réseaux pair-à-pair comme Bitcoin et le Lightning Network présentent des défis uniques pour la configuration du réseau.
+
+Dans un service centralisé, votre ordinateur se connecte aux "gros serveurs" d'une entreprise, et non l'inverse. Votre connexion Internet à domicile est en fait configurée sur l'hypothèse que vous êtes simplement un consommateur de services fournis par d'autres. Mais dans un système pair-à-pair, chaque pair consomme et fournit des services à d'autres nœuds. Si vous utilisez un nœud Bitcoin ou Lightning chez vous, vous fournissez un service à d'autres ordinateurs sur Internet. Votre service Internet par défaut n'est pas configuré pour vous permettre d'exécuter des serveurs et peut nécessiter une configuration supplémentaire pour permettre à d'autres d'accéder à votre nœud.
+
+Si vous souhaitez exécuter un nœud Bitcoin ou Lightning, vous devez permettre à d'autres nœuds sur Internet de se connecter à vous. Cela signifie activer les connexions TCP entrantes vers le port Bitcoin (port 8333 par défaut) ou le port Lightning (port 9735 par défaut). Bien que vous puissiez exécuter un nœud Bitcoin sans connectivité entrante, vous ne pouvez pas le faire avec un nœud Lightning. Un nœud Lightning doit être accessible aux autres depuis l'extérieur de votre réseau.
+
+Par défaut, votre routeur Internet domestique n'attend pas de connexions entrantes de l'extérieur et, en fait, les connexions entrantes sont bloquées. L'adresse IP de votre routeur Internet est la seule adresse IP accessible de l'extérieur, et tous les ordinateurs que vous utilisez à l'intérieur de votre réseau domestique partagent cette adresse IP unique. Ceci est réalisé par un mécanisme appelé _Network Address Translation_ (_NAT_), qui permet à votre routeur Internet d'agir comme intermédiaire pour toutes les connexions sortantes. ((("port forwarding","defined")))Si vous souhaitez autoriser une connexion entrante, vous devez configurer _redirection de port_ ("port forwarding" en anglais), qui indique à votre routeur Internet que les connexions entrantes sur des ports spécifiques doivent être transférées vers des ordinateurs spécifiques à l'intérieur du réseau. Vous pouvez le faire manuellement en modifiant la configuration de votre routeur Internet ou, si votre routeur le prend en charge, via un mécanisme de transfert de port automatique appelé _Universal Plug and Play_ (_UPnP_).
+
+Un mécanisme alternatif à la redirection de port consiste à activer The Onion Router (Tor), qui fournit une sorte de superposition de réseau privé virtuel qui permet les connexions entrantes vers une _adresse "onion"_. Si vous exécutez Tor, vous n'avez pas besoin de faire de transfert de port ou d'activer les connexions entrantes vers les ports Bitcoin ou Lightning. Si vous exécutez vos nœuds à l'aide de Tor, tout le trafic passe par Tor et aucun autre port n'est utilisé.
+
+Examinons différentes manières de permettre à d'autres de se connecter à votre nœud. Nous examinerons ces alternatives dans l'ordre, du plus simple au plus difficile.
+
+===== Ça marche !
+
+Il est possible que votre fournisseur de services Internet ou votre routeur soit configuré pour prendre en charge UPnP par défaut et que tout fonctionne automatiquement. Essayons d'abord cette approche, juste au cas où nous aurions de la chance.
+
+En supposant que vous ayez déjà un nœud Bitcoin ou Lightning en cours d'exécution, nous essaierons de voir s'ils sont accessibles de l'extérieur.
+
+[NOTE]
+====
+Pour que ce test fonctionne, vous devez avoir un nœud Bitcoin ou Lightning (ou les deux) opérationnel sur votre réseau domestique. Si votre routeur prend en charge UPnP, le trafic entrant sera automatiquement transféré vers les ports correspondants sur l'ordinateur exécutant le nœud.
+====
+
+Vous pouvez utiliser certains sites Web très populaires et utiles pour savoir quelle est votre adresse IP externe et si elle autorise et transmet les connexions entrantes vers un port connu. En voici deux qui sont fiables :
+
+* https://canyouseeme.org[]
+* https://www.whatismyip.com/port-scanner[]
+
+Par défaut, ces services vous permettent uniquement de vérifier les connexions entrantes à l'adresse IP à partir de laquelle vous vous connectez. Ceci est fait pour vous empêcher d'utiliser le service pour analyser les réseaux et les ordinateurs d'autres personnes. Vous verrez l'adresse IP externe de votre routeur et un champ pour entrer un numéro de port. Si vous n'avez pas modifié les ports par défaut dans la configuration de votre nœud, essayez le port 8333 (Bitcoin) et/ou 9735 (Lightning).
+
+Sur <<ln_port_check>> vous pouvez voir le résultat de la vérification du port 9735 sur un serveur exécutant Lightning, à l'aide de l'outil d'analyse de port _whatismyip.com_. Cela montre que le serveur accepte les connexions entrantes sur le port Lightning. Si vous voyez un résultat comme celui-ci, vous êtes prêt !
+
+[[ln_port_check]]
+.Vérification du port entrant 9735
+image::images/mtln_0503.png[]
+
+===== Redirection de port automatique en utilisant UPnP
+
+((("network configuration","automatic port forwarding using UPnP")))((("port forwarding","automatic")))((("Universal Plug and Play (UPnP)")))Parfois, même si votre routeur Internet prend en charge l'UPnP, il se peut qu'il soit désactivé par défaut. Dans ce cas, vous devez modifier la configuration de votre routeur Internet depuis son interface d'administration Web :
+
+. Connectez-vous au site Web de configuration de votre routeur Internet. Cela peut généralement être fait en se connectant à _l'adresse de passerelle_ ("gateway address" en anglais) de votre réseau domestique à l'aide d'un navigateur Web. Vous pouvez trouver l'adresse de la passerelle en consultant la configuration IP de n'importe quel ordinateur de votre réseau domestique. Il s'agit souvent de la première adresse dans l'un des réseaux non routables, comme 192.168.0.1 ou 10.0.0.1. Vérifiez également tous les autocollants sur votre routeur pour _l'adresse de la passerelle_. Une fois trouvée, ouvrez un navigateur et saisissez l'adresse IP dans la zone URL/Recherche du navigateur, par exemple, "192.168.0.1" ou "http://192.168.0.1".
+
+. Recherchez le nom d'utilisateur et le mot de passe de l'administrateur pour le panneau de configuration Web du routeur. Ceci est souvent écrit sur un autocollant sur le routeur lui-même et peut être aussi simple que "admin" et "password". Une recherche rapide sur le Web pour votre FAI et votre modèle de routeur peut également vous aider à trouver ces informations.
+
+. Trouvez un paramètre pour UPnP et activez-le.
+
+Redémarrez votre nœud Bitcoin et/ou Lightning et répétez le test de port ouvert avec l'un des sites Web que nous avons utilisés dans la section précédente.
+
+===== Utilisation de Tor pour les connexions entrantes
+
+((("network configuration","Tor for incoming connections")))((("The Onion Router (Tor)")))((("Tor (The Onion Router)")))_The Onion Router_ (_Tor_ ) est un VPN avec la propriété spéciale qu'il crypte les communications entre les sauts, de sorte qu'aucun nœud intermédiaire ne peut déterminer l'origine ou la destination d'un paquet. Les nœuds Bitcoin et Lightning prennent en charge le fonctionnement sur Tor, ce qui vous permet d'exploiter un nœud sans révéler votre adresse IP ou votre emplacement. Par conséquent, il offre un haut niveau de confidentialité à votre trafic réseau. Un avantage supplémentaire de l'exécution de Tor est que, comme il fonctionne comme un VPN, il résout le problème de redirection de port depuis votre routeur Internet. Les connexions entrantes sont reçues via le tunnel Tor et votre nœud peut être trouvé via une _adresse "onion"_ générée ad hoc au lieu d'une adresse IP.
+
+L'activation de Tor nécessite deux étapes. Tout d'abord, vous devez installer le routeur Tor et le proxy sur votre ordinateur. Deuxièmement, vous devez activer l'utilisation du proxy Tor dans votre configuration Bitcoin ou Lightning.
+
+Pour installer Tor sur un système Ubuntu Linux qui utilise le gestionnaire de paquets +apt+, exécutez :
+
+----
+sudo apt install tor
+----
+
+Ensuite, nous configurons notre nœud Lightning pour utiliser Tor pour sa connectivité externe. Voici un exemple de configuration pour LND :
+
+----
+[Tor]
+tor.active=true
+tor.v3=true
+tor.streamisolation=true
+listen=localhost
+----
+
+Cela activera Tor (+tor.active+), établira un service onion v3 (+tor.v3=true+), utilisera un flux onion différent pour chaque connexion (+tor.streamisolation+) et limitera l'écoute des connexions à l'hôte local uniquement, pour éviter de divulguer votre adresse IP (pass:[<code>l&#x2060;i&#x2060;s&#x2060;t&#x2060;e&#x2060;n&#x200b;=&#x2060;l&#x2060;o&#x2060;c&#x2060;a&#x2060;l&#x2060;h&#x2060;o&#x2060;s&#x2060;t</code>]).
+
+Vous pouvez vérifier si Tor est correctement installé et fonctionne en exécutant une simple commande d'une ligne. Cette commande devrait fonctionner sur la plupart des versions de Linux :
+
+----
+curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs
+----
+
+Si tout fonctionne correctement, la réponse de cette commande devrait être +"Congratulations. This browser is configured to use Tor"+ (traduit en "Félicitations votre navigateur est configuré pour utiliser Tor").
+
+En raison de la nature de Tor, vous ne pouvez pas facilement utiliser un service externe pour vérifier si votre nœud est accessible via une adresse "onion". Néanmoins, vous devriez voir votre adresse "onion" de Tor dans les journaux de votre nœud Lightning. C'est une longue chaîne de lettres et de chiffres suivie du suffixe +.onion+. Votre nœud devrait maintenant être accessible depuis Internet, avec en prime la confidentialité !
+
+===== Redirection de port manuelle
+
+((("network configuration","manual port forwarding")))((("port forwarding","manual")))C'est le processus le plus complexe et nécessite pas mal de compétences techniques. Les détails dépendent du type de routeur Internet dont vous disposez, des paramètres et des politiques de votre fournisseur de services et de nombreux autres contextes. Essayez d'abord UPnP ou Tor, avant d'essayer ce mécanisme beaucoup plus difficile.
+
+Les étapes de base sont les suivantes :
+
+. Trouvez l'adresse IP de l'ordinateur sur lequel se trouve votre nœud. Ceci est généralement alloué dynamiquement par le protocole DHCP (Dynamic Host Configuration Protocol) et se situe souvent quelque part dans la plage 192.168.x.x ou 10.x.x.x.
+
+. Recherchez l'adresse MAC (Media Access Control) de l'interface réseau de votre nœud. Cela peut être trouvé dans les paramètres Internet de cet ordinateur.
+
+. Attribuez une adresse IP statique à votre nœud afin qu'elle soit toujours la même. Vous pouvez utiliser l'adresse IP dont il dispose actuellement. Sur votre routeur Internet, recherchez "Baux statiques" ("Static Leases" en anglais) sous la configuration DHCP. Associez l'adresse MAC à l'adresse IP que vous avez sélectionnée. Désormais, cette adresse IP sera toujours attribuée à votre nœud. Vous pouvez également consulter la configuration DHCP de votre routeur et découvrir quelle est sa plage d'adresses DHCP. Sélectionnez une adresse inutilisée _hors_ de la plage d'adresses DHCP. Ensuite, sur le serveur, configurez le réseau pour qu'il cesse d'utiliser DHCP et codez en dur l'adresse IP non-DHCP sélectionnée dans la configuration réseau du système d'exploitation.
+
+. Enfin, installer une "Redirection de ports" ("Port Forwarding" en anglais) sur votre routeur Internet pour acheminer le trafic entrant sur des ports spécifiques vers l'adresse IP sélectionnée de votre serveur.
+
+Une fois la reconfiguration terminée, répétez la vérification du port en utilisant l'un des sites Web des sections précédentes (((range="endofrange", startref="ix_05_node_operations-asciidoc10")))(((range="endofrange", startref="ix_05_node_operations-asciidoc9"))).(((range="endofrange", startref="ix_05_node_operations-asciidoc8")))(((range="endofrange", startref="ix_05_node_operations-asciidoc7")))(((range="endofrange", startref="ix_05_node_operations-asciidoc6")))
+
+=== Sécurité de votre nœud
+
+((("Lightning node operation","security", id="ix_05_node_operations-asciidoc11", range="startofrange")))((("security and privacy","Lightning node", id="ix_05_node_operations-asciidoc12", range="startofrange")))Un nœud Lightning est, par définition, un _porte-monnaie chaud_ ("hot wallet" en anglais). Cela signifie que les fonds (à la fois sur la chaîne et hors chaîne) contrôlés par un nœud Lightning sont directement contrôlés par des clés qui sont chargées dans la mémoire du nœud ou stockées sur le disque dur du nœud. Si un nœud Lightning est compromis, il est trivial de créer des transactions sur la chaîne ou hors chaîne pour drainer ses fonds. Il est donc extrêmement important que vous le protégiez contre tout accès non autorisé.
+
+La sécurité est un effort holistique, ce qui signifie que vous devez sécuriser chaque couche d'un système. Comme le dit l'adage : la chaîne est aussi solide que son maillon le plus faible. Il s'agit d'un concept important dans la sécurité informatique et nous l'appliquerons à notre nœud.
+
+Malgré toutes les mesures de sécurité que vous prendrez, rappelez-vous que le Lightning Network est une technologie expérimentale à un stade précoce et qu'il est probable qu'il y ait des bogues exploitables dans le code de tout projet que vous utilisez. _Ne mettez pas plus d'argent que vous n'êtes prêt à risquer de perdre sur le Lightning Network._
+
+
+==== Sécurité du système d'exploitation
+
+((("operating system","security")))((("security and privacy","operating system security")))La sécurisation d'un système d'exploitation est un vaste sujet qui dépasse le cadre de ce livre. Cependant, nous pouvons établir quelques principes de base.
+
+Pour sécuriser votre système d'exploitation, voici quelques-uns des principaux éléments à prendre en compte :
+
+Provenance:: Commencez par vous assurer que vous téléchargez la bonne image du système d'exploitation et vérifiez les signatures ou les sommes de contrôle ("checksum" en anglais) avant de l'installer. Étendez cela à tous les logiciels que vous installez. Vérifiez à nouveau toute source ou URL à partir de laquelle vous téléchargez. Vérifiez l'intégrité et l'exactitude du logiciel téléchargé grâce aux signatures et à la vérification des sommes de contrôle.
+Maintenance:: Assurez-vous que votre système d'exploitation est à jour. Activez l'installation quotidienne ou hebdomadaire automatisée des mises à jour de sécurité.
+Moindres privilèges:: Créez des utilisateurs spécifiquement  pour les processus et accordez-leur le moins d'accès possible pour exécuter un service. N'exécutez pas de processus avec des privilèges d'administrateur (par exemple, +root+).
+Isolation des processus:: Utilisez les fonctionnalités du système d'exploitation pour isoler les processus les uns par rapport aux autres.
+Autorisations du système de fichiers:: Configurez le système de fichiers avec soin, selon le principe des moindres privilèges. Ne rendez pas les fichiers lisibles ou inscriptibles par tout le monde.
+Authentification forte:: Utilisez des mots de passe forts générés aléatoirement ou, dans la mesure du possible, une authentification par clé publique. Par exemple, il est plus sûr d'utiliser Secure Shell (SSH) avec une paire de clés cryptographiques au lieu d'un mot de passe.
+Authentification à deux facteurs (2FA):: Utilisez l'authentification à deux facteurs dans la mesure du possible, y compris Universal 2nd Factor (U2F) avec des clés de sécurité matérielles. Cela s'applique à tous les services externes que vous pourriez utiliser, tels que votre fournisseur de services cloud. Vous pouvez également l'appliquer à votre propre configuration, telle que votre propre configuration SSH. Utilisez 2FA également pour les services indirects. Par exemple, supposons que vous utilisez un service cloud. Vous avez donné une adresse e-mail à votre fournisseur de services cloud, vous devez donc également protéger votre adresse e-mail avec 2FA.
+Sauvegarde:: Effectuez des sauvegardes de votre système et assurez-vous également de protéger les sauvegardes avec un cryptage. Effectuez ces sauvegardes périodiquement. Au moins une fois, testez si vous pouvez restaurer votre sauvegarde et si votre sauvegarde est complète et accessible. Si possible, conservez une copie de vos sauvegardes sur un disque différent pour éviter qu'une seule panne de disque dur ne détruise _à la fois_ votre nœud actif ainsi que vos copies de sauvegarde.
+Gestion des vulnérabilités et de l'exposition:: Utilisez l'analyse à distance pour vous assurer que vous avez minimisé la surface d'attaque de votre système. Fermez tous les services ou ports inutiles. Installez uniquement les logiciels et paquets dont vous avez vraiment besoin et que vous utilisez. Désinstallez les paquets que vous n'utilisez plus. Il est recommandé de _ne pas_ utiliser votre l'ordinateur de votre nœud pour des activités non liées au nœud que vous pouvez effectuer sur un autre de vos ordinateurs. Surtout, si vous le pouvez, n'utilisez _pas_ l'ordinateur de votre nœud pour naviguer, surfer sur Internet ou lire vos e-mails.
+
+Voici une liste des mesures de sécurité les plus élémentaires. Elle n'est en aucun cas exhaustive.
+
+==== Accès au nœud
+
+((("Lightning node operation","node access")))((("remote procedure call (RPC) API")))((("RPC (remote procedure call) API")))Votre nœud Lightning va exposer une API d'appel de procédure distante (RPC). Cela signifie que votre nœud peut être contrôlé à distance par des commandes envoyées à un port TCP spécifique. Le contrôle d'accès à cette API RPC est réalisé après une certaine forme d'authentification de l'utilisateur. Selon le type de nœud Lightning que vous configurez, cela se fera soit par une authentification pass:[<span class="keep-together">nom d'utilisateur/mot de passe</span>] ou par un mécanisme appelé un _macaron_ d'authentification ("macaroon" en anglais). Comme son nom l'indique, un macaron est un type de cookie plus sophistiqué. Contrairement à un cookie, il est signé cryptographiquement et peut exprimer un ensemble de pass:[<span class="keep-together">capacités</span>].
+
+Par exemple, LND utilise des macarons pour accorder l'accès à l'API RPC. Par défaut, le logiciel LND crée trois macarons avec différents niveaux d'accès, appelés +admin+, +invoice+ et +readonly+. Selon le macaron que vous copiez et utilisez dans votre client RPC, vous disposez soit d'un accès en _lecture seule_, d'un accès _facture_ (qui inclut les capacités de lecture seule) ou d'un accès _admin_, qui vous donne un contrôle total. Il existe également une fonction macaron + boulangerie + dans LND qui peut construire des macarons avec n'importe quelle combinaison de capacités permettant un contrôle très fin.
+
+Si vous utilisez un modèle d'authentification nom d'utilisateur/mot de passe, assurez-vous de sélectionner un mot de passe long et aléatoire. Vous n'aurez pas à taper souvent ce mot de passe, car il sera stocké dans les fichiers de configuration. Vous devez donc en choisir un qui ne peut pas être deviné. De nombreux exemples que vous verrez incluent des mots de passe mal choisis, et souvent les gens les copient dans leurs propres systèmes, offrant un accès facile à n'importe qui. Ne fais pas cela ! Utilisez un gestionnaire de mots de passe pour générer un long mot de passe alphanumérique aléatoire. Étant donné que certains caractères spéciaux tels que +$?/!*\&%`"'+ peuvent interférer avec la ligne de commande, il est préférable de les éviter pour les mots de passe qui seront utilisés dans un environnement shell. Pour éviter les problèmes, restez avec de longs mots de passe alphanumériques aléatoires.
+
+Une séquence alphanumérique simple de plus de 12 caractères et générée de manière aléatoire est généralement suffisante. Si vous prévoyez de stocker de grosses sommes d'argent sur votre nœud Lightning et que vous êtes préoccupé par les attaques par force brute à distance, sélectionnez un mot de passe de plus de 20 caractères pour rendre ces attaques pratiquement impossibles.(((range="endofrange", startref="ix_05_node_operations-asciidoc12")))(((range="endofrange", startref="ix_05_node_operations-asciidoc11")))
+
+=== Sauvegardes de nœuds et de canaux
+
+((("backups", id="ix_05_node_operations-asciidoc13", range="startofrange")))((("Lightning Network channels","backups", id="ix_05_node_operations-asciidoc14", range="startofrange")))((("Lightning node operation","node and channel backups", id="ix_05_node_operations-asciidoc15", range="startofrange")))Une considération très importante lors de l'exécution d'un nœud Lightning est la question des sauvegardes. Contrairement à un porte-monnaie Bitcoin, où une phrase mnémonique BIP-39 peut récupérer tout l'état du porte-monnaie, sur Lightning ce n'est _pas_ le cas.
+
+Les porte-monnaie Lightning utilisent une sauvegarde de phrase mnémonique BIP-39, mais uniquement pour le porte-monnaie sur la chaîne. Cependant, en raison de la manière dont les canaux sont construits, la phrase mnémonique n'est _pas_ suffisante pour restaurer un nœud Lightning. ((("SCB (static channel backup)")))((("static channel backup (SCB)")))Une couche supplémentaire de sauvegardes est nécessaire, appelée _sauvegarde de canal statique_ ("Static Channel Backup" ou _"SCB"_ en anglais). Sans SCB, un opérateur de nœud Lightning peut perdre _tous_ les fonds qui se trouvent dans les canaux s'il perd le magasin de données du nœud Lightning.
+
+[WARNING]
+====
+Ne financez _pas_ de canaux tant que vous n'avez pas mis en place un système pour sauvegarder en permanence l'état de vos canaux. Vos sauvegardes doivent être déplacées "hors site" vers un système et un emplacement différents de votre nœud, afin qu'elles puissent survivre à diverses pannes du système (coupure de courant, corruption de données, etc.) ou à des catastrophes naturelles (inondation, incendie, etc.).
+====
+
+Les SCB ne sont pas une panacée. Tout d'abord, l'état de chaque canal doit être sauvegardé chaque fois qu'il y a une nouvelle transaction d'engagement. Deuxièmement, la restauration à partir d'une sauvegarde de canal est dangereuse. Si vous n'avez pas la _dernière_ transaction d'engagement et que vous diffusez accidentellement un ancien engagement (révoqué), votre pair de canal supposera que vous essayez de tricher et réclamera l'intégralité du solde du canal avec une transaction de pénalité. Pour vous assurer que vous fermez le canal, vous devez effectuer une _fermeture coopérative_. Mais un pair malveillant pourrait induire votre nœud en erreur en diffusant un ancien engagement révoqué lors de cette fermeture coopérative, vous trompant ainsi en obligeant votre nœud à essayer de tricher par inadvertance.
+
+De plus, les sauvegardes de vos canaux doivent être cryptées pour préserver votre confidentialité et la sécurité de votre canal. Sinon, quiconque trouve les sauvegardes peut non seulement voir tous vos canaux, mais peut également utiliser les sauvegardes pour fermer tous vos canaux de manière à remettre le solde à vos pairs. En d'autres termes, une personne malveillante qui accède à vos sauvegardes peut vous faire perdre tous les fonds sur vos canaux.
+
+Vous pouvez voir que les SCB ne sont pas une garantie infaillible. Ils constituent un compromis faible car ils remplacent un type de risque (corruption ou perte de données) par un autre type de risque (pair malveillant). Pour restaurer à partir d'un SCB, vous devez interagir avec vos pairs de canal et espérer qu'ils n'essaieront pas de vous tromper en vous fournissant un ancien engagement ou en trompant votre nœud en diffusant un engagement révoqué afin qu'ils puissent vous pénaliser. Malgré les faiblesses du SCB, les SCB ont du sens et vous devez les mettre en œuvre. Si vous n'utilisez pas les SCB et que vous perdez vos données de nœud, vous perdrez les fonds de votre canal pour toujours. Garanti ! Cependant, si vous utilisez les SCB et que vous perdez vos données de nœud, vous avez une chance raisonnable que certains de vos pairs soient honnêtes et que vous puissiez récupérer une partie des fonds de votre canal. Si vous êtes chanceux, vous pourriez récupérer tous vos fonds. En conclusion, il est préférable pour d'utiliser des SCB continus sur un disque autre que le disque dur primaire du nœud.
+
+Les mécanismes de sauvegarde des canaux sont toujours en cours de développement et constituent une faiblesse dans la plupart des implémentations de Lightning.
+
+((("Lightning Network Daemon (LND) node project","SCBs and")))Au moment de la rédaction de ce livre, seul LND propose un mécanisme intégré pour les SCB. Eclair dispose d'un mécanisme similaire déployé pour les déploiements côté serveur, toutefois Eclair Mobile propose une sauvegarde facultative sur Google Drive. `c-lightning` a récemment fusionné les interfaces nécessaires à un plug-in pour implémenter des sauvegardes de canaux. Malheureusement, il n'y a pas de mécanisme de sauvegarde cohérent et convenu entre les différentes pass:[<span class="keep-together">implémentations</span>] de nœuds.
+
+Les sauvegardes basées sur des fichiers des bases de données du nœud Lightning sont au mieux une solution partielle car vous courez le risque de sauvegarder un état de base de données incohérent. De plus, vous ne pouvez pas attraper de manière fiable les états d'engagements les plus récents. Il est bien préférable d'avoir un mécanisme de sauvegarde qui se déclenche à chaque changement d'état d'un canal, assurant ainsi la cohérence des données.
+
+Pour configurer des SCB dans LND, définissez le paramètre +backupfilepath+ sur la ligne de commande ou dans le fichier de configuration. LND enregistrera alors un fichier SCB dans ce chemin de répertoire. Bien sûr, ce n'est que la première étape de la solution. Maintenant, vous devez mettre en place un mécanisme qui surveille ce fichier pour les modifications. A chaque fois que le fichier change, le mécanisme pass:[<span class="keep-together">de sauvegarde</span>] doit copier ce fichier sur un autre disque, de préférence hors site. De tels mécanismes de sauvegarde sortent du cadre de ce livre. Néanmoins, toute solution de sauvegarde sophistiquée devrait être capable de gérer ce scénario. Rappelez-vous que les fichiers de sauvegarde doivent également être cryptés.
+
+==== Risque des porte-monnaie chauds
+
+((("Lightning node operation","hot wallet risk")))Comme ((("hot wallets","security issues", id="ix_05_node_operations-asciidoc16", range="startofrange")))((("security and privacy","hot wallet risk", id="ix_05_node_operations-asciidoc17", range="startofrange")))nous en avons parlé précédemment, le Lightning Network se compose d'un réseau de _porte-monnaie chaud_. Les fonds que vous stockez dans un porte-monnaie Lightning sont en ligne tout le temps. Cela les rend vulnérables. Par conséquent, vous ne devez pas stocker de grandes quantités dans un porte-monnaie Lightning. Les montants importants doivent être conservés dans un porte-monnaie _froid_ qui n'est _pas_ en ligne et qui ne peut effectuer des transactions que sur la chaîne.
+
+Même si vous commencez petit, au fil du temps, vous constaterez peut-être que vous avez encore une somme d'argent importante dans un porte-monnaie Lightning. Il s'agit d'un scénario typique pour les propriétaires de magasins. Si vous utilisez un nœud Lightning pour une opération de commerce électronique, votre porte-monnaie recevra probablement des fonds souvent, mais en enverra rarement. Vous finirez donc par avoir deux problèmes simultanément. Premièrement, vos canaux seront déséquilibrés, les gros soldes locaux l'emportant sur les petits soldes distants. Deuxièmement, vous aurez trop d'argent dans le porte-monnaie. Heureusement, vous pouvez aussi résoudre ces deux problèmes simultanément.
+
+Examinons quelques-unes des solutions que vous pouvez utiliser pour réduire les fonds exposés dans un porte-monnaie chaud.
+
+==== Balayage de fonds ("sweeping" en anglais)
+
+((("hot wallets","sweeping funds")))((("sweeping funds","hot wallets")))Si le solde de votre porte-monnaie Lightning devient trop important pour votre tolérance de risques, vous devrez "balayer" des fonds hors du porte-monnaie. Vous pouvez le faire de trois manières : sur la chaîne, hors chaîne et Loop Out. Examinons chacune de ces options dans les prochaines sections.
+
+===== Balayage sur la chaîne
+
+((("sweeping funds","on-chain sweep")))Le balayage ("sweeping" en anglais) de fonds sur la chaîne est accompli en déplaçant les fonds du porte-monnaie Lightning vers un porte-monnaie Bitcoin. Vous faites cela en fermant des canaux. Lorsque vous fermez un canal, tous les fonds de votre solde local sont "balayés" vers une adresse Bitcoin. L'adresse Bitcoin pour les fonds sur la chaîne est généralement générée par votre porte-monnaie Lightning, il s'agit donc toujours d'un porte-monnaie chaud. Vous devrez peut-être effectuer une transaction supplémentaire sur la chaîne pour déplacer les fonds vers une adresse plus sécurisée, telle que celle générée sur votre porte-monnaie matériel.
+
+La fermeture des canaux entraînera des frais de chaîne et réduira la capacité et la connectivité de votre nœud Lightning. Cependant, si vous exploitez un nœud de commerce électronique populaire, vous ne manquerez pas de capacité entrante et pourrez fermer stratégiquement des canaux avec des soldes locaux importants, en "regroupant" essentiellement vos fonds pour les mouvements sur la chaîne. Vous devrez peut-être utiliser certaines techniques de rééquilibrage des canaux (voir <<channel_rebalancing>>) avant de fermer des canaux pour maximiser les avantages de cette stratégie.
+
+===== Balayage hors chaîne
+
+((("sweeping funds","off-chain sweep")))Une autre technique que vous pouvez utiliser consiste à exécuter un deuxième nœud Lightning qui n'est pas annoncé sur le réseau. Vous pouvez établir des canaux de grande capacité à partir de votre nœud public (par exemple, celui qui gère votre boutique) vers votre nœud non annoncé (caché). Régulièrement, "balayez" des fonds en effectuant un paiement Lightning sur votre nœud caché.
+
+L'avantage de cette technique réside dans le fait que le nœud Lightning qui reçoit les paiements pour votre boutique sera connu publiquement. Cela en fait une cible pour les pirates, car tout nœud Lightning associé à une boutique serait supposé avoir un solde important. Un deuxième nœud qui n'est pas associé à votre boutique ne sera pas facilement identifié comme une cible valable.
+
+Comme mesure de sécurité supplémentaire, vous pouvez faire de votre deuxième nœud un service Tor caché afin que son adresse IP ne soit pas connue. Cela réduit encore les risques d'attaques et augmente votre confidentialité.
+
+Vous devrez configurer un script qui s'exécute à intervalles réguliers. Le but de ce script est de créer une facture sur votre nœud caché et de payer cette facture depuis le nœud de votre boutique, transférant ainsi des fonds vers votre nœud caché.
+
+Gardez à l'esprit que cette technique ne déplace pas les fonds dans un cold storage. Les deux nœuds Lightning sont des porte-monnaie chauds. L'objectif de ce balayage est de déplacer des fonds d'un porte-monnaie chaud très connu vers un porte-monnaie chaud obscur.
+
+===== Balayage par échange sous-marin
+
+((("échanges sous-marins")))((("sweeping funds","échange sous-marin sweep")))Une autre façon de réduire le solde de votre porte-monnaie chaud Lightning consiste à utiliser une technique appelée _échange sous-marin_ ("submarine swaps" en anglais). Les échanges sous-marins, conceptualisés par le co-auteur Olaoluwa Osuntokun et Alex Bosworth, permettent l'échange de bitcoins sur la chaîne contre des paiements Lightning et vice versa. Essentiellement, les échanges sous-marins sont des échanges atomiques entre les fonds hors chaîne Lightning et les fonds sur la chaîne Bitcoin.
+
+Un opérateur de nœud peut initier un échange sous-marin et envoyer tous les soldes de canaux disponibles à l'autre partie, qui leur enverra des bitcoins sur la chaîne en échange.
+
+À l'avenir, il pourrait s'agir d'un service payant proposé par les nœuds du Lightning Network qui annoncent des taux de change ou facturent des frais fixes pour la conversion.
+
+L'avantage d'un échange sous-marin pour balayer des fonds est qu'aucun canal n'a besoin d'être fermé. Cela signifie que nous préservons nos canaux, ne rééquilibrant nos canaux qu'à travers cette opération. Lorsque nous envoyons un paiement Lightning, nous transférons une partie du solde depuis le local vers le distant sur un ou plusieurs de nos canaux. Non seulement cela réduit le solde exposé dans le porte-monnaie actif de notre nœud, mais cela augmente également le solde disponible pour les futurs paiements entrants.
+
+Vous pouvez le faire en confiant à un intermédiaire le rôle de passerelle, mais cela risque de vous faire voler vos pièces. Cependant, dans le cas d'un échange sous-marin, l'opération ne nécessite pas de confiance. Les échanges sous-marins sont des opérations _atomiques_ non dépositaires. Cela signifie que la contrepartie de votre échange sous-marin ne peut pas voler vos fonds car le paiement sur la chaîne dépend de l'achèvement du paiement hors chaîne et vice versa.
+
+===== Échanges sous-marins avec Loop
+
+((("Loop, submarine swaps with")))((("sweeping funds","submarine swaps with Loop")))Un exemple de service d'échange sous-marin est _Loop_ de Lightning Labs, la même société qui développe LND. Loop existe en deux variantes : Loop In et Loop Out. _Loop In_ accepte un paiement Bitcoin sur la chaîne et le convertit en un paiement Lightning hors chaîne. _Loop Out_ convertit un paiement Lightning en paiement Bitcoin.
+
+[NOTE]
+====
+Pour utiliser le service Loop, vous devez exécuter un nœud Lightning LND.
+====
+
+Dans le but de réduire le solde de votre porte-monnaie chaud Lightning, vous utiliserez le service Loop Out. Pour utiliser le service Loop, vous devez installer des logiciels supplémentaires sur votre nœud. Le logiciel Loop fonctionne avec votre nœud LND et fournit des outils de ligne de commande pour exécuter des échanges sous-marins. Vous pouvez trouver le logiciel Loop et les instructions d'installation sur https://github.com/lightninglabs/loop[GitHub].
+
+Une fois que vous avez installé et exécuté le logiciel, une opération Loop Out est aussi simple que d'exécuter une seule commande :
+
+----
+loop out --amt 501000 --conf_target 400
+Max swap fees for 501000 sat Loop Out: 25716 sat
+Regular swap speed requested, it might take up to 30m0s for the swap to be executed.
+CONTINUE SWAP? (y/n), expand fee detail (x): x
+
+Estimated on-chain sweep fee:        149 sat
+Max on-chain sweep fee:              14900 sat
+Max off-chain swap routing fee:      10030 sat
+Max no show penalty (prepay):        1337 sat
+Max off-chain prepay routing fee:    36 sat
+Max swap fee:                        750 sat
+CONTINUE SWAP? (y/n): y
+Swap initiated
+
+Run `loop monitor` to monitor progress.
+----
+
+Notez que vos frais maximums, qui représentent le pire des cas, dépendront de la cible de confirmation que vous sélectionnez(((range="endofrange", startref="ix_05_node_operations-asciidoc17")))(((range="endofrange", startref="ix_05_node_operations-asciidoc16"))).(((range="endofrange", startref="ix_05_node_operations-asciidoc15")))(((range="endofrange", startref="ix_05_node_operations-asciidoc14")))(((range="endofrange", startref="ix_05_node_operations-asciidoc13")))
+
+=== Disponibilité et temps de fonctionnement des nœuds Lightning
+
+((("Lightning node operation","uptime and availability", id="ix_05_node_operations-asciidoc18", range="startofrange")))Contrairement à Bitcoin, les nœuds Lightning doivent être en ligne presque en permanence. Votre nœud doit être en ligne pour recevoir des paiements, ouvrir des canaux, fermer des canaux (de manière coopérative) et surveiller les violations du protocole. La disponibilité des nœuds est une exigence si importante sur le Lightning Network qu'il s'agit d'une métrique utilisée par divers outils de gestion automatique des canaux (par exemple, un +pilote automatique+) pour décider avec quels nœuds ouvrir des canaux. Vous pouvez également voir la "disponibilité" en tant que métrique de nœud sur les explorateurs de nœuds populaires (voir <<ln_explorer>>) comme https://1ml.com[1ML].
+
+La disponibilité des nœuds est particulièrement importante pour mitiger et résoudre les violations de protocole potentielles (c'est-à-dire les engagements révoqués). Bien que vous puissiez vous permettre de courtes interruptions d'une heure à un ou deux jours, vous ne pouvez pas avoir votre nœud hors ligne pendant de plus longues périodes sans risquer de perdre des fonds.
+
+Maintenir un nœud en ligne en permanence n'est pas facile, car divers bogues et limitations de ressources peuvent entraîner et entraîneront occasionnellement des temps d'arrêt. Surtout si vous exécutez un nœud occupé et populaire, vous rencontrerez des limitations de mémoire, d'espace de swap, de nombre de fichiers ouverts, d'espace disque, etc. Une multitude de problèmes différents feront planter votre nœud ou votre serveur.
+
+==== Tolérer les défauts et automatiser
+
+((("automation, Lightning node")))((("fault tolerance, Lightning node")))((("Lightning node operation","fault toleration and automation")))Si vous avez le temps et les compétences, vous devez tester certains scénarios d'erreur de base sur le Lightning testnet. Sur le testnet, vous apprendrez de précieuses leçons sans risquer d'argent. Chaque étape que vous effectuez pour automatiser votre système améliorera votre disponibilité :
+
+Redémarrage automatique d'ordinateur serveur:: Que se passe-t-il lorsque votre serveur ou le système d'exploitation tombe en panne ? Que se passe-t-il en cas de panne de courant ? Simulez ce défaut en appuyant sur le bouton "reset" de votre PC ou en débranchant le câble d'alimentation. Après un plantage, une réinitialisation ou une panne de courant, l'ordinateur doit redémarrer automatiquement. Certains ordinateurs ont un paramètre dans leur BIOS pour spécifier comment l'ordinateur doit réagir en cas de panne de courant. Testez-le pour vous assurer que l'ordinateur redémarre vraiment automatiquement en cas de panne de courant sans intervention humaine.
+
+Redémarrage automatique des nœuds:: Que se passe-t-il lorsque votre nœud ou l'un de vos nœuds plante ? Simulez cette erreur en tuant les processus de nœud correspondants. Si un nœud tombe en panne, il doit redémarrer automatiquement. Testez-le pour vous assurer que le ou les nœuds redémarrent vraiment automatiquement en cas d'échec sans intervention humaine. Si ce n'est pas le cas, votre nœud n'est probablement pas configuré correctement en tant que service du système d'exploitation.
+
+Reconnexion automatique au réseau:: Que se passe-t-il si votre réseau tombe en panne ? Que se passe-t-il lorsque votre FAI tombe temporairement en panne ? Que se passe-t-il lorsque votre FAI attribue une nouvelle adresse IP à votre routeur ou à votre ordinateur ? Lorsque le réseau revient, les nœuds que vous exécutez se reconnectent-ils automatiquement au réseau ? Simulez ce défaut en débranchant puis en rebranchant le câble Ethernet de l'appareil hébergeant vos nœuds. Les nœuds doivent se reconnecter automatiquement et continuer à fonctionner sans intervention humaine.
+
+Configurez vos fichiers journaux:: Tous les échecs précédents doivent laisser des entrées textuelles dans les fichiers journaux correspondants. Augmentez la verbosité de la journalisation si nécessaire. Recherchez ces entrées d'erreur dans les fichiers journaux et utilisez-les pour la surveillance.
+
+==== Surveillance de la disponibilité des nœuds
+
+((("Lightning node operation","monitoring node availability")))((("monitoring","node availability")))La surveillance de vos nœuds est une partie importante de leur fonctionnement. Vous devez surveiller non seulement la disponibilité de l'ordinateur lui-même, mais également la disponibilité et le bon fonctionnement du logiciel du nœud Lightning.
+
+Il existe plusieurs façons de procéder, mais la plupart nécessitent une certaine personnalisation. Vous pouvez utiliser des outils génériques de surveillance de l'infrastructure ou de surveillance des applications, mais vous devez les personnaliser spécifiquement pour interroger l'API du nœud Lightning afin de vous assurer que le nœud est en cours d'exécution, synchronisé avec la blockchain et connecté aux pairs des canaux.
+
+https://lightning.watch[Lightning.watch] fournit un service spécialisé qui offre la surveillance de nœuds Lightning. Il utilise un bot Telegram pour vous informer de toute interruption de service. Il s'agit d'un service gratuit, bien que vous puissiez payer (sur Lightning, bien sûr) pour obtenir des alertes plus rapides.
+
+Au fil du temps, nous nous attendons à ce que davantage de services tiers fournissent une surveillance spécialisée de nœuds Lightning payable via des micropaiements. Peut-être que ces services et leurs API deviendront standardisés et seront un jour directement pris en charge par le logiciel de nœud Lightning.
+
+[[watchtowers]]
+==== Tours de guet
+
+((("Lightning node operation","watchtowers")))((("monitoring","watchtowers")))((("protocol violations, watchtowers and")))((("watchtowers")))Les _tours de guet_ ("watchtowers" en anglais) sont un mécanisme d'externalisation de la surveillance et de la résolution des pénalités pour les violations du protocole Lightning.
+
+Comme nous l'avons mentionné dans les chapitres précédents, le protocole Lightning maintient la sécurité grâce à un mécanisme de pénalité. Si l'un de vos partenaires de canal diffuse une ancienne transaction d'engagement, votre nœud devra exercer la clause de révocation et diffuser une transaction de pénalité pour éviter de perdre de l'argent. Mais si votre nœud est en panne pendant la violation du protocole, vous risquez de perdre de l'argent.
+
+Pour résoudre ce problème, nous pouvons utiliser une ou plusieurs tours de guet pour externaliser le travail de surveillance des violations de protocole et d'émission de transactions de pénalité. Il y a deux parties dans une configuration de tour de guet : un serveur de tour de guet (ou simplement une tour de guet) qui surveille la blockchain et un client de tour de guet qui demande au serveur de la tour de guet ce service de surveillance.
+
+La technologie de tour de guet en est encore aux premiers stades de développement et n'est pas largement prise en charge. Cependant, dans le passage suivant, nous énumérons quelques implémentations expérimentales que vous pouvez essayer.
+
+Le logiciel LND comprend à la fois un serveur de tour de guet et un client de tour de guet. Vous pouvez activer le serveur de tour de guet en ajoutant les options de configuration suivantes :
+
+[source, subs="quotes"]
+----
+[watchtower]
+watchtower.active=1
+watchtower.towerdir=_/path_to_watchtower_data_directory_
+----
+
+Vous pouvez utiliser le client de tour de guet de LND en l'activant dans la configuration puis en utilisant la ligne de commande pour le connecter à un serveur watchtower. La configuration est :
+
+----
+[wtclient]
+wtclient.active=1
+----
+
+Le client de ligne de commande de LND +lncli+ affiche les options suivantes pour gérer le client de tour de guet :
+
+----
+$ lncli wtclient
+
+NAME:
+   lncli wtclient - Interact with the watchtower client.
+
+USAGE:
+   lncli wtclient command [command options] [arguments...]
+
+COMMANDS:
+     add     Register a watchtower to use for future sessions/backups.
+     remove  Remove a watchtower to prevent its use for future sessions/backups.
+     towers  Display information about all registered watchtowers.
+     tower   Display information about a specific registered watchtower.
+     stats   Display the session stats of the watchtower client.
+     policy  Display the active watchtower client policy configuration.
+
+OPTIONS:
+   --help, -h  show help
+----
+
+`c-lightning` a les hooks d'API nécessaires pour un plug-in client de tour de guet, bien qu'aucun plug-in de ce type n'ait encore été implémenté.
+
+Enfin, un serveur de tour de guet autonome populaire est _The Eye of Satoshi_ (TEOS, traduit en "l'Oeuil de Satoshi"). Il peut être trouvé sur https://github.com/talaia-labs/python-teos[GitHub].(((range="endofrange", startref="ix_05_node_operations-asciidoc18")))
+
+=== Gestion des canaux
+
+((("channel management", id="ix_05_node_operations-asciidoc19", range="startofrange")))((("Lightning node operation","channel management", id="ix_05_node_operations-asciidoc20", range="startofrange")))En tant qu'opérateur de nœud Lightning, l'une des tâches récurrentes que vous devrez effectuer est la gestion de vos canaux. Cela signifie ouvrir des canaux sortants de votre nœud vers d'autres nœuds, ainsi que faire en sorte que d'autres nœuds ouvrent des canaux entrants vers votre nœud. À l'avenir, la construction de canaux coopératifs pourrait devenir possible, vous pourriez donc ouvrir des canaux symétriques qui auraient des fonds engagés aux deux extrémités lors de leur création. Pour l'instant, cependant, les nouveaux canaux n'ont de fonds que d'un côté, du côté de l'initiateur. Par conséquent, pour rendre votre nœud _équilibré_ avec une capacité entrante et sortante, vous devez ouvrir des canaux avec les autres et inciter les autres à ouvrir des canaux vers votre nœud.
+
+==== Ouverture de canaux sortants
+
+((("channel management","opening outbound channels", id="ix_05_node_operations-asciidoc21", range="startofrange")))Dès que votre nœud Lightning est opérationnel, vous pouvez financer son porte-monnaie Bitcoin, puis commencer à ouvrir des canaux avec ces fonds.
+
+Vous devez choisir les partenaires de canal avec soin, car la capacité de votre nœud à envoyer des paiements dépend de qui sont vos partenaires de canal et de leur niveau de connexion au reste du Lightning Network. Vous souhaitez également disposer de plusieurs canaux pour éviter d'être exposé à un seul point de défaillance. Étant donné que Lightning prend désormais en charge les paiements en plusieurs parties, vous pouvez diviser vos fonds initiaux en plusieurs canaux et acheminer des paiements plus importants en combinant leur capacité. En même temps, évitez de rendre vos canaux trop petits. Étant donné que vous devez payer des frais de transaction Bitcoin pour ouvrir et fermer un canal, le solde du canal ne doit pas être si faible que les frais sur la chaîne en consommeraient une part importante. Tout est question d'équilibre !
+
+En résumé :
+
+* Connectez-vous à quelques nœuds bien connectés
+* Ouvrez plus d'un canal
+* N'ouvrez pas trop de canaux
+* Ne faites pas des canaux trop petits
+
+Une façon de trouver des nœuds bien connectés consiste à ouvrir un canal vers un marchand populaire vendant des produits sur le Lightning Network. Ces nœuds ont tendance à être bien financés et bien connectés. Ainsi, lorsque vous êtes prêt à acheter quelque chose en ligne via Lightning, vous pouvez ouvrir un canal directement sur le nœud du marchand. L'ID de nœud du marchand figurera sur la facture que vous recevrez lorsque vous essaierez d'acheter quelque chose. Cela facilite les choses.
+
+Une autre façon de trouver des nœuds bien connectés consiste à utiliser un Lightning Explorer (voir <<ln_explorer>>) comme https://1ml.com[1ML] et parcourez la liste des nœuds triés par capacité de canal et nombre de canaux. N'optez pas pour les plus gros nœuds, car cela encourage la centralisation. Optez pour un nœud au milieu de la liste afin de pouvoir les aider à grandir. Un autre facteur à prendre en compte peut être la durée de fonctionnement d'un nœud. Les nœuds établis depuis plus d'un an sont susceptibles d'être plus réputés et moins risqués que les nœuds qui ont commencé à fonctionner il y a une semaine.
+
+[[autopilot]]
+===== Pilote automatique
+
+((("autopilot", id="ix_05_node_operations-asciidoc22", range="startofrange")))((("channel management","autopilot for", id="ix_05_node_operations-asciidoc23", range="startofrange")))La tâche d'ouverture des canaux peut être partiellement automatisée grâce à l'utilisation d'un _pilote automatique_ qui est un logiciel qui ouvre automatiquement les canaux en fonction de certaines règles heuristiques. Le logiciel de pilote automatique est encore relativement nouveau et il ne sélectionne pas toujours les meilleurs partenaires de canal pour vous. Surtout au début, il serait peut-être préférable d'ouvrir des canaux manuellement.
+Les pilotes automatiques existent actuellement sous trois formes :
+
+- +lnd+ intègre un pilote automatique entièrement intégré à +lnd+ et fonctionne constamment en arrière-plan lorsqu'il est en fonction.
+- +lib_autopilot.py+ peut offrir des calculs de pilote automatique pour n'importe quelle implémentation de nœud basée sur les bavardages et les données des canaux.
+- Il existe un plug-in +c-lightning+ basé sur +lib_autopilot.py+ qui fournit une interface facile à utiliser pour les utilisateurs de +c-lightning+.
+
+((("lnd autopilot", id="ix_05_node_operations-asciidoc24", range="startofrange")))Sachez que le pilote automatique +lnd+ commencera à fonctionner en arrière-plan dès qu'il sera activé via le fichier de configuration. En conséquence, il commencera à ouvrir des canaux immédiatement si vous avez des sorties sur la chaîne dans votre porte-monnaie +lnd+.
+Si vous souhaitez avoir un contrôle total sur les transactions en bitcoins que vous effectuez et les canaux que vous ouvrez, assurez-vous de désactiver le pilote automatique _avant_ de charger votre porte-monnaie +lnd+ avec des fonds en bitcoins.
+Si le pilote automatique était activé auparavant, vous aurez peut-être à redémarrer votre +lnd+ avant de recharger votre porte-monnaie avec une transaction sur la chaîne ou avant de fermer des canaux, ce qui vous redonne effectivement des fonds sur la chaîne.
+Il est essentiel que vous définissiez des valeurs de configuration clés si vous souhaitez exécuter le pilote automatique.
+Jetez un œil à cet exemple de configuration :
+
+
+----
+[lnd-autopilot]
+autopilot.active=1
+autopilot.maxchannels=40
+autopilot.allocation=0.70
+autopilot.minchansize=500000
+autopilot.maxchansize=5000000
+autopilot.heuristic=top_centrality:1.0
+----
+
+Ce fichier de configuration activerait le pilote automatique.
+Cela ouvrirait des canaux tant que les deux conditions suivantes seraient remplies :
+
+1. Votre nœud a actuellement moins de 40 canaux ouverts.
+2. Moins de 70 % de vos fonds totaux sont hors chaîne dans les canaux de paiement.
+
+Les nombres 40 et 0,7 sont choisis de manière complètement arbitraire ici car nous ne pouvons faire aucune recommandation valable pour tout le monde sur le nombre de canaux que vous devriez avoir ouverts et le pourcentage de vos fonds qui devraient être hors chaîne.
+Le pilote automatique dans +lnd+ ne prendra pas en compte les frais sur la chaîne. En d'autres termes, il ne retardera pas l'ouverture de canaux pour attendre une période où les frais sont bas.
+Pour réduire les frais, vous pouvez ouvrir manuellement les canaux pendant une période où les frais sont bas, par exemple, pendant le week-end.
+Le pilote automatique fera des recommandations de canaux chaque fois que les conditions sont remplies et essaiera immédiatement d'ouvrir un canal en utilisant les frais actuels appropriés.
+Selon le fichier de configuration précédent, les canaux auront une taille comprise entre 5 mBTC (`minchansize` = 500 000 satoshis) et 50 mBTC (`maxchansize` = 5 000 000 satoshis).
+Comme il est courant, les montants dans le fichier de configuration sont énumérés en satoshis.
+Actuellement, les canaux inférieurs à 1 mBTC ne sont pas très utiles, et nous vous déconseillons d'ouvrir des canaux trop petits et inférieurs à ce montant.
+Avec l'adoption plus large des paiements en plusieurs parties, les petits canaux sont moins un fardeau. Mais pour le moment, c'est notre recommandation.
+
+((("c-lightning autopilot plugin")))Le plugin +c-lightning+, qui a été écrit à l'origine par René Pickhardt (un co-auteur de ce livre), fonctionne très différemment par rapport au pilote automatique +lnd+.
+Premièrement, il diffère dans les algorithmes utilisés pour faire les recommandations. Nous ne couvrirons pas cela ici. Deuxièmement, il diffère par son interface utilisateur.
+Vous devrez télécharger le plug-in de _pilote automatique_ à partir du https://github.com/lightningd/plugins/tree/master/autopilot[dépôt] de plug-ins +c-lightning+ et l'activer.
+
+[NOTE]
+====
+Pour activer un plug-in dans +c-lightning+, placez-le dans le répertoire _~/.lightning/plugins_, assurez-vous qu'il est exécutable (par exemple, `chmod +x ~/.lightning/plugins/autopilot.py`), puis redémarrez +lightningd+.
+
+Sinon, si vous ne souhaitez pas qu'un plug-in s'active automatiquement lorsque vous démarrez +lightningd+, vous pouvez le placer dans un répertoire différent et l'activer manuellement avec l'argument +plugin+ de +lightningd+ :
+
+----
+   lightningd --plugin=~/lightning-plugins/autopilot.py
+----
+
+====
+
+Le pilote automatique dans +c-lightning+ est contrôlé via trois valeurs de configuration qui peuvent être définies dans le fichier de configuration ou en tant qu'arguments de ligne de commande lorsque vous démarrez +lightningd+ :
+
+----
+[c-lightning-autopilot]
+autopilot-percent=75
+autopilot-num-channels=10
+autopilot-min-channel-size-msat=100000000msat
+----
+
+Ces valeurs sont la configuration par défaut réelle et vous n'avez pas du tout besoin de les définir.
+
+Le pilote automatique ne fonctionnera pas automatiquement en arrière-plan comme dans +lnd+.
+Au lieu de cela, vous devez démarrer une exécution spécifiquement avec `lightning-cli autopilot-run-once` si vous souhaitez que le pilote automatique ouvre les canaux recommandés.
+Mais si vous voulez qu'il vous fournisse simplement des recommandations, à partir desquelles vous pouvez sélectionner les nœuds, vous pouvez ajouter l'argument facultatif `dryrun`.
+
+Une différence clé entre les pilotes automatiques +lnd+ et +c-lightning+ est que le pilote automatique +c-lightning+ fera également une recommandation pour la taille du canal.
+Par exemple, si le pilote automatique recommande d'ouvrir un canal avec un petit nœud qui n'a que de petits canaux, il ne recommandera pas d'ouvrir un grand canal.
+Cependant, s'il ouvre un canal avec un nœud bien connecté qui possède également de nombreux canaux volumineux, il recommandera probablement une taille de canal plus grande.
+
+Comme vous pouvez le voir, le pilote automatique +c-lightning+ n'est pas aussi automatique que celui de +lnd+, mais il vous donne un peu plus de contrôle.
+Ces différences reflètent des préférences personnelles et pourraient en fait être le facteur décisif pour vous de choisir une implémentation plutôt qu'une autre.
+
+Gardez à l'esprit que les pilotes automatiques actuels utiliseront principalement les informations publiques du protocole de bavardage sur la topologie actuelle du Lightning Network.
+Il est évident que vos exigences personnelles en matière de canaux ne peuvent être reflétées que dans une certaine mesure.
+Des pilotes automatiques plus avancés utiliseraient les informations historiques et d'utilisation que votre nœud aurait recueillies lors de son exécution passée, y compris des informations sur les succès de routage, qui vous avez payé dans le passé et qui vous a payé.
+À l'avenir, ces pilotes automatiques améliorés pourraient également utiliser ces données collectées pour faire des recommandations sur la fermeture des canaux et la réaffectation des fonds.(((range="endofrange", startref="ix_05_node_operations-asciidoc24")))
+
+Dans l'ensemble, au moment de la rédaction de ce livre, veillez à ne pas dépendre ou trop compter sur les pilotes automatiques(((range="endofrange", startref="ix_05_node_operations-asciidoc23")))(((range="endofrange", startref="ix_05_node_operations-asciidoc22"))).(((range="endofrange", startref="ix_05_node_operations-asciidoc21")))
+
+==== Obtenir des liquidités entrantes
+
+((("channel management","getting inbound liquidity")))Dans la conception actuelle du Lightning Network, il est plus courant que les utilisateurs obtiennent des liquidités sortantes _avant_ d'obtenir des liquidités entrantes.
+Ils le feront en ouvrant un canal avec un autre nœud, et le plus souvent ils pourront dépenser des bitcoins avant de pouvoir en recevoir.
+Il existe trois façons typiques d'obtenir des liquidités entrantes :
+
+* Ouvrez un canal avec des liquidités sortantes, puis dépensez une partie de ces fonds. Maintenant, le solde est à l'autre bout du canal, ce qui signifie que vous pouvez recevoir des paiements.
+
+* Demandez à quelqu'un d'ouvrir un canal vers votre nœud. Proposez de rendre la pareille, afin que vos deux nœuds deviennent mieux connectés et équilibrés.
+
+* Utilisez un swap sous-marin (par exemple, Loop In) pour échanger des BTC sur la chaîne contre un canal entrant vers votre nœud.
+
+* Payez un service tiers pour ouvrir un canal avec vous. Plusieurs services de ce type existent. Certains facturent des frais pour fournir des liquidités, d'autres sont gratuits.
+
+[role="pagebreak-before"]
+Voici une liste des fournisseurs de liquidité actuellement disponibles qui ouvriront un canal vers votre nœud moyennant des frais :
+
+* https://www.bitrefill.com/thor-lightning-network-channels[Service Thor de Bitrefill]
+
+* https://lightningto.me[Lightning To Me]
+
+* https://lnbig.com[LNBig]
+
+* https://lightningconductor.net/channels[Lightning Conductor]
+
+La création de liquidités entrantes est un défi à la fois du point de vue pratique et de l'expérience utilisateur. La liquidité entrante ne se produit pas automatiquement, vous devez donc trouver des moyens de la créer pour votre nœud. Cette asymétrie des canaux de paiement n'est pas non plus intuitive. Dans la plupart des autres systèmes de paiement, vous êtes payé en premier (entrant) avant de payer les autres (sortant).
+
+Le défi de créer des liquidités entrantes est plus visible si vous êtes un commerçant ou si vous vendez vos services pour les paiements Lightning. Dans ce cas, vous devez être vigilant pour vous assurer que vous disposez de suffisamment de liquidités entrantes pour pouvoir continuer à recevoir des paiements. Que se passe-t-il s'il y a une vague d'acheteurs dans votre magasin, mais qu'ils ne peuvent pas vous payer parce qu'il n'y a plus de capacité entrante ?
+
+À l'avenir, ces défis peuvent être partiellement atténués par la mise en œuvre de canaux à double financement, qui sont financés des deux côtés et offrent une capacité entrante et sortante équilibrée. La charge pourrait également être atténuée par un logiciel de pilote automatique plus sophistiqué, qui pourrait demander et payer la capacité entrante selon les besoins.
+
+En fin de compte, les utilisateurs de Lightning doivent être stratégiques et proactifs en matière de gestion des canaux pour s'assurer qu'une capacité entrante suffisante est disponible pour répondre à leurs besoins.
+
+==== Fermeture de canaux
+
+((("channel management","closing channels")))Comme discuté précédemment dans le livre, une _fermeture mutuelle_ est la méthode préférée pour fermer un canal. ((("force close")))Cependant, il existe des cas où une _fermeture forcée_ est nécessaire.
+
+Quelques exemples :
+
+* Votre partenaire de canal est hors ligne et ne peut pas être contacté pour initier une fermeture mutuelle.
+* Votre partenaire de canal est en ligne, mais ne répond pas aux demandes d'initiation d'une fermeture mutuelle.
+* Votre partenaire de canal est en ligne et vos nœuds négocient une fermeture mutuelle, mais ils sont bloqués et ne parviennent pas à une résolution.
+
+[[channel_rebalancing]]
+==== Rééquilibrage de canaux
+
+((("channel management","rebalancing channels")))((("rebalancing channels")))Au cours des transactions et du routage de paiements sur Lightning, la combinaison des capacités entrantes et sortantes peut devenir déséquilibrée.
+
+Par exemple, si l'un de vos partenaires de canal achemine fréquemment des paiements via votre nœud, vous épuiserez la capacité entrante sur ce canal, tout en épuisant également la capacité sortante sur les canaux sortants. Une fois que cela se produit, vous ne pouvez plus acheminer les paiements par cette route.
+
+Il existe de nombreuses façons de rééquilibrer les canaux, chacune présentant des avantages et des inconvénients différents. Une façon consiste à utiliser un échange sous-marin (par exemple, Loop Out), comme décrit précédemment dans ce chapitre. Une autre façon de rééquilibrer consiste simplement à attendre les paiements acheminés qui circulent dans la direction opposée. Si votre nœud est bien connecté, lorsqu'une route spécifique devient épuisée dans une direction, la même route devient disponible dans la direction opposée. D'autres nœuds peuvent "découvrir" cette route dans la direction opposée et commencer à l'utiliser dans le cadre de leur chemin de paiement, rééquilibrant ainsi à nouveau les fonds.
+
+((("circular route rebalancing")))Une troisième façon de rééquilibrer les canaux consiste à créer délibérément une _route circulaire_ qui renvoie un paiement de votre nœud vers votre nœud, via le Lightning Network. En envoyant un paiement sur un canal local de grande capacité et en organisant le chemin de manière à ce qu'il revienne à votre nœud sur un canal distant de grande capacité, ces deux canaux deviendront plus équilibrés. Un exemple de stratégie de rééquilibrage de route circulaire peut être aperçu dans <<circular_rebalancing>>.
+
+[[circular_rebalancing]]
+.Rééquilibrage par une route circulaire
+image::images/mtln_0504.png[]
+
+Le rééquilibrage circulaire est pris en charge par la plupart des implémentations de nœuds Lightning et peut être effectué en ligne de commande ou via l'une des interfaces de gestion Web telles que Ride The Lightning (voir <<rtl>>).
+
+Le rééquilibrage des canaux est une question complexe qui fait l'objet de recherches actives et abordée plus en détail dans <<channel_rebalancing>>.(((range="endofrange", startref="ix_05_node_operations-asciidoc20")))(((range="endofrange", startref="ix_05_node_operations-asciidoc19")))
+
+=== Frais de routage
+
+((("Lightning node operation","routing fees")))((("routing","fees")))L'exécution d'un nœud Lightning vous permet de gagner des frais en acheminant les paiements sur vos canaux. Les frais de routage ne sont généralement pas une source de revenus importante et sont éclipsés par le coût d'exploitation d'un nœud. Par exemple, sur un nœud relativement occupé qui achemine une douzaine de paiements par jour, les frais ne dépassent pas 2 000 satoshis.
+
+Les nœuds se font concurrence pour les frais de routage en fixant leur taux de frais désirés sur chaque canal. Les frais de routage sont définis par deux paramètres sur chaque canal : un _frais de base_ ("base fee" en anglais) fixe qui est facturé pour tout paiement et un _taux de frais_ ("fee rate" en anglais) variable supplémentaire qui est proportionnel au montant du paiement.
+
+Lors de l'envoi d'un paiement Lightning, un nœud sélectionnera un chemin afin de minimiser les frais, de minimiser les sauts, ou les deux. En conséquence, un marché des frais de routage émerge de ces interactions. Il existe actuellement de nombreux nœuds qui facturent des frais de routage très faibles ou nuls, ce qui crée une pression à la baisse sur le marché des frais de routage.
+
+Si vous ne faites aucun choix, votre nœud Lightning définira des frais de base et un taux de frais par défaut pour chaque nouveau canal. Les valeurs par défaut dépendent de l'implémentation de nœud que vous utilisez.
+Les frais de base sont fixés dans l'unité _millisatoshi_ (millièmes de satoshi). Le taux de frais proportionnel est défini dans l'unité de _millionièmes_ et est appliqué au montant du paiement.
+L'unité des millionièmes est souvent abrégée en _ppm_ (parties par million).
+Par exemple, des frais de base de 1 000 (millisatoshis) et un taux de frais de 1 000 ppm (millionièmes) entraîneraient les frais suivants pour un paiement de 100 000 satoshis :
+
+[latexmath]
+++++
+\begin{equation}
+\begin{aligned}
+P &= 100,000 \text{ satoshis} \\
+F_{base} &= 1,000 \text{ millisatoshis} = 1 \text{ satoshi} \\
+F_{rate} &= 1,000 \text{ ppm} = 1,000/1,000,000 = 1/1,000 = \text{0.001} = 0.1\% \\
+F_{total} &= F_{base} + ( P * F_{rate} ) \\
+ \Rightarrow  F_{total} &= 1 \text{ satoshi} + ( 100,000/1,000 ) \text{ satoshis} \\
+ \Rightarrow  F_{total} &= 1 \text{ satoshi} + 100 \text{ satoshis} = 101 \text{ satoshis} \\
+\end{aligned}
+\end{equation}
+++++
+
+D'une manière générale, vous pouvez adopter l'une des deux approches des frais de routage. Vous pouvez acheminer de nombreux paiements avec des frais peu élevés, en compensant les frais peu élevés par un volume élevé. Alternativement, vous pouvez choisir de facturer des frais plus élevés. Si vous choisissez de fixer des frais plus élevés, votre nœud sera sélectionné uniquement lorsqu'il n'existe pas d'autres itinéraires moins chers. Par conséquent, vous routerez moins fréquemment mais gagnerez plus par routage réussi.
+
+Pour la plupart des nœuds, il est généralement préférable d'utiliser les valeurs de frais de routage par défaut. De cette façon, votre nœud est en concurrence sur un pied d'égalité avec les autres nœuds qui utilisent les valeurs par défaut.
+
+Vous pouvez également utiliser les paramètres de frais de routage pour rééquilibrer les canaux. Si la plupart de vos canaux ont les frais par défaut mais que vous souhaitez rééquilibrer un canal particulier, réduisez simplement les frais sur ce canal spécifique à zéro ou à des taux très bas. Ensuite, asseyez-vous et attendez que quelqu'un achemine un paiement sur votre itinéraire "bon marché" et rééquilibre vos canaux pour vous comme effet secondaire.
+
+=== Gestion de nœuds
+
+((("Lightning node operation","node management")))((("node management")))Gérer votre nœud Lightning en ligne de commande n'est évidemment pas facile. Cela vous offre toute la flexibilité de l'API du nœud et la possibilité d'écrire vos propres scripts personnalisés pour répondre à vos besoins personnels. Mais si vous ne souhaitez pas gérer la complexité de la ligne de commande et n'avez besoin que de certaines fonctionnalités de base de gestion des nœuds, vous devriez envisager d'installer une interface utilisateur Web qui facilite la gestion de nœuds.
+
+Il existe un certain nombre de projets concurrents qui offrent une gestion Web de nœuds Lightning. Plusieurs des plus populaires sont décrits dans la section suivante.
+
+[[rtl]]
+==== Ride The Lightning
+
+((("Lightning node operation","Ride The Lightning (RTL)")))((("node management","Ride The Lightning (RTL)")))((("Ride The Lightning (RTL)")))((("RTL (Ride The Lightning)")))Ride The Lightning (RTL) est une interface utilisateur Web graphique pour aider les utilisateurs à gérer les opérations du nœud Lightning pour les trois principales implémentations du nœud Lightning (LND, `c-lightning `, et Eclair). RTL est un projet open source développé par Shahana Farooqui et de nombreux autres contributeurs. Vous pouvez trouver le logiciel RTL sur https://github.com/Ride-The-Lightning/RTL[GitHub].
+
+<<rtl-web-interface>> montre un exemple de capture d'écran de l'interface Web de RTL, telle que fournie sur le dépôt du projet.
+
+[[rtl-web-interface]]
+.Exemple de l'interface Web de RTL
+image::images/mtln_0505.png[]
+
+==== lndmon
+
+((("Lightning node operation","lndmon")))((("lndmon")))((("node management","lndmon")))Lightning Labs, les créateurs de LND, fournissent un interface utilisateur graphique basée sur le Web appelée +lndmon+ pour surveiller les différentes métriques d'un nœud LND Lightning. +lndmon+ ne fonctionne qu'avec les nœuds LND. Il s'agit d'une interface en lecture seule pour la surveillance et, en tant que telle, ne vous permet pas de gérer activement de nœud. Elle ne peut pas ouvrir de canaux ni effectuer de paiements. Retrouvez +lndmon+ sur https://github.com/lightninglabs/lndmon[GitHub].
+
+==== ThunderHub
+
+((("Lightning node operation","ThunderHub")))((("node management","ThunderHub")))((("ThunderHub")))https://thunderhub.io[ThunderHub] est un interface utilisateur graphique basée sur le Web très esthétique, similaire à RTL mais exclusive à LND. Elle peut être utilisée pour effectuer des paiements, rééquilibrer les canaux et gérer le nœud via une variété de fonctionnalités.
+
+=== Conclusion
+
+Au fur et à mesure que vous entretenez votre nœud et gagnez de l'expérience, vous en apprendrez beaucoup sur le Lightning Network. Être un opérateur de nœud est une tâche difficile mais gratifiante. La maîtrise de ces compétences vous permettra de contribuer à la croissance et au développement de cette technologie et du Lightning Network lui-même. Vous aurez en outre la possibilité d'envoyer et de recevoir des paiements Lightning avec le plus grand degré de contrôle et de facilité. Vous jouerez un rôle central dans l'infrastructure du réseau et ne serez pas seulement un participant à la périphérie.(((range="endofrange", startref="ix_05_node_operations-asciidoc0")))

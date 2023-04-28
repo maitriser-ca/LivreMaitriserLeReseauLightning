@@ -1,0 +1,650 @@
+[[encrypted_message_transport]]
+== Le transport de messages encryptés de Lightning
+
+((("Lightning encrypted transport protocol", id="ix_14_encrypted_transport-asciidoc0", range="startofrange")))Dans ce chapitre, nous examinerons le _transport de messages encryptés_ de Lightning Network,
+parfois appelé ((("Brontide Protocol")))_Brontide Protocol_, qui permet aux pairs
+d'établir une communication encryptée de bout en bout, l'authentification et la vérification
+de l'intégrité.
+
+[NOTE]
+====
+Une partie de ce chapitre comprend des détails hautement techniques sur le protocole d'encryptage et les algorithmes d'encryptage utilisés dans le transport encrypté de Lightning. Vous pouvez décider de sauter cette section si vous n'êtes pas intéressé par ces détails.
+====
+
+=== Le transport encrypté dans de la suite de protocoles de Lightning
+
+((("Lightning encrypted transport protocol","Lightning Protocol Suite and")))Le composant de transport du Lightning Network et ses différents composants sont illustrés dans la partie la plus à gauche de la couche de connexion réseau dans <<LN_protocol_encrypted_transport_highlight>>.
+
+[[LN_protocol_encrypted_transport_highlight]]
+.Le transport de messages encryptés dans la suite de protocoles Lightning
+image::images/mtln_1401.png["Le transport de messages encryptés dans la suite de protocoles Lightning"]
+
+=== Introduction
+
+Contrairement au réseau P2P de base de Bitcoin, chaque nœud du Lightning Network est
+identifié par une clé publique unique qui lui sert d'identité. Par défaut, cette
+clé publique est utilisée pour encrypter de bout en bout _toutes_ les communications au sein du
+réseau. L'encryptage par défaut au niveau le plus bas du protocole garantit que
+tous les messages sont authentifiés, sont à l'abri des attaques de l'homme du milieu (MITM) et de l'espionnage par des tiers, et garantit la confidentialité au niveau fondamental du
+transport. Dans ce chapitre, nous allons découvrir le protocole de cryptage utilisé par le
+Lightning Network en détail. À la fin de ce chapitre, le lecteur sera
+familier avec des protocoles de messagerie encryptés de pointe, ainsi qu'avec
+les diverses propriétés que de tels protocoles fournissent au réseau. Cela vaut la peine
+de mentionner que le cœur du transport des messages chiffrés est _agnostique_ à
+son utilisation dans le contexte du Lightning Network. En conséquence, le
+transport de messages chiffrés personnalisé utilisé par Lightning peut être transposé dans n'importe quel contexte
+qui nécessite une communication encryptée entre deux parties.
+
+=== Le graphe des canaux en tant qu'infrastructure clés publiques décentralisée
+
+((("channel graph","decentralized public key infrastructure")))((("Lightning encrypted transport protocol","channel graph as decentralized public key infrastructure")))((("PKI (public key infrastructure)")))((("public key infrastructure (PKI)")))Comme nous l'avons appris dans <<routing>>, chaque nœud a une
+identité à long terme qui est utilisée comme identifiant pour un sommet lors du pathfinding et
+également utilisé dans les opérations cryptographiques asymétriques liées à la création de
+de paquets de routage chiffrés en oignon. Cette clé publique, qui sert à l'identité
+du nœud à long terme, est incluse dans la réponse d'amorçage DNS, ainsi
+qu'intégrée dans le graphe des canaux. Par conséquent, avant qu'un nœud ne tente de
+se connecter à un autre nœud sur le réseau P2P, il connaît déjà la clé publique
+du nœud auquel il souhaite se connecter.
+
+De plus, si le nœud auquel vous vous connectez possède déjà une série de
+canaux dans le graphe, le nœud qui se connecte est alors en mesure de vérifier davantage l'identité du nœud. Parce que l'ensemble du graphe des canaux est entièrement
+authentifié, on peut le voir comme une sorte d'infrastructure à clés publiques décentralisée
+(PKI) : pour enregistrer une clé, un canal public dans la blockchain
+Bitcoin doit être ouvert, et une fois qu'un nœud n'a plus de canaux publics, alors
+ils sont effectivement supprimés de la PKI.
+
+Étant donné que Lightning est un réseau décentralisé, il est impératif qu'aucune entité
+centrale ne se voit attribuer le pouvoir de fournir une identité par clé publique au sein du
+réseau. A la place d'une entité centrale, le Lightning Network utilise la blockchain
+Bitcoin comme mécanisme d'atténuation de d'attaque Sybil car obtenir une identité sur le
+réseau a un coût tangible : les frais nécessaires pour créer un canal sur la
+blockchain, ainsi que le coût d'opportunité du capital alloué à leurs
+canaux. Tout en déployant une PKI spécifique à un domaine, le
+Lightning Network est en mesure de simplifier considérablement son protocole de transport encrypté
+car il n'a pas besoin de traiter toutes les complexités qui se présentent
+avec TLS, le protocole Transport Layer Security.
+
+=== Pourquoi pas TLS ?
+
+((("Lightning encrypted transport protocol","TLS vulnerabilities/limitations")))((("TLS (Transport Layer Security protocol)")))((("Transport Layer Security protocol (TLS)")))Les lecteurs familiers avec le système TLS peuvent se demander à ce stade : pourquoi TLS n'a-t-il pas été
+utilisé malgré les inconvénients du système PKI existant ? C'est en effet un
+fait que les "certificats auto-signés" peuvent être utilisés pour éviter efficacement le
+système PKI mondial existant en affirmant simplement l'identité d'une
+clé publique parmi un ensemble de pairs. Cependant, même avec le système PKI existant
+à l'écart, TLS présente plusieurs inconvénients qui ont incité les créateurs du Lightning Network
+à opter plutôt pour un protocole d'encryptage personnalisé plus compact.
+
+Pour commencer, TLS est un protocole qui existe depuis plusieurs décennies et
+en conséquence a évolué au fil du temps à mesure que de nouvelles avancées ont été réalisées dans le domaine
+de l'encryptage de transport. Cependant, au fil du temps, cette évolution a entraîné le
+gonflement en taille et en complexité du protocole. Au cours des dernières décennies, plusieurs
+vulnérabilités dans TLS ont été découvertes et corrigées, avec chaque évolution
+apportant plus de complexité au protocole. En raison de l'âge de
+du protocole, plusieurs versions et itérations existent, ce qui signifie qu'un client doit
+comprendre de nombreuses itérations antérieures du protocole pour communiquer
+avec une grande partie de l'Internet public, augmentant encore la complexité
+de l'implémentation.
+
+Dans le passé, plusieurs vulnérabilités de sécurité liées à la mémoire ont été découvertes dans
+des implémentations largement utilisées de SSL/TLS. Intégrer un tel protocole dans chaque
+nœud Lightning servirait à augmenter la surface d'attaque des nœuds exposés au réseau pair-à-pair public. Pour augmenter la sécurité du
+réseau dans son ensemble et minimiser la surface d'attaque exploitable, les créateurs du
+Lightning Network a plutôt choisi d'adopter le Noise Protocol Framework. Noise comme protocole
+internalise plusieurs des leçons de sécurité et de confidentialité apprises au fil du temps en raison
+par l'examen approfondi continu du protocole TLS durant des décennies. D'une certaine manière, l'existence
+of Noise permet à la communauté de "recommencer" efficacement, avec un protocole plus compact
+et simplifié qui conserve tous les atouts de TLS.
+
+=== Le Noise Protocol Framework
+
+((("Lightning encrypted transport protocol","Noise Protocol Framework")))((("Noise Protocol Framework","encrypted message transport and")))Le Noise Protocol Framework est un protocole d'encryptage de messages moderne, extensible et flexible
+conçu par les créateurs du Signal Protocol. Le Signal Protocol est l'un des protocoles de cryptage de message les plus largement utilisés
+au monde. Il est utilisé à la fois par Signal et Whatsapp, qui sont utilisés cumulativement par
+plus d'un milliard de personnes dans le monde. Le Noise Framework est le résultat de
+de décennies d'évolution à la fois dans le milieu universitaire et dans l'industrie des protocoles
+d'encryptage de messages. Lightning utilise le Noise Protocol Framework pour implémenter
+un protocole d'encryptage _orienté message_ utilisé par tous les nœuds pour communiquer
+entre eux.
+
+Une session de communication utilisant Noise comporte deux phases distinctes : la phase de poignée de main ("handshake" en anglais)
+et la phase de messagerie. Avant que deux parties puissent communiquer l'une avec l'autre,
+elles doivent d'abord arriver à un secret partagé connu d'elles seules qui
+sera utilisé pour encrypter et authentifier les messages envoyés entre elles. ((("handshake","defined")))Une variante
+de l'accord de clé authentifié est utilisée pour parvenir à une clé partagée finale
+entre les deux parties. Dans le contexte du protocole Noise, cet
+accord de clé authentifié est appelé _poignée de main_. Une fois cette
+poignée de main terminée, les deux nœuds peuvent maintenant s'envoyer
+des messages encryptés. Chaque fois que des pairs doivent se connecter ou se reconnecter l'un
+à l'autre, une nouvelle itération du protocole de poignée de main est exécutée, ce qui permet de garantir
+le secret de transmission (la fuite de la clé d'une transcription antérieure ne compromet pas
+les transcriptions futures).
+
+Comme le Noise Protocol permet à un concepteur de protocole de choisir parmi plusieurs
+primitives cryptographiques, telles que l'encryptage symétrique et la cryptographie
+à clé publique, il est d'usage que chaque variante du Noise Protocol soit désignée
+par un nom unique. Dans l'esprit de "Noise", chaque variante du protocole
+choisit un nom dérivé d'une sorte de "bruit" ("noise" en anglais). Dans le contexte du
+((("Brontide Protocol")))Lightning Network, la variante du protocole de bruit utilisée est parfois appelée
+Brontide. Une _brontide_ est un bruit sourd, semblable à celui que l'on peut
+entendre lors d'un orage à une grande distance.
+
+=== Le transport encrypté de Lightning en détail
+
+((("Lightning encrypted transport protocol","elements of", id="ix_14_encrypted_transport-asciidoc1", range="startofrange")))Dans cette section, nous décomposerons le protocole de transport encrypté de Lightning et approfondirons les détails des algorithmes et protocole cryptographiques utilisés pour établir des communications encryptées, authentifiées et à intégrité garantie entre les pairs. N'hésitez pas à sauter cette section si vous trouvez ce niveau de détail décourageant.
+
+==== Noise_XK : La poignée de main Noise du Lightning Network
+
+((("Lightning encrypted transport protocol","Noise_XK")))((("Noise Protocol Framework","Noise_XK")))((("Noise_XK")))Le protocole Noise est extrêmement flexible car il annonce plusieurs
+poignées de main, chacune ayant des propriétés différentes en matière de sécurité et de confidentialité,
+parmi lesquelles le concepteur éventuel de protocole peut faire son choix. Une exploration approfondie de chaque
+poignée de main et de leurs différents compromis sort du cadre de ce chapitre.
+Cela dit, le Lightning Network utilise une poignée de main spécifique appelée
+`Noise_XK`. ((("identity hiding")))La propriété unique fournie par cette poignée de main est la __dissimulation d'identité__ : pour qu'un nœud puisse initier une connexion avec un autre nœud, il
+doit d'abord connaître sa clé publique. Mécaniquement, cela signifie que la clé publique
+du répondant n'est en fait jamais transmise dans le contexte de la
+poignée de main. Au lieu de cela, une série astucieuse de contrôles ECDH (Elliptic Curve Diffie-Hellman) et
+MAC (Message Authentication Code) est utilisée pour authentifier le
+répondant.
+
+==== Notation de poignée de main et flux du protocole
+
+((("handshake","notation and protocol flow")))((("Lightning encrypted transport protocol","handshake notation and protocol flow")))((("Noise_XK","handshake notation and protocol flow")))Chaque poignée de main se déroule généralement en plusieurs étapes. À chaque étape, un
+élément (éventuellement) encrypté est envoyé à l'autre partie, une ECDH (ou
+plusieurs) est effectuée, et le résultat de la poignée de main est "mélangé" dans une
+_transcription_ de protocole. Cette transcription sert à authentifier chaque étape du
+protocole et permet de déjouer les attaques de type "homme du milieu". À la
+fin de la poignée de main, deux clés, `ck` et `k`, sont produites et utilisées pour
+encrypter les messages (`k`) et effectuer la rotation des clés (`ck`) tout au long de la durée de vie de
+la session.
+
+Dans le contexte d'une poignée de main, `s` est généralement une clé publique statique à long terme.
+Dans notre cas, le système de cryptographie à clé publique utilisé est basé sur une courbe elliptique,
+instanciée avec la courbe `secp256k1`, qui est utilisée ailleurs dans Bitcoin.
+Plusieurs clés éphémères sont générées tout au long de la poignée de main. Nous utilisons `e` pour
+désigner une nouvelle clé éphémère. Les opérations ECDH entre deux clés sont notées comme
+la concaténation de deux clés. Par exemple, `ee` représente une opération ECDH
+entre deux clés éphémères.
+
+==== Vue d'ensemble de haut niveau
+
+((("Lightning encrypted transport protocol","high-level overview")))((("Noise_XK","high-level overview")))En utilisant la notation présentée précédemment, nous pouvons décrire succinctement le `Noise_XK`
+comme pass:[<span class="keep-together">suit</span>] :
+```
+    Noise_XK(s, rs):
+       <- rs
+       ...
+       -> e, e(rs)
+       <- e, ee
+       -> s, se
+```
+
+Le protocole commence par la "pré-transmission" de la clé statique du répondant
+(`rs`) à l'initiateur. Avant d'exécuter la poignée de main, l'initiateur doit
+générer sa propre clé statique (`s`). À chaque étape de la poignée de main, tous
+les éléments envoyés sur le fil et les clés envoyées/utilisées sont incrémentalement
+hachés dans un _digest de poignée de main_, `h`. Ce digest n'est jamais envoyé sur le
+fil pendant la poignée de main, mais est utilisé comme "données associées" lorsque
+le AEAD ("Authenticated Encryption with Associated Data" en anglais, traduit littéralement Encryptage Authentifié avec Données Associées) est envoyé sur le fil.
+((("AD (associated data)")))((("associated data (AD)")))Les _données associées_ ("associated data" ou "AD" en anglais) permettent à un protocole d'encryptage d'authentifier des informations supplémentaires
+en même temps qu'un paquet de texte crypté. Dans d'autres domaines, les AD peuvent être
+un nom de domaine ou une partie du paquet en texte clair.
+
+L'existence de `h` garantit que si une portion d'un message de poignée de main transmis
+est remplacée, l'autre partie le remarquera. À chaque étape, un digest MAC
+est vérifié. Si la vérification MAC réussit, le destinataire sait
+que la poignée de main s'est déroulée avec succès jusqu'à ce point. Dans le cas contraire, si une vérification MAC
+échoue, le processus de poignée de main a échoué et la connexion
+doit être interrompue.
+
+Le protocole ajoute également une nouvelle donnée à chaque message de poignée de main : la version
+du protocole. La version initiale du protocole est `0`. Au moment de la rédaction de ce document, aucune nouvelle
+version de protocole n'a été créée. Par conséquent, si un pair reçoit une version
+autre que `0`, il doit rejeter la tentative d'initiation de la poignée de main.
+
+En ce qui concerne les primitives cryptographiques, SHA-256 est utilisé comme fonction de hachage de
+choix, `secp256k1` comme courbe elliptique, et `ChaChaPoly-130` comme construction AEAD
+(encryptage symétrique).
+
+Chaque variante du protocole Noise possède une chaîne ASCII unique pour s'y référer. Pour s'assurer que deux parties utilisent la même variante du
+protocole, la chaîne ASCII est hachée en un digest, qui est utilisé pour initialiser
+l'état de la poignée de main de départ. Dans le contexte du Lightning Network, la chaîne ASCII
+décrivant le protocole est `Noise_XK_secp256k1_ChaChaPoly_SHA256`.
+
+==== La poignée de main en trois actes
+
+((("Lightning encrypted transport protocol","handshake in three acts", id="ix_14_encrypted_transport-asciidoc2", range="startofrange")))((("Noise_XK","handshake in three acts", id="ix_14_encrypted_transport-asciidoc3", range="startofrange")))La partie "poignée de main" peut être séparée en trois "actes" distincts.
+L'ensemble de la poignée de main prend 1,5 aller-retour entre l'initiateur et le répondant.
+À chaque acte, un seul message est envoyé entre les deux parties. Le message de poignée de main
+est une charge utile de taille fixe préfixée par la version du protocole.
+
+Le protocole Noise utilise une notation inspirée de l'orientation objet pour décrire le
+protocole à chaque étape. Lors de l'établissement de l'état de la poignée de main, chaque partie
+initialisera les variables suivantes :
+
+`ck`:: La _clé de chaînage_. Cette valeur est le hachage accumulé de toutes
+   les précédentes sorties de l'ECDH. A la fin de la poignée de main, 'ck' est utilisé pour dériver
+   les clés d'encryptage des messages Lightning.
+
+`h`:: Le _hachage de la poignée de main_. Cette valeur est le hachage accumulé du _toutes_
+   les données de poignée de main qui ont été envoyées et reçues jusqu'à présent pendant le processus de
+   poignée de main.
+
+`temp_k1`, `temp_k2`, `temp_k3`:: Les _clés intermédiaires_. Celles-ci servent à
+   encrypter et décrypter les charges utiles AEAD de longueur nulle à la fin de chaque message de
+   poignée de main.
+
+ `e`:: La _paire de clés éphémère_ d'une partie. Pour chaque session, un nœud doit générer une
+   nouvelle clé éphémère cryptographique avec un fort caractère aléatoire
+
+`s`:: La _paire de clés statiques_ d'une partie (`ls` pour local, `rs` pour distant).
+
+Compte tenu de cette poignée de main et de l'état de la session de messagerie, nous définirons ensuite une série de
+de fonctions qui opéreront sur l'état de la poignée de main et de la messagerie. Lors de
+la description du protocole de poignée de main, nous utiliserons ces variables d'une manière
+similaire au pseudocode pour réduire la verbosité de l'explication de
+chaque étape du protocole. Nous allons définir les primitives _fonctionnelles_ de
+la poignée de main ainsi :
+
+`ECDH(k, rk)`:: Effectue une opération Elliptic Curve Diffie–Hellman en utilisant
+    `k`, qui est une clé privée `secp256k1` valide, et `rk`, qui est une clé publique valide.
++
+La valeur renvoyée est le SHA-256 du format compressé du
+      point généré.
+
+`HKDF(salt,ikm)`:: Une fonction définie dans la `RFC 5869`,
+    évalué avec un champ "info" de longueur nulle.
++
+Toutes les invocations de `HKDF` renvoient implicitement 64 octets de
+       données cryptographique aléatoires en utilisant le composant "extract-and-expand"
+        de l'algorithme `HKDF`.
+
+`encryptWithAD(k, n, ad, plaintext)`:: Renvoie `encrypt(k, n, ad, plaintext)`.
++
+Où `encrypt` est une évaluation de `ChaCha20-Poly1305` (variante Internet Engineering Task Force)
+       avec les arguments passés, avec le nonce `n` encodé sur 32 bits à zéro,
+       suivi d'une valeur _little-endian_ de 64 bits. Remarque : cela suit la convention du
+       protocole Noice, plutôt que notre "endian" usuel.
+
+`decryptWithAD(k, n, ad, ciphertext)`:: Renvoie `decrypt(k, n, ad, ciphertext)`.
++
+Où `decrypt` est une évaluation de `ChaCha20-Poly1305` (variante IETF)
+       avec les arguments passés, avec le nonce `n` encodé sur 32 bits à zéro,
+       suivi d'une valeur _little-endian_ de 64 bits.
+
+`generateKey()`:: Génère et renvoie une nouvelle paire de clés `secp256k1`.
++
+Où l'objet renvoyé par `generateKey` a deux attributs : `.pub`, qui renvoie un objet abstrait représentant la clé publique ; et `.priv`, qui représente la clé privée utilisée pour générer la clé publique
++
+Où l'objet a également une seule méthode : `.serializeCompressed()`
+
+`a || b`:: Ceci indique la concaténation de deux chaînes d'octets `a` et `b`.
+
+===== Initialisation de l'état de session de poignée de main
+
+((("handshake","session state initialization")))((("Lightning encrypted transport protocol","handshake session state initialization")))((("Noise_XK","handshake session state initialization")))Avant de commencer le processus de poignée de main, les deux parties doivent initialiser
+l'état de départ qu'ils utiliseront pour faire avancer le processus de poignée de main. Pour commencer,
+les deux parties doivent construire le résumé initial de la poignée de main `h`.
+
+ 1. ++h = SHA-256(__protocolName__)++
++
+Où ++__protocolName__ = "Noise_XK_secp256k1_ChaChaPoly_SHA256"++ encodé en
+      une chaîne ASCII.
+
+ 2. `ck = h`
+
+ 3. ++h = SHA-256(h || __prologue__)++
++
+Où ++__prologue__++ est la chaîne ASCII : `lightning`.
+
+En plus du nom du protocole, nous ajoutons également un "prologue" supplémentaire qui est
+utilisé pour lier davantage le contexte du protocole au Lightning Network.
+
+Pour conclure l'étape d'initialisation, les deux parties mélangent la clé publique du répondant
+dans le digest de la poignée de main. Comme ce digest est utilisé pendant que les données associées à un
+un texte chiffré de longueur nulle (uniquement le MAC) est envoyé, cela garantit que l'initiateur
+connaît bien la clé publique du répondant.
+
+ * Le nœud initiateur mélange la clé publique statique du nœud répondant
+   sérialisée au format compressé de Bitcoin : `h = SHA-256(h || rs.pub.serializeCompressed())`
+
+ * Le nœud répondant mélange sa clé publique statique locale sérialisée avec
+   le format compressé de Bitcoin : `h = SHA-256(h || ls.pub.serializeCompressed())`
+
+===== Les actes de poignée de main
+
+((("handshake","acts", id="ix_14_encrypted_transport-asciidoc4", range="startofrange")))((("Lightning encrypted transport protocol","handshake acts", id="ix_14_encrypted_transport-asciidoc5", range="startofrange")))((("Noise_XK","handshake acts", id="ix_14_encrypted_transport-asciidoc6", range="startofrange")))Après l'initialisation initiale de la poignée de main, nous pouvons commencer l'exécution proprement dite
+du processus de poignée de main. La poignée de main est composée d'une série de
+trois messages envoyés entre l'initiateur et le répondant, ci-après dénommés
+"actes". Parce que chaque acte est un message unique envoyé entre les parties, une poignée de main
+est terminée en 1,5 aller-retour au total (0,5 pour chaque acte).
+
+((("Diffie-Hellman Key Exchange (DHKE)")))Le premier acte complète la partie initiale du triple échange de clés Diffie-Hellman (DH) incrémentiel (en utilisant une nouvelle clé éphémère générée par l'initiateur)
+et garantit également que l'initiateur connaît réellement la clé publique à long terme du
+répondant. Lors du deuxième acte, le répondant transmet la clé éphémère
+qu'ils souhaitent utiliser pour la session à l'initiateur, et mixe à nouveau incrémentalement
+cette nouvelle clé dans la poignée de main DH triple. Lors du troisième et dernier
+agir, l'initiateur transmet sa clé publique statique à long terme au
+répondant et exécute l'opération DH finale pour la mélanger au secret
+ final partagé qui en résulte.
+
+====== Acte Un
+
+```
+    -> e, es
+```
+
+L'Acte Un est envoyé par l'initiateur au répondant. Au cours de cet acte, l'initiateur
+tente de répondre à un défi implicite lancé par le répondant. Pour relever ce
+défi, l'initiateur doit connaître la clé publique statique du répondant.
+
+Le message de poignée de main est _exactement_ de 50 octets : 1 octet pour la version de poignée de main,
+33 octets pour la clé publique éphémère compressée de l'initiateur,
+et 16 octets pour la balise `poly1305`.
+
+Actions de l'expéditeur :
+
+1. `e = generateKey()`
+2. `h = SHA-256(h || e.pub.serializeCompressed())`
++
+La clé éphémère nouvellement générée est accumulée dans le
+       digest de la poignée de main.
+3. `es = ECDH(e.priv, rs)`
++
+L'initiateur effectue une ECDH entre sa clé éphémère nouvellement générée
+       et la clé publique statique du nœud distant.
+4. `ck, temp_k1 = HKDF(ck, es)`
++
+Une nouvelle clé d'encryptage temporaire est générée, qui est
+       utilisé pour générer le MAC d'authentification.
+5. `c = encryptWithAD(temp_k1, 0, h, zero)`
++
+Où `zero` est un texte brut de longueur nulle.
+6. `h = SHA-256(h || c)`
++
+Enfin, le texte chiffré généré est accumulé dans l'authentification
+       digest de la poignée de main.
+7. Envoyer `m = 0 || e.pub.serializeCompressed() || c` au répondant via la mémoire tampon du réseau.
+
+Actions du destinataire :
+
+1. Lire _exactement_ 50 octets du tampon réseau.
+2. Parser le message lu (`m`) en `v`, `re` et `c` :
+    * Où `v` est le _premier_ octet de `m`, `re` est les 33 octets suivants
+      de `m`, et `c` est les 16 derniers octets de `m`.
+    * Les octets bruts de la clé publique éphémère de la partie distante (`re`) doivent être
+      désérialisé en un point sur la courbe à l'aide de coordonnées affines telles qu'encodées
+      par le format composé sérialisé de la clé.
+3. Si `v` est une version de poignée de main non reconnue, le répondant doit
+    annuler la tentative de connexion.
+4. `h = SHA-256(h || re.serializeCompressed())`
++
+Le répondant accumule la clé éphémère de l'initiateur dans le digest
+      de la poignée de main d'authentification.
+5. `es = ECDH(s.priv, re)`
++
+Le répondant effectue une ECDH entre sa clé privée statique et la
+      clé publique éphémère de l'initiateur.
+6. `ck, temp_k1 = HKDF(ck, es)`
++
+Une nouvelle clé d'encryptage temporaire est générée, qui
+      bientôt sera utilisée pour vérifier le MAC d'authentification.
+7. `p = decryptWithAD(temp_k1, 0, h, c)`
++
+Si la vérification MAC de cette opération échoue, alors l'initiateur ne connait _pas_
+      la clé publique statique du répondant. Si tel est le cas, alors le
+      répondant doit mettre fin à la connexion sans aucun autre message.
+8. `h = SHA-256(h || c)`
++
+Le texte chiffré reçu est mélangé au digest de la poignée de main. Cette étape sert
+       à s'assurer que la charge utile n'a pas été modifiée par un MITM.
+
+====== Acte Deux
+
+```
+   <- e, ee
+```
+
+L'Acte Deux est envoyé du répondant à l'initiateur. L'Acte Deux n'aura lieu _que_
+si l'Acte Un réussit. Le premier acte a été un succès si le
+répondant a pu décrypter et vérifier correctement le MAC de la balise envoyée à
+la fin du premier acte.
+
+La poignée de main fait _exactement_ 50 octets : 1 octet pour la version de poignée de main, 33
+octets pour la clé publique éphémère compressée du répondant, et 16 octets
+pour la balise "poly1305".
+
+Actions de l'expéditeur :
+
+1. `e = generateKey()`
+2. `h = SHA-256(h || e.pub.serializeCompressed())`
++
+La clé éphémère nouvellement générée est accumulée dans le
+       digest de la poignée de main.
+3. `ee = ECDH(e.priv, re)`
++
+Où `re` est la clé éphémère de l'initiateur, qui a été reçue
+       durant l'Acte Un.
+4. `ck, temp_k2 = HKDF(ck, ee)`
++
+Une nouvelle clé d'encryptage temporaire est générée, qui est
+       utilisé pour générer le MAC d'authentification.
+5. `c = encryptWithAD(temp_k2, 0, h, zero)`
++
+Où `zero` est un texte brut de longueur nulle.
+6. `h = SHA-256(h || c)`
++
+Enfin, le texte chiffré généré est accumulé dans l'authentification
+       digest de la poignée de main.
+7. Envoyer `m = 0 || e.pub.serializeCompressed() || c` à l'initiateur sur le tampon réseau.
+
+Actions du destinataire :
+
+1. Lire _exactement_ 50 octets du tampon réseau.
+2. Parser le message lu (`m`) en `v`, `re` et `c` :
++
+Où `v` est le _premier_ octet de `m`, `re` est les 33 suivant
+      de `m`, et `c` est les 16 derniers octets de `m`.
+3. Si `v` est une version de poignée de main non reconnue, le répondant doit
+    annuler la tentative de connexion.
+4. `h = SHA-256(h || re.serializeCompressed())`
+5. `ee = ECDH(e.priv, re)`
++
+Où `re` est la clé publique éphémère du répondant.
++
+Les octets bruts de la clé publique éphémère de la partie distante (`re`) doivent être
+      désérialisé en un point sur la courbe à l'aide de coordonnées affines telles qu'encodées
+      par le format composé sérialisé de la clé.
+6. `ck, temp_k2 = HKDF(ck, ee)`
++
+Une nouvelle clé d'encryptage temporaire est générée, qui est
+       utilisé pour générer le MAC d'authentification.
+7. `p = decryptWithAD(temp_k2, 0, h, c)`
++
+Si la vérification MAC de cette opération échoue, l'initiateur doit
+      mettre fin à la connexion sans autre message.
+8. `h = SHA-256(h || c)`
++
+Le texte chiffré reçu est mélangé au digest de la poignée de main. Cette étape sert
+       à s'assurer que la charge utile n'a pas été modifiée par un MITM.
+
+====== Acte Trois
+
+```
+   -> s, se
+```
+
+L'Acte Trois est la phase finale de l'accord de clé authentifié décrit dans
+cette section. Cet acte est envoyé de l'initiateur au répondant en tant
+qu'étape de conclusion. L'Acte Trois est exécuté _si et seulement si_ l'Acte Deux a réussi.
+Au cours de l'Acte Trois, l'initiateur transporte sa clé publique statique vers le
+répondant crypté avec un secret de transmission _fort_, en utilisant la clé secrète dérivée `HKDF` accumulée
+à ce stade de la poignée de main.
+
+La poignée de main fait _exactement_ 66 octets : 1 octet pour la version de la poignée de main, 33
+octets pour la clé publique statique chiffrée avec l'encryptage de flux `ChaCha20`,
+16 octets pour la balise de la clé publique chiffrée générée par la construction AEAD,
+et 16 octets pour une balise d'authentification finale.
+
+Actions de l'expéditeur :
+
+1. `c = encryptWithAD(temp_k2, 1, h, s.pub.serializeCompressed())`
++
+Où `s` est la clé publique statique de l'initiateur.
+2. `h = SHA-256(h || c)`
+3. `se = ECDH(s.priv, re)`
++
+Où `re` est la clé publique éphémère du répondant.
+4. `ck, temp_k3 = HKDF(ck, se)`
++
+Le secret partagé intermédiaire final est mélangé à la clé de chaînage en circulation.
+5. `t = encryptWithAD(temp_k3, 0, h, zero)`
++
+Où `zero` est un texte brut de longueur nulle.
+6. `sk, rk = HKDF(ck, zero)`
++
+Où `zero` est un texte brut de longueur nulle,
+       `sk` est la clé à utiliser par l'initiateur pour encrypter les messages pour le
+       répondant,
+       et `rk` est la clé à utiliser par l'initiateur pour décrypter les messages envoyés par
+       le répondant.
++
+Les clés de cryptage finales, à utiliser pour envoyer et
+       recevoir des messages pendant la durée de la session, sont générées.
+7. `rn = 0, sn = 0`
++
+Les nonces d'envoi et de réception sont initialisés à 0.
+8. Envoyer `m = 0 || c || t` sur la mémoire tampon du réseau.
+
+Actions du destinataire :
+
+1. Lire _exactement_ 66 octets du tampon réseau.
+2. Parser le message lu (`m`) en `v`, `c` et `t` :
++
+Où `v` est le _premier_ octet de `m`, `c` est les 49 octets suivants
+      de `m`, et `t` les 16 derniers octets de `m`.
+3. Si `v` est une version de poignée de main non reconnue, le répondant doit
+    annuler la tentative de connexion.
+4. `rs = decryptWithAD(temp_k2, 1, h, c)`
++
+À ce stade, le répondant a récupéré la clé publique statique de
+       l'initiateur.
+5. `h = SHA-256(h || c)`
+6. `se = ECDH(e.priv, rs)`
++
+Où `e` est la clé éphémère d'origine du répondant.
+7. `ck, temp_k3 = HKDF(ck, se)`
+8. `p = decryptWithAD(temp_k3, 0, h, t)`
++
+Si la vérification MAC de cette opération échoue, le répondant doit
+       terminer à la connexion sans autre message.
+9. `rk, sk = HKDF(ck, zero)`
++
+Où `zero` est un texte brut de longueur nulle,
+       `rk` est la clé à utiliser par le répondant pour décrypter les messages envoyés
+       par l'initiateur,
+       et `sk` est la clé à utiliser par le répondant pour crypter les messages pour
+       l'initiateur.
++
+Les clés de cryptage finales, à utiliser pour envoyer et
+       recevoir des messages pendant la durée de la session, sont générées.
+10. `rn = 0, sn = 0`
++
+Les nonces d'envoi et de réception sont initialisés à 0.(((range="endofrange", startref="ix_14_encrypted_transport-asciidoc6")))(((range="endofrange", startref="ix_14_encrypted_transport-asciidoc5")))(((range="endofrange", startref="ix_14_encrypted_transport-asciidoc4")))
+
+===== Cryptage des messages de transport
+
+((("Lightning encrypted transport protocol","transport message encryption")))((("Noise_XK","transport message encryption")))À la fin de l'Acte Trois, les deux parties ont dérivé les clés de cryptage, qui
+seront utilisés pour crypter et décrypter les messages pour le reste de la
+session.
+
+Les messages réels du protocole Lightning sont encapsulés dans les textes chiffrés AEAD.
+Chaque message est précédé d'un autre texte chiffré AEAD, qui encode la longueur
+totale du message Lightning suivant (sans compter son MAC).
+
+La taille _maximale_ de _n'importe quel_ message Lightning ne doit pas dépasser 65 535 octets. Une
+la taille maximale de 65 535 simplifie les tests, facilite la gestion de la mémoire et
+aide à atténuer les attaques d'épuisement de la mémoire.
+
+Pour rendre l'analyse du trafic plus difficile, le préfixe de longueur pour tous
+les messages Lightning encryptés sont également encryptés. De plus, une balise de 16 octets
+`Poly-1305` est ajoutée au préfixe de longueur cryptée pour garantir que
+la longueur du paquet n'a pas été modifiée en vol et aussi pour éviter
+la création d'un oracle de décryptage.
+
+La structure des paquets sur le fil ressemble au schéma dans <<noise_encrypted_packet>>.
+
+[[noise_encrypted_packet]]
+.Structure de paquet encrypté
+image::images/mtln_1402.png["Structure de paquet encrypté"]
+
+La longueur préfixée du message est codée sous la forme d'un entier big-endian de 2 octets, pour une
+longueur maximale totale de paquet de pass:[<span>2 + 16 + 65 535 + 16 = 65 569</span>] octets.
+
+====== Encryptage et envoi de messages
+
+Pour encrypter et envoyer un message Lightning (`m`) vers le flux réseau,
+étant donné une clé d'envoi (`sk`) et un nonce (`sn`), les étapes suivantes sont
+effectuées :
+
+[role="pagebreak-before"]
+1. Soit `l = len(m)`.
++
+Où `len` obtient la longueur en octets du message Lightning.
+2. Sérialiser `l` en 2 octets codés comme un entier big-endian.
+3. Encrypter `l` (en utilisant `ChaChaPoly-1305`, `sn` et `sk`), pour obtenir `lc`
+    (18 octets).
+    * Le nonce `sn` est encodé sous la forme d'un nombre little-endian de 96 bits. Comme le
+      nonce décodé fait 64 bits, le nonce de 96 bits est encodé comme 32 bits
+      de zéros non significatifs suivis d'une valeur de 64 bits.
+        * Le nonce `sn` doit être incrémenté après cette étape.
+    * Une tranche d'octets de longueur nulle doit être transmise comme AD (données associées).
+4. Enfin, crypter le message lui-même (`m`) en utilisant la même procédure utilisée pour
+    encrypter le préfixe de longueur. Que ce texte encrypté soit connu pass:[<span class="keep-together">comme <code>c</code></span>].
++
+Le nonce `sn` doit être incrémenté après cette étape.
+5. Envoyer `lc || c` sur le tampon réseau.
+
+====== Réception et décryptage des messages
+
+Pour décrypter le message _suivant_ dans le flux réseau, les étapes suivantes
+les étapes sont réalisées :
+
+1. Lire _exactement_ 18 octets du tampon réseau.
+2. Laisser le préfixe de longueur encrypté être connu sous le nom de `lc`.
+3. Décrypter `lc` (en utilisant `ChaCha20-Poly1305`, `rn` et `rk`) pour obtenir la taille de
+    du paquet encrypté `l`.
+    * Une tranche d'octets de longueur nulle doit être transmise comme AD (données associées).
+    * Le nonce `rn` doit être incrémenté après cette étape.
+4. Lire _exactement_ `l + 16` octets du tampon réseau et laisser les octets être
+connues pass:[<span class="keep-together">come <code>c</code></span>].
+5. Décrypter `c` (en utilisant `ChaCha20-Poly1305`, `rn` et `rk`) pour obtenir le paquet
+    `p` en texte brut.
++
+Le nonce `rn` doit être incrémenté après cette étape.
+
+===== Rotation de la clé de message Lightning
+
+((("Lightning encrypted transport protocol","Lightning message key rotation")))((("Noise_XK","Lightning message key rotation")))Changer régulièrement les clés et oublier les clés précédentes est utile pour empêcher le
+décryptage des anciens messages, en cas de fuite de clé ultérieure (c'est-à-dire, confidentialité
+rétrospective).
+
+La rotation des clés est effectuée pour _chaque_ clé (`sk` et `rk`) _individuellement_. Une clé
+doit subir une rotation après qu'une partie encrypte ou décrypte 1 000 fois elle (c'est-à-dire,
+tous les 500 messages). Cela peut être correctement pris en compte en opérant une rotation de la clé
+une fois que le nonce qui lui est dédié dépasse 1 000.
+
+La rotation de clé pour une clé `k` est effectuée selon les étapes suivantes (((range="endofrange", startref="ix_14_encrypted_transport-asciidoc3")))(((range="endofrange", startref="ix_14_encrypted_transport-asciidoc2"))):(((range="endofrange", startref="ix_14_encrypted_transport-asciidoc1")))
+
+1. Soit `ck` la clé de chaînage obtenue à la fin de l'Acte Trois.
+2. `ck', k' = HKDF(ck, k)`
+3. Réinitialiser le nonce pour la clé à `n = 0`.
+4. `k = k'`
+5. `ck = ck'`
+
+=== Conclusion
+
+L'encryptage de transport sous-jacent de Lightning est basé sur le protocole Noise et offre de solides garanties de sécurité en matière de confidentialité, d'authenticité et d'intégrité pour toutes les communications entre les pairs Lightning.
+
+Contrairement à Bitcoin où les pairs communiquent souvent "en clair" (sans cryptage), toutes les communications Lightning sont encryptées de pair-à-pair. En plus du cryptage de transport (pair-à-pair), sur le Lightning Network, les paiements sont _également_ encryptés en paquets oignon (de saut-en-saut) et les détails de paiement sont envoyés hors bande entre l'expéditeur et le destinataire (de bout en bout). La combinaison de tous ces mécanismes de sécurité est cumulative et fournit une défense en couches contre la désanonymisation, les attaques de l'homme du milieu et la surveillance du réseau.
+
+Bien sûr, aucune sécurité n'est parfaite et nous verrons dans <<security_and_privacy>> que ces propriétés peuvent être dégradées et attaquées. Cependant, le Lightning Network améliore considérablement la confidentialité de Bitcoin.(((range="endofrange", startref="ix_14_encrypted_transport-asciidoc0")))
