@@ -1,0 +1,221 @@
+[[invoices]]
+== Demandes de paiement Lightning
+
+((("Lightning invoices", id="ix_15_payment_requests-asciidoc0", range="startofrange")))Dans ce chapitre, nous examinerons les _demandes de paiement Lightning_, ou, comme on les appelle plus communément, les _factures Lightning_.
+
+=== Factures dans la suite de protocoles Lightning
+
+((("Lightning invoices","Lightning Protocol suite and")))((("Lightning Network Protocol","Lightning invoices in")))Les _demandes de paiement_, alias _factures_, font partie de la couche de paiement et sont affichées dans le coin supérieur gauche dans <<LN_payment_request_highlight>>.
+
+[[LN_payment_request_highlight]]
+.Demandes de paiement dans la suite de protocoles Lightning
+image::images/mtln_1501.png["Demandes de paiement dans la suite de protocoles Lightning"]
+
+=== Introduction
+
+Comme nous l'avons appris tout au long du livre, au moins deux données sont requises
+pour effectuer un paiement Lightning : un hachage de paiement et une destination. Étant donné que
+SHA-256 est utilisé dans le Lightning Network pour implémenter les HTLC, cette information
+nécessite 32 octets pour communiquer. Les destinations, en revanche, sont
+simplement la clé publique `secp256k1` du nœud qui souhaite recevoir un paiement.
+Une demande de paiement dans le cadre du Lightning Network a pour but de
+de communiquer ces deux informations depuis l'expéditeur vers le destinataire. Le format "QR-code-friendly" pour communiquer les informations requises
+afin d'effectuer un paiement du destinataire à l'expéditeur est décrit dans https://github.com/lightningnetwork/lightning-rfc/blob/master/11-payment-encoding.md[BOLT #11: Invoice Protocol for Lightning Payments]. En pratique, plus que le simplement
+le hachage et la destination du paiement sont communiqués dans une demande de paiement pour
+rendre l'encodage encore plus riche.
+
+=== Demandes de paiement Lightning versus Adresses Bitcoin
+
+((("Bitcoin addresses, Lightning invoices versus")))((("Lightning invoices","Bitcoin addresses versus")))Une question fréquemment posée lorsque les gens rencontrent pour la première fois une requête de paiement
+Lightning est : Pourquoi un format d'adresse statique normal ne peut-il pas être utilisé à la place ?
+
+Pour répondre à cette question, vous devez d'abord comprendre comment Lightning
+diffère de la couche de base Bitcoin en tant que méthode de paiement. Comparé à un adresse
+Bitcoin qui peut être utilisée pour effectuer un nombre potentiellement illimité de paiements
+(bien que la réutilisation d'une adresse Bitcoin soit susceptible de nuire à la protection de la vie privée), une demande
+de paiement Lightning ne doit être utilisée _qu'une seule fois_. Ceci est dû au fait que
+l'envoi d'un paiement à une adresse Bitcoin utilise essentiellement un système de cryptographie
+à clé publique pour "encoder" le paiement de manière à ce que seul le véritable "propriétaire" de
+l'adresse Bitcoin puisse le réclamer.
+
+En revanche, pour effectuer un paiement Lightning, le destinataire doit
+révéler un "secret" à l'ensemble de la route de paiement, y compris à l'expéditeur. Cela peut être
+interprété comme l'utilisation d'une sorte de cryptographie symétrique spécifique à un domaine, car
+la préimage du paiement est, dans la pratique, un nonce (numéro utilisé une seule
+fois). Si l'expéditeur tente d'effectuer un autre paiement en utilisant ce hachage de paiement identique,
+il risque de perdre des fonds car le paiement peut ne pas être réellement
+livré à la destination. Il est raisonnable de supposer qu'une fois qu'une préimage a
+été révélée, tous les nœuds sur le chemin la conserveront pour toujours. Ainsi, plutôt
+que de transmettre un HTLC pour percevoir des frais de routage si le paiement est
+effectué, ils peuvent simplement régler le paiement à cette instance et obtenir le
+montant total du paiement en retour. Par conséquent, il n'est pas sûr d'utiliser une demande de paiement
+plus d'une fois.
+
+De nouvelles variantes de la demande de paiement Lightning originale existent et permettent à l'expéditeur de les réutiliser autant de fois qu'il le souhaite. Ces variantes inversent le flux de paiement normal, l'expéditeur transmettant une préimage dans la charge utile cryptée en oignon au destinataire, qui est le seul
+à pouvoir la décrypter et régler le paiement. Par ailleurs, en supposant
+qu'un mécanisme permette à l'expéditeur de demander généralement une nouvelle demande de paiement
+au destinataire, et ensuite un protocole interactif peut être utilisé pour permettre un
+certain degré de réutilisation des demandes de paiement.
+
+=== BOLT #11 : Sérialisation pass:[<span class="keep-together">et interprétation</span>] des demandes de paiement Lightning
+
+((("BOLT (Basis of Lightning Technology) standards documents","Lightning payment request serialization/interpretation")))((("Lightning invoices","payment request serialization/interpretation")))Dans cette section, nous décrirons le mécanisme utilisé pour encoder l'ensemble des
+informations requises pour effectuer un paiement sur le Lightning Network. Comme
+mentionné précédemment, le hachage de paiement et la destination sont la quantité minimum
+d'informations requises pour effectuer un paiement. Cependant, en pratique, plus
+d'informations telles que les informations de timelock, d'expiration de la demande de paiement et
+éventuellement une adresse de secours sur la chaîne sont également communiquées. Le document de spécification complet est https://github.com/lightningnetwork/lightning-rfc/blob/master/11-payment-encoding.md[BOLT #11: Invoice Protocol for Lightning Payments].
+
+==== Encodage des demandes de paiement dans la pratique
+
+((("Lightning invoices","payment request encoding in practice")))D'abord, examinons à quoi ressemble une vraie demande de paiement en pratique. Ci-dessous
+voici une demande de paiement valide qui aurait pu être utilisée pour effectuer un
+paiement sur le réseau principal Lightning Network au moment de sa création :
+
+----
+lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysx
+xatsyp3k7enxv4jsxqzpuaztrnwngzn3kdzw5hydlzf03qdgm2hdq27cqv3agm2awhz5se903vruatf
+hq77w3ls4evs3ch9zw97j25emudupq63nyw24cg27h2rspfj9srp
+----
+
+==== Le préfixe lisible par l'humain
+
+((("human-readable prefixes")))((("Lightning invoices","human-readable prefix")))En regardant la chaîne de caractères, nous pouvons en démêler une partie que nous pouvons analyser avec nos
+yeux, tandis que le reste ressemble à un ensemble aléatoire de caractères. La partie
+qui peut être parsée par les humains est appelé _préfixe lisible par l'humain_. Il permet à un humain d'extraire rapidement des informations pertinentes d'une
+demande de paiement en un coup d'œil. Dans ce cas, nous pouvons voir que ce paiement est pour
+l'instance mainnet du Lightning Network (`lnbc`), et demande 2 500
+uBTC (microbitcoins), ou 25 000 000 satoshis. La dernière potion est appelée
+la partie de données et utilise un format extensible pour encoder
+les informations requises pour effectuer un paiement.
+
+Chaque version d'instance du Lightning Network (mainnet, testnet, etc.) a
+son propre préfixe lisible par l'humain (voir <<table1501>>). Cela permet aux logiciels clients et aussi aux humains de
+déterminer rapidement si une demande de paiement peut être satisfaite par leur nœud ou non.
+
+[role="pagebreak-before less_space"]
+[[table1501]]
+.Préfixes de réseau de BOLT #11
+[options="header"]
+|=============================
+|Réseau       |Préfixe BOLT #11
+|mainnet       |`lnbc`
+|testnet       |`lntb`
+|simnet/regtest|`lnbcrt`
+|=============================
+
+
+La première partie du préfixe lisible par l'humain est une expression _compacte_ du
+montant de la demande de paiement. Le montant compact est codé en deux parties. Tout d'abord, un nombre entier est utilisé comme montant _de base_. Cette partie est ensuite suivie d'un
+multiplicateur qui nous permet de spécifier des ordres de grandeur distincts pour des augmentations
+en rapport au montant de base. Si nous reprenons notre exemple initial, nous pouvons
+prendre la partie `2500u` et la diminuer d'un facteur de 1000 pour utiliser
+à la place `2500m` ou (2,500 mBTC). En règle générale, pour connaître le montant
+d'une facture en un coup d'œil, prenez le facteur de base et multipliez-le par le
+multiplicateur.
+
+Une liste complète des multiplicateurs actuellement définis figure dans <<tableau1502>>.
+
+[[table1502]]
+.Multiplicateurs de montant de BOLT #11
+[options="header"]
+|==============================================
+|Multiplicateur|Unité Bitcoin|Facteur de multiplication
+|`m`|milli|0.001
+|`u`|micro|0.000001
+|`n`|nano|0.000000001
+|`p`|pico|0.000000000001
+|==============================================
+
+
+==== bech32 et le segment de données
+
+((("bech32, Lightning invoices and")))((("Lightning invoices","bech32 and data segment")))Si la partie "incompréhensible" vous semble familière, c'est parce qu'elle utilise le
+même schéma d'encodage que celui utilisé aujourd'hui par les adresses Bitcoin compatibles avec SegWit,
+à savoir bech32. La description du schéma d'encodage bech32 sort du cadre
+de ce chapitre. En bref, il s'agit d'un moyen sophistiqué d'encoder de courtes chaînes de caractères
+qui présente de très bonnes propriétés de correction et de détection des erreurs.
+
+La partie des données peut être divisée en trois sections :
+
+  * L'horodatage (timestamp)
+  * Zéro ou plusieurs paires de clé-valeur étiquetées
+  * La signature de l'ensemble de la facture
+
+L'horodatage est exprimé en secondes depuis l'année 1970, ou l'époque Unix. Cet
+horodatage permet à l'expéditeur d'évaluer l'ancienneté de la facture et, comme nous le verrons
+plus loin, au destinataire de forcer une facture à n'être valable que pendant une certaine période
+s'il le souhaite.
+
+À l'instar du format TLV dont nous avons parlé dans <<tlv>>, le format de facture BOLT #11
+utilise une série de paires clé-valeur extensibles pour encoder les informations
+nécessaires pour satisfaire un paiement. Grâce à l'utilisation de paires clé-valeur, il est facile d'ajouter
+de nouvelles valeurs à l'avenir si un nouveau type de paiement ou une
+exigence/fonctionnalité supplémentaire est introduit.
+
+Enfin, une signature couvrant l'ensemble de la facture et signée par le
+destinataire du paiement est incluse. Cette signature permet à l'expéditeur de vérifier que la
+demande de paiement a bien été créée par le destinataire du paiement. Contrairement
+aux demandes de paiement Bitcoin qui ne sont pas signées, cela nous permet de nous assurer qu'une
+entité particulière a signé la demande de paiement. La signature elle-même est encodée
+à l'aide d'un identifiant de récupération qui permet d'utiliser une signature plus compacte
+autorisant l'extraction de la clé publique. Lors de la vérification de la signature, l'ID de récupération
+extrait la clé publique, puis la compare à la clé publique incluse dans
+la facture.
+
+===== Champs balisés de la facture
+
+((("Lightning invoices","tagged invoice fields")))Les champs balisés de la facture sont encodés dans le corps principal de la facture. Ces
+champs représentent différentes paires de clé-valeur qui expriment soit des informations supplémentaires
+qui peuvent aider à compléter le paiement, soit des informations qui sont
+_requises_ pour compléter le paiement. Étant donné qu'une légère variante de bech32 est
+utilisée, chacun de ces champs est en fait dans le domaine de la "base 5".
+
+Un champ balise donné est composé de trois éléments :
+
+  * Le `type` du champ (5 bits)
+  * La `length` (longueur) des données du champ (10 bits).
+  * Les `data` (données) elles-mêmes, qui font une taille de `length * 5 octets`.
+
+Une liste complète de tous les champs balisés actuellement définis figure dans <<tableau1503>>.
+
+[[table1503]]
+.Champs tagués de facture de BOLT #11
+[options="header"]
+|===
+|pass:[<span class="keep-together">Champ de balise</span>]|pass:[<span class="keep-together">Longueur de données</span>]|Utilisation
+|`p`|`52`|Le hachage de paiement en SHA-256.
+|`s`|`52`|Un secret de 256 bits qui augmente la confidentialité de bout en bout d'un paiement en atténuant le sondage par les nœuds intermédiaires.
+|`d`|Variable|La description, une courte chaîne UTF-8 indiquant l'objet du paiement.
+|`n`|`53`|La clé publique du nœud de destination.
+|`h`|`52`|Un hachage qui représente une description du paiement. Il peut être utilisé pour s'engager sur une description de plus de 639 octets.
+|`x`|Variable|Le délai d'expiration, en secondes, du paiement. La valeur par défaut est de 1 heure (3 600) s'elle n'est pas spécifiée.
+|`c`|Variable|Le `min_cltv_expiry` à utiliser pour le dernier saut de la route. La valeur par défaut est 9, si elle n'est pas spécifiée.
+|`f`|Variable|Une adresse de secours sur la chaîne à utiliser pour effectuer le paiement si celui-ci ne peut pas être effectué sur le Lightning Network.
+|`r`|Variable|Une ou plusieurs entrées qui permettent à un destinataire de donner à l'expéditeur des arêtes éphémères supplémentaires pour compléter le paiement.
+|`9`|Variable|Un ensemble de valeurs de 5 bits contenant les bits de caractéristiques nécessaires pour compléter le paiement.
+|===
+
+Les éléments contenus dans le champ `r` sont communément appelés _indices de routage_. Ils permettent au destinataire de communiquer un ensemble supplémentaire d'arêtes qui peuvent
+aider l'expéditeur à effectuer son paiement. Ces indications sont généralement utilisées lorsque le
+destinataire dispose de certains ou de la totalité des canaux privés et qu'il souhaite guider l'expéditeur dans
+cette partie "non cartographiée" du graphe des canaux. Un indice de routage encode
+en fait la même information qu'un message `channel_update` normal.
+La mise à jour est elle-même empaquetée dans une valeur unique avec les champs suivants :
+
+ * La `pubkey` du nœud sortant dans l'arête (264 bits)
+ * Le `short_channel_id` de l'arête "virtuelle" (64 bits)
+ * Les frais de base (`fee_base_msat`) de l'arête (32 bits)
+ * Les frais proportionnelle (`fee_proportional_millionths`) (32 bits)
+ * Le delta d'expiration CLTV (`cltv_expiry_delta`) (16 bits)
+
+La dernière partie du segment de données est l'ensemble des bits de fonctionnalités qui
+indiquent à l'expéditeur les fonctionnalités nécessaires pour effectuer un
+paiement. Par exemple, si un nouveau type de paiement est ajouté à l'avenir et qu'il n'est pas
+rétrocompatible avec le type de paiement d'origine, ainsi le destinataire peut définir
+un bit de fonctionnalité _requis_ pour indiquer que le payeur doit
+comprendre cette fonctionnalité pour effectuer le paiement.
+
+=== Conclusion
+
+Comme nous l'avons vu, les factures sont bien plus qu'une simple demande pour montant. Elles contiennent des informations critiques sur _la manière_ d'effectuer le paiement, telles que des conseils de routage, la clé publique du nœud de destination, des clés éphémères pour renforcer la sécurité, et bien plus encore.(((range="endofrange", startref="ix_15_payment_requests-asciidoc0")))

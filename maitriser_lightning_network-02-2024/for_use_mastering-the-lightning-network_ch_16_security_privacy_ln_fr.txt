@@ -1,0 +1,622 @@
+[[security_and_privacy]]
+== Sécurité et confidentialité du pass:[<span class="keep-together">Lightning Network</span>]
+
+((("security and privacy", id="ix_16_security_privacy_ln-asciidoc0", range="startofrange")))Dans ce chapitre, nous examinons certains des problèmes les plus importants liés à la sécurité et à la confidentialité du Lightning Network. Tout d'abord, nous examinerons la confidentialité, ce que ce qu'elle implique, comment l'évaluer et certaines choses que vous pouvez faire pour protéger votre propre confidentialité lorsque vous utilisez le Lightning Network. Ensuite, nous explorerons certaines attaques courantes et les techniques pour les mitiger.
+
+=== Pourquoi la confidentialité est-elle importante ?
+
+((("security and privacy","importance of privacy")))La proposition de valeur fondamentale des cryptomonnaies est une monnaie résistante à la censure. Bitcoin offre aux participants la possibilité de stocker et de transférer leurs actifs sans interférence de la part des gouvernements, des banques ou des entreprises. Le Lightning Network poursuit cette mission.
+
+Contrairement aux solutions d'évolutivité triviales telles que les banques Bitcoin dépositaires, le Lightning Network vise à faire évoluer le Bitcoin sans compromettre l'auto-dépôt, ce qui devrait conduire à une plus grande résistance à la censure dans l'écosystème Bitcoin. Cependant, le Lightning Network fonctionne selon un modèle de sécurité différent qui introduit de nouveaux défis en matière de sécurité et de confidentialité.
+
+=== Définitions de la confidentialité
+
+((("security and privacy","definitions of privacy", id="ix_16_security_privacy_ln-asciidoc1", range="startofrange")))La question : "Est-ce que Lightning est privé ?" n'a pas de réponse directe. La confidentialité est un sujet complexe, il est souvent difficile de définir précisément ce que nous entendons par confidentialité, surtout si vous n'êtes pas un chercheur en matière de confidentialité. Heureusement, les chercheurs en confidentialité utilisent des processus pour analyser et évaluer les caractéristiques de confidentialité des systèmes, et nous pouvons aussi les utiliser ! Voyons comment un chercheur en sécurité pourrait chercher à répondre à la question "Est-ce que Lightning est privé ?" en deux étapes générales.
+
+Tout d'abord, un chercheur en confidentialité définirait un _modèle de sécurité_ qui spécifie ce dont un adversaire est capable et vise à réaliser.
+Ensuite, il décrirait les propriétés pertinentes du système et vérifierait s'il est conforme à ces exigences.
+
+=== Processus d'évaluation de la confidentialité
+
+((("security and privacy","evaluation process for privacy")))((("security assumptions")))Un modèle de sécurité est basé sur un ensemble _d'hypothèses de sécurité_ sous-jacentes.
+Dans les systèmes cryptographiques, ces hypothèses sont souvent centrées sur les propriétés mathématiques des primitives cryptographiques, telles que les chiffres, les signatures et les fonctions de hachage.
+Les hypothèses de sécurité du Lightning Network sont que les signatures ECDSA, la fonction de hachage SHA-256 et les autres fonctions cryptographiques utilisées dans le protocole se comportent dans le cadre de leurs définitions en matière de sécurité.
+Par exemple, nous supposons qu'il est pratiquement impossible de trouver une préimage (et une deuxième préimage) d'une fonction de hachage.
+Cela permet au Lightning Network de s'appuyer sur le mécanisme des HTLC (qui utilise la préimage d'une fonction de hachage) pour l'atomicité des paiements multi-sauts : personne, à l'exception du destinataire final, ne peut révéler le secret du paiement et résoudre les HTLC.
+Nous supposons également un degré de connectivité dans le réseau, à savoir que les canaux Lightning forment un graphe connexe. Par conséquent, il est possible de trouver un chemin de n'importe quel expéditeur à n'importe quel destinataire. Enfin, nous supposons que les messages réseau sont propagés sous certains délais.
+
+Maintenant que nous avons identifié certaines de nos hypothèses sous-jacentes, considérons quelques adversaires possibles.
+
+Voici quelques modèles possibles d'adversaires sur le Lightning Network.
+Un nœud de transfert "honnête mais curieux" peut observer les montants des paiements, les nœuds immédiatement précédents et suivants, et le graphe des canaux annoncés avec leurs capacités.
+Un nœud très bien connecté peut faire la même chose mais dans une plus large mesure.
+Par exemple, considérez les développeurs d'un porte-monnaie populaire qui maintiennent un nœud auquel leurs utilisateurs se connectent par défaut.
+Ce nœud serait responsable de l'acheminement d'une grande partie des paiements vers et depuis les utilisateurs de ce porte-monnaie.
+Que se passe-t-il si plusieurs nœuds sont sous le contrôle d'adversaires ?
+Si deux nœuds en collusion se trouvent sur le même chemin de paiement, ils comprendraient qu'ils transmettent des HTLC appartenant au même paiement car les HTLC ont le même hachage de paiement.
+
+[NOTE]
+====
+Paiements en plusieurs parties (voir <<mpp>>) permettent aux utilisateurs de masquer leurs montants de paiement compte tenu de leurs tailles de fractionnements non uniformes.
+====
+
+Quels peuvent être les objectifs d'un attaquant sur Lightning ?
+La sécurité de l'information est souvent décrite en termes de trois propriétés principales : confidentialité, intégrité et disponibilité.
+
+Confidentialité:: Les informations ne parviennent qu'aux destinataires prévus.
+Intégrité:: Les informations ne sont pas modifiées en transit.
+Disponibilité:: Le système fonctionne la plupart du temps.
+
+Les propriétés importantes du Lightning Network sont principalement centrées sur la confidentialité et la disponibilité. Certaines des propriétés les plus importantes à protéger incluent :
+
+* Seuls l'expéditeur et le destinataire connaissent le montant du paiement.
+* Personne ne peut faire le lien entre les émetteurs et les récepteurs.
+* Un utilisateur honnête ne peut pas être empêché d'envoyer et de recevoir des paiements.
+
+Pour chaque objectif de confidentialité et modèle de sécurité, il existe une certaine probabilité qu'un attaquant parvienne à ses fins.
+Cette probabilité dépend de divers facteurs, tels que la taille et la structure du réseau.
+À toutes choses égales par ailleurs, il est généralement plus facile d'attaquer avec succès un petit réseau qu'un grand.
+De même, plus le réseau est centralisé, plus un attaquant peut être efficace si les nœuds "centraux" sont sous son contrôle.
+Bien entendu, le terme "centralisation" doit être défini avec précision pour pouvoir construire des modèles de sécurité sur cette base, et il existe de nombreuses définitions possibles du degré de centralisation d'un réseau.
+Enfin, en tant que réseau de paiement, le Lightning Network dépend des stimuli économiques.
+La taille et la structure des frais affectent l'algorithme de routage et peuvent donc soit aider l'attaquant en transférant la plupart des paiements via leurs nœuds, soit empêcher que cela se produise.(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc1")))
+
+
+=== Ensemble d'anonymat
+
+((("anonymity set")))((("de-anonymization")))((("security and privacy","anonymity set")))Que signifie désanonymiser quelqu'un ?
+En termes simples, la désanonymisation implique de lier une action à l'identité réelle d'une personne, comme son nom ou son adresse physique.
+Dans la recherche sur la confidentialité, la notion de désanonymisation est plus nuancée.
+Premièrement, nous ne parlons pas nécessairement de noms et d'adresses.
+Découvrir l'adresse IP ou le numéro de téléphone de quelqu'un peut également être considéré comme une désanonymisation.
+Une information qui permet de lier l'action d'un utilisateur à ses actions précédentes est appelée une _identité_.
+Deuxièmement, la désanonymisation n'est pas binaire ; un utilisateur n'est ni totalement anonyme ni complètement désanonymisé.
+Au lieu de cela, la recherche sur la confidentialité examine l'anonymat par rapport à l'ensemble d'anonymat.
+
+_L'ensemble d'anonymat_ est une notion centrale dans la recherche sur la confidentialité.
+Cela fait référence à l'ensemble des identités telles que, du point de vue d'un attaquant, une action donnée pourrait correspondre à n'importe qui dans l'ensemble.
+Prenons un exemple concret.
+Imaginez que vous rencontrez une personne dans une rue de la ville.
+Quel est leur ensemble d'anonymat de votre point de vue ?
+Si vous ne les connaissez pas personnellement, et sans aucune information supplémentaire, leur anonymat est à peu près égal à la population de la ville, y compris les voyageurs.
+Si vous tenez également compte de leur apparence, vous pourrez peut-être estimer approximativement leur âge et exclure les habitants de la ville qui sont manifestement plus âgés ou plus jeunes que la personne en question de l'ensemble d'anonymat.
+De plus, si vous remarquez que la personne entre dans les bureaux de l'Entreprise X à l'aide d'un badge électronique, l'ensemble d'anonymat défini se réduit au nombre d'employés et de visiteurs pass:[<span class="keep-together">de l'Entreprise</span>] X.
+Enfin, vous remarquerez peut-être le numéro d'immatriculation de la voiture qu'ils ont utilisée pour arriver sur les lieux.
+Si vous êtes un observateur occasionnel, cela ne vous donne pas grand-chose.
+Cependant, si vous êtes un fonctionnaire de la ville et que vous avez accès à la base de données qui associe les numéros de plaque d'immatriculation aux noms, vous pouvez limiter l'anonymat à quelques personnes : le propriétaire de la voiture et tous les amis proches et parents qui ont pu emprunter la voiture.
+
+Cet exemple illustre quelques points importants.
+Tout d'abord, chaque élément d'information peut rapprocher l'adversaire de son objectif.
+Il n'est peut-être pas nécessaire de réduire l'ensemble d'anonymat à une taille d'un individu.
+Par exemple, si l'adversaire planifie une attaque par déni de service ("Denial of Service" ou "DoS" en anglais) ciblée et peut arrêter 100 serveurs, l'ensemble d'anonymat de 100 est suffisant.
+Deuxièmement, l'adversaire peut croiser des informations provenant de différentes sources.
+Même si une fuite de confidentialité semble relativement bénigne, nous ne savons jamais ce qu'elle peut accomplir en combinaison avec d'autres sources de données.
+Enfin, en particulier dans les paramètres cryptographiques, l'attaquant a toujours le "dernier recours" d'une recherche par force brute.
+Les primitives cryptographiques sont conçues de manière à ce qu'il soit pratiquement impossible de deviner un secret tel qu'une clé privée.
+Néanmoins, chaque information rapproche l'adversaire de ce but et, à un moment donné, celui-ci devient atteignable.
+
+Pour ce qui est de Lightning, la désanonymisation signifie généralement établir une correspondance entre les paiements et les utilisateurs identifiés par des ID de nœud.
+Chaque paiement peut se voir attribuer un ensemble d'anonymat d'expéditeur et un ensemble d'anonymat de destinataire.
+Idéalement, l'ensemble d'anonymat est composé de tous les utilisateurs du réseau.
+Cela garantit que l'attaquant n'a aucune information.
+Cependant, le réseau réel laisse échapper des informations qui permettent à un attaquant de restreindre la recherche.
+Plus l'ensemble d'anonymat est petit, plus les chances d'une désanonymisation réussie sont élevées.
+
+[role="pagebreak-before less_space"]
+=== Différences entre Lightning Network et Bitcoin en termes de confidentialité
+
+((("security and privacy","differences between Lightning Network and Bitcoin in terms of privacy", id="ix_16_security_privacy_ln-asciidoc2", range="startofrange")))S'il est vrai que les transactions sur le réseau Bitcoin ne s'associent pas les identités du monde réel avec des adresses Bitcoin, toutes les transactions sont diffusées en clair et peuvent être analysées.
+Plusieurs sociétés ont été créées pour désanonymiser les utilisateurs de Bitcoin et d'autres cryptomonnaies.
+
+À première vue, Lightning offre une meilleure confidentialité que Bitcoin car les paiements Lightning ne sont pas diffusés sur l'ensemble du réseau.
+Bien que cela améliore la base de confidentialité, d'autres propriétés du protocole Lightning peuvent rendre les paiements anonymes plus difficiles.
+Par exemple, les paiements plus importants peuvent avoir moins d'options de routage.
+Cela peut permettre à un adversaire qui contrôle des nœuds bien capitalisés d'acheminer la plupart des paiements importants et de découvrir les montants des paiements et probablement d'autres détails. Au fil du temps, à mesure que le Lightning Network se développe, cela peut devenir moins problématique.
+
+Une autre différence pertinente entre Lightning et Bitcoin est que les nœuds Lightning conservent une identité permanente, contrairement aux nœuds Bitcoin.
+Un utilisateur sophistiqué de Bitcoin peut facilement changer de nœud utilisé pour recevoir des données de blockchain et diffuser des transactions.
+Un utilisateur Lightning, au contraire, envoie et reçoit des paiements via les nœuds qu'il a utilisés pour ouvrir ses canaux de paiement.
+De plus, le protocole Lightning suppose que les nœuds de routage annoncent leur adresse IP en plus de leur ID de nœud.
+Cela crée un lien permanent entre les ID de nœud et les adresses IP, ce qui peut être dangereux, étant donné qu'une adresse IP est souvent une étape intermédiaire dans les attaques sur l'anonymat liées à l'emplacement physique de l'utilisateur et, dans la plupart des cas, à leur identité réelle.
+Il est possible d'utiliser Lightning sur Tor, mais de nombreux nœuds n'utilisent pas cette fonctionnalité, comme on peut le voir sur https://1ml.com/statistics[statistiques collectées depuis les annonces de nœuds].
+
+Un utilisateur Lightning, lors de l'envoi d'un paiement, a ses voisins dans son ensemble d'anonymat.
+Plus précisément, un nœud de routage ne connaît que les nœuds immédiatement précédents et suivants.
+Le nœud de routage ne sait pas si ses voisins immédiats dans la route de paiement sont l'expéditeur ou le destinataire final.
+Par conséquent, l'ensemble d'anonymat d'un nœud dans Lightning est à peu près égal à ses voisins (voir <<anonymity_set>>).
+
+[[anonymity_set]]
+.L'ensemble d'anonymat d'Alice et Bob est constitué de leurs voisins
+image::images/mtln_1601.png["L'ensemble d'anonymat d'Alice et Bob est constitué de leurs voisins"]
+
+Une logique similaire s'applique aux destinataires des paiements.
+De nombreux utilisateurs n'ouvrent qu'une poignée de canaux de paiement, limitant ainsi leurs ensembles d'anonymat.
+De plus, dans Lightning, l'ensemble d'anonymat est statique ou du moins change lentement.
+En revanche, on peut obtenir des ensembles d'anonymat beaucoup plus importants dans les transactions CoinJoin sur la chaîne.
+Les transactions CoinJoin avec des ensembles d'anonymat supérieurs à 50 sont assez fréquentes.
+En règle générale, les ensembles d'anonymat dans une transaction CoinJoin correspondent à un ensemble d'utilisateurs changeant dynamiquement.
+
+Enfin, les utilisateurs de Lightning peuvent également se voir refuser le service, voir leurs canaux bloqués ou épuisés par un attaquant.
+L'acheminement des paiements nécessite du capital — une ressource rare ! — pouvant être temporairement bloqué dans les HTLC le long de la route.
+Un attaquant peut envoyer de nombreux paiements mais ne pas les finaliser, occupant le capital des utilisateurs honnêtes pendant de longues périodes.
+Ce vecteur d'attaque n'est pas présent (ou du moins pas aussi évident) dans Bitcoin.
+
+En résumé, si certains aspects de l'architecture du Lightning Network suggèrent qu'il s'agit d'un pas en avant en termes de confidentialité par rapport au Bitcoin, d'autres propriétés du protocole peuvent faciliter les attaques contre la confidentialité. Des recherches approfondies sont nécessaires pour évaluer les garanties de confidentialité fournies par le Lightning Network et améliorer la situation.
+
+Les questions abordées dans cette partie du chapitre résument les recherches disponibles à la mi-2021. Cependant, ce domaine de recherche et de développement est en pleine expansion. Nous sommes heureux d'annoncer que les auteurs ont connaissance de plusieurs équipes de recherche travaillant actuellement sur la confidentialité de Lightning.
+
+Passons maintenant en revue certaines des attaques contre la confidentialité de LN qui ont été décrites dans la littérature académique.(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc2")))
+
+
+=== Attaques contre Lightning
+
+((("security and privacy","attacks on Lightning", seealso="breaches of privacy", id="ix_16_security_privacy_ln-asciidoc3", range="startofrange")))Des recherches récentes décrivent différentes manières dont la sécurité et la confidentialité du Lightning Network peuvent être compromises.
+
+==== Observation des montants de paiements
+
+((("breaches of privacy","observing payment amounts")))L'un des objectifs d'un système de paiement préservant la confidentialité est de cacher le montant du paiement aux parties non impliquées.
+Le Lightning Network est une amélioration par rapport à la couche 1 à cet égard.
+Alors que les transactions Bitcoin sont diffusées en texte clair et peuvent être observées par n'importe qui, les paiements Lightning ne transitent que par quelques nœuds le long du chemin de paiement.
+Cependant, les nœuds intermédiaires voient le montant du paiement, bien que ce montant puisse ne pas correspondre au montant total réel du paiement (voir <<mpp>>).
+Ceci est nécessaire pour créer un nouveau HTLC à chaque saut.
+La disponibilité des montants de paiement pour les nœuds intermédiaires ne présente pas une menace immédiate.
+Cependant, un nœud intermédiaire _honnête mais curieux_ peut les utiliser dans le cadre d'une attaque plus importante.
+
+
+==== Lier les expéditeurs et les destinataires
+
+((("breaches of privacy","linking senders and receivers", id="ix_16_security_privacy_ln-asciidoc4", range="startofrange")))Un attaquant pourrait être intéressé à connaître l'expéditeur et/ou le destinataire d'un paiement pour révéler certaines relations économiques.
+Cette violation de la confidentialité pourrait nuire à la résistance à la censure, car un nœud intermédiaire pourrait censurer les paiements vers ou en provenance de certains destinataires ou expéditeurs.
+Idéalement, la liaison des expéditeurs aux destinataires ne devrait pas être possible pour quiconque d'autre que l'expéditeur et le destinataire.
+
+Dans les sections suivantes, nous considérerons deux types d'adversaires : l'adversaire hors-chemin et l'adversaire sur le chemin.
+Un adversaire hors chemin essaie d'évaluer l'expéditeur et le destinataire d'un paiement sans participer au processus d'acheminement du paiement.
+Un adversaire sur le chemin peut exploiter toutes les informations qu'il pourrait obtenir en acheminant le paiement en question.
+
+((("off-path adversary")))Premièrement, considérons _l'adversaire hors-chemin_.
+Dans la première étape de ce scénario d'attaque, un puissant adversaire hors chemin déduit les soldes individuels de chaque canal de paiement via un sondage (décrit dans une section ultérieure) et forme un instantané du réseau au temps __t~1~__. Par souci de simplicité, faisons en sorte que __t~1~__ soit égal à 12:05.
+Il sonde ensuite à nouveau le réseau un peu plus tard à l'heure __t~2~__, que nous définissons à 12h10. L'attaquant comparerait alors les instantanés à 12h10 et 12h05 et utiliserait les différences entre les deux instantanés pour déduire des informations sur les paiements qui ont eu lieu en examinant les chemins qui ont changé.
+Dans le cas le plus simple, s'il n'y avait qu'un seul paiement entre 12h10 et 12h05, l'adversaire observerait un chemin unique où les soldes ont changé des mêmes montants.
+Ainsi, l'adversaire apprend presque tout sur ce paiement : l'expéditeur, le destinataire et le montant.
+Si plusieurs voies de paiement se chevauchent, l'adversaire doit appliquer des heuristiques pour identifier ce chevauchement et séparer les paiements.
+
+((("on-path adversary")))Maintenant, nous tournons notre attention vers un _adversaire sur le chemin_.
+Un tel adversaire pourrait sembler complexe.
+Cependant, en juin 2020, les chercheurs ont remarqué que le nœud le plus central https://arxiv.org/pdf/2006.12143.pdf[observait près de 50% de tous les paiements LN], tandis que les quatre nœuds les plus centraux https://arxiv.org/pdf/1909.06890.pdf[observaient une moyenne de 72 % des paiements].
+Ces résultats soulignent la pertinence du modèle d'attaquant sur le chemin.
+Même si les intermédiaires d'un chemin de paiement n'apprennent que leur successeur et prédécesseur, il existe plusieurs fuites qu'un intermédiaire malveillant ou honnête mais curieux pourrait utiliser pour déduire l'expéditeur et le destinataire.
+
+L'adversaire sur le chemin peut observer le montant de tout paiement acheminé ainsi que les deltas de timelocks (voir <<onion_routing>>).
+Par conséquent, l'adversaire peut exclure tous les nœuds de l'ensemble d'anonymat de l'expéditeur ou du destinataire avec des capacités inférieures au montant routé.
+Par conséquent, nous observons un compromis réalisé entre la confidentialité et les montants des paiements.
+En règle générale, plus le montant des paiements sont grands, plus les ensembles d'anonymat sont petits.
+Nous notons que cette fuite pourrait être minimisée avec des paiements en plusieurs parties ou avec des canaux de paiement de grande capacité.
+De même, les canaux de paiement avec de petits deltas de timelocks pourraient être exclus d'un chemin de paiement.
+Plus précisément, un canal de paiement ne peut pas concerner un paiement si le temps restant pour lequel le paiement pourrait être bloqué est supérieur à ce que le nœud de transfert serait prêt à accepter.
+Cette fuite pourrait être évitée en adhérant à ce que l'on appelle les routes "de l'ombre" ("shadow routes" en anglais).
+
+L'analyse du timing est l'une des fuites les plus subtiles et pourtant les plus puissantes qu'un adversaire sur le chemin peut favoriser.
+Un adversaire sur le chemin peut conserver un journal pour chaque paiement acheminé, ainsi que le temps nécessaire à un nœud pour répondre à une requête de HTLC.
+Avant de lancer l'attaque, l'attaquant apprend les caractéristiques de latence de chaque nœud dans le Lightning Network en leur envoyant des requêtes.
+Naturellement, cela peut aider à établir la position précise de l'adversaire dans le chemin de paiement.
+De plus, comme cela a été récemment expliqué, un attaquant peut déterminer avec succès l'expéditeur et le destinataire d'un paiement à partir d'un ensemble d'expéditeurs et de destinataires possibles en utilisant des estimateurs basés sur le timing.
+
+Enfin, il est important de reconnaître qu'il existe probablement des fuites inconnues ou non étudiées qui pourraient faciliter les tentatives de désanonymisation. Par exemple, étant donné que différents porte-monnaie Lightning appliquent différents algorithmes de routage, simplement connaître l'algorithme de routage appliqué pourrait aider à exclure certains nœuds comme expéditeur et/ou destinataire d'un paiement.(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc4")))
+
+
+==== Révéler les soldes des canaux (sondage)
+
+((("breaches of privacy","revealing channel balances", id="ix_16_security_privacy_ln-asciidoc5", range="startofrange")))((("channel balances, revealing", id="ix_16_security_privacy_ln-asciidoc6", range="startofrange")))((("channel probing", id="ix_16_security_privacy_ln-asciidoc7", range="startofrange")))((("probing attack", id="ix_16_security_privacy_ln-asciidoc8", range="startofrange")))Les soldes des canaux Lightning sont censés être cachés pour des raisons de confidentialité et d'efficacité.
+Un nœud Lightning ne connaît que les soldes de ses canaux adjacents.
+Le protocole ne fournit aucun moyen standard d'interroger le solde d'un canal distant.
+
+Cependant, un attaquant peut révéler le solde d'un canal distant lors d'une _attaque par sondage_.
+En sécurité de l'information, le sondage fait référence à la technique consistant à envoyer des requêtes à un système ciblé et à tirer des conclusions sur son état privé en fonction des réponses reçues.
+
+Les canaux Lightning sont susceptibles au sondage.
+Rappelez-vous qu'un paiement Lightning standard commence par la création par le destinataire d'un secret de paiement aléatoire et l'envoi de son hachage à l'expéditeur.
+Notez que pour les nœuds intermédiaires, tous les hachages semblent aléatoires.
+Il n'y a aucun moyen de savoir si un hachage correspond à un vrai secret ou s'il a été généré aléatoirement.
+
+L'attaque par sondage se déroule comme suit.
+Supposons que l'attaquant Mallory veuille révéler le solde d'Alice sur un canal publique entre Alice et Bob.
+Supposons que la capacité totale de ce canal soit de 1 million de satoshis.
+Le solde d'Alice pourrait aller de zéro à 1 million de satoshis (pour être précis, l'estimation est un peu plus petite en raison de la réserve de canal, mais nous ne la comptabilisons pas ici pour plus de simplicité).
+Mallory ouvre un canal avec Alice pour 1 million de satoshis et envoie 500 000 satoshis à Bob via Alice en utilisant un _nombre aléatoire_ comme hachage de paiement.
+Bien entendu, ce nombre ne correspond à aucun secret de paiement connu.
+Par conséquent, le paiement échouera.
+La question est : comment échouera-t-il exactement ?
+
+Il existe deux scénarios.
+Si Alice a plus de 500 000 satoshis de son côté du canal vers Bob, elle transmet le paiement.
+Bob décrypte l'oignon de paiement et se rend compte que le paiement lui est destiné.
+Il consulte son magasin local de secrets de paiement et recherche la préimage qui correspond au hachage de paiement, mais n'en trouve pas.
+Suivant le protocole, Bob renvoie l'erreur "hachage de paiement inconnu" à Alice, qui la relaie à Mallory.
+En conséquence, Mallory sait que le paiement _aurait pu réussir_ si le hachage de paiement avait été réel.
+Par conséquent, Mallory peut mettre à jour son estimation du solde d'Alice de "entre zéro et 1 million" à "entre 500 000 et 1 million".
+Un autre scénario se produit si le solde d'Alice est inférieur à 500 000 satoshis.
+Dans ce cas, Alice est incapable de transférer le paiement et renvoie l'erreur "solde insuffisant" à Mallory.
+Mallory met à jour son estimation de "entre zéro et 1 million" à "entre zéro et 500 000".
+
+Notez que dans tous les cas, l'estimation de Mallory devient deux fois plus précise après un seul sondage !
+Elle peut continuer à sonder, en choisissant la quantité de sondage suivante de manière à diviser par deux l'intervalle d'estimation actuel.
+((("binary search")))Cette technique de recherche bien connue est appelée _recherche binaire_.
+Avec la recherche binaire, le nombre de sondages est _logarithmique_ dans la précision souhaitée.
+Par exemple, pour obtenir le solde d'Alice dans un canal de 1 million de satoshis jusqu'à un seul satoshi, Mallory n'aurait qu'à effectuer log~2~ (1 000 000) &asymp; 20 sondages.
+Si un sondage prend 3 secondes, un canal peut être précisément sondé en seulement une minute environ !
+
+Le sondage des canaux peut être rendu encore plus efficace.
+Dans sa variante la plus simple, Mallory se connecte directement au canal qu'elle souhaite sonder.
+Est-il possible de sonder un canal sans ouvrir un canal à l'une de ses extrémités ?
+Imaginez que Mallory veuille maintenant sonder un canal entre Bob et Charlie mais ne veuille pas ouvrir un autre canal, ce qui nécessiterait de payer des frais sur la chaîne et d'attendre les confirmations des transactions de financement.
+Au lieu de cela, Mallory réutilise son canal existant vers Alice et envoie un sondage le long de la route Mallory -> Alice -> Bob -> Charlie.
+Mallory peut interpréter l'erreur "hachage de paiement inconnu" de la même manière qu'auparavant : la sonde a atteint la destination ; par conséquent, tous les canaux le long de la route ont des soldes suffisants pour le transmettre.
+Mais que se passe-t-il si Mallory reçoit l'erreur "solde insuffisant" ?
+Cela signifie-t-il que le solde est insuffisant entre Alice et Bob ou entre Bob et Charlie ?
+
+Dans le protocole Lightning actuel, les messages d'erreur signalent non seulement _quelle_ erreur s'est produite, mais également _où_ elle s'est produite.
+Ainsi, avec une gestion des erreurs plus soignée, Mallory sait désormais quel canal a échoué.
+S'il s'agit du canal cible, elle met à jour ses estimations ; sinon, elle choisit une autre route vers le canal cible.
+Elle obtient même des informations _supplémentaires_ sur les soldes des canaux intermédiaires, en plus de celui du canal cible.
+
+L'attaque par sondage peut en plus être utilisée pour relier les expéditeurs et les destinataires, comme décrit dans la section précédente.
+
+À ce stade, vous pouvez vous demander : pourquoi le Lightning Network fait-il un si mauvais travail pour protéger les données privées de ses utilisateurs ?
+Ne serait-il pas préférable de ne pas révéler à l'expéditeur pourquoi et où le paiement a échoué ?
+En effet, cela pourrait être une contre-mesure potentielle, mais cela présente des inconvénients importants.
+Lightning doit trouver un équilibre délicat entre confidentialité et efficacité.
+N'oubliez pas que les nœuds réguliers ne connaissent pas la répartition des soldes dans les canaux distants.
+Par conséquent, les paiements peuvent échouer (et échouent souvent) en raison d'un solde insuffisant auprès d'un saut intermédiaire.
+Les messages d'erreur permettent à l'expéditeur d'exclure le canal défaillant de la considération lors de la construction d'une autre route.
+Un porte-monnaie Lightning populaire effectue même des sondages en interne pour vérifier si un itinéraire construit peut vraiment gérer un paiement.
+
+Il existe d'autres contre-mesures potentielles contre le sondage de canaux.
+Premièrement, il est difficile pour un attaquant de cibler des canaux non annoncés.
+Deuxièmement, les nœuds qui implémentent le routage juste-à-temps ("Just-in-Time" ou "JIT" en anglais) peuvent être moins sujets à cette attaque.
+Enfin, comme les paiements en plusieurs parties atténuent le problème de capacité insuffisante, les développeurs de protocoles peuvent envisager de masquer certains des détails de l'erreur sans nuire à l'efficacité.(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc8")))(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc7")))(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc6")))(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc5")))
+
+[[denial_of_service]]
+==== Déni de service
+
+((("breaches of privacy","denial-of-service attacks", id="ix_16_security_privacy_ln-asciidoc9", range="startofrange")))((("denial-of-service (DoS) attacks", id="ix_16_security_privacy_ln-asciidoc10", range="startofrange")))Lorsque des ressources sont mises à la disposition du public, il existe un risque que des attaquants tentent de rendre cette ressource indisponible en exécutant une attaque par déni de service ("Denial of Service" ou "DoS" en anglais).
+Généralement, cela est réalisé par l'attaquant en bombardant une ressource avec des requêtes qui sont indiscernables de requêtes légitimes.
+Les attaques entraînent rarement des pertes financières pour la cible, mis à part le coût d'opportunité de leur service et visent simplement à léser la cible.
+
+Les moyens typiques pour mitiger des attaques DoS nécessitent une authentification pour les demandes afin de séparer les utilisateurs légitimes des utilisateurs malveillants. Ces moyens pour mitiger entraînent un coût insignifiant pour les utilisateurs réguliers, mais ils agiront comme un moyen de dissuasion suffisant pour un attaquant lançant des requêtes à grande échelle.
+Des mesures anti-déni de service peuvent être observées partout sur Internet — les sites Web appliquent des limites de débit pour s'assurer qu'aucun utilisateur ne puisse consommer toute l'attention de leur serveur, les sites de critiques de films exigent une authentification de connexion pour garder les membres en colère de r/prequelmemes (groupe Reddit) à distance, et les services de données vendent des clés API pour limiter le nombre de requêtes.
+
+===== DoS sur Bitcoin
+
+((("Bitcoin (system)","DoS attacks")))((("denial-of-service (DoS) attacks","DoS in Bitcoin")))Dans Bitcoin, la bande passante utilisée par les nœuds pour relayer les transactions et l'espace dont ils disposent sur le réseau sous la forme de leur mempool sont des ressources accessibles au public.
+Tout nœud du réseau peut consommer de la bande passante et de l'espace mempool en envoyant une transaction valide.
+Si cette transaction est minée dans un bloc valide, ils paieront des frais de transaction, ce qui ajoute un coût à l'utilisation de ces ressources réseau partagées.
+
+Dans le passé, le réseau Bitcoin a fait face à une tentative d'attaque DoS où les attaquants ont spammé le réseau avec des transactions à faible coût.
+Beaucoup de ces transactions n'ont pas été sélectionnées par les mineurs en raison de leurs faibles frais de transaction, de sorte que les attaquants étaient capables de consommer les ressources du réseau sans payer de frais.
+Pour résoudre ce problème, des frais minimums de relayage de transaction qui définissent un seuil de frais dont les nœuds ont besoin pour propager les transactions ont été définis.
+Cette mesure garantit en grande partie que les transactions qui consomment des ressources réseau finiront par payer leurs frais de chaîne.
+Les frais de relayage minimum sont acceptables pour les utilisateurs réguliers, mais nuiraient financièrement aux attaquants s'ils tentaient de spammer le réseau.
+Bien que certaines transactions puissent ne pas se retrouver dans des blocs valides dans un contexte de frais élevés, ces mesures ont été largement efficaces pour décourager ce type de spam.
+
+===== DoS sur Lightning
+
+((("denial-of-service (DoS) attacks","DoS in Lightning")))Comme pour Bitcoin, le Lightning Network facture des frais pour l'utilisation de ses ressources publiques, mais dans ce cas, les ressources sont des canaux publics et les frais se présentent sous la forme de frais de routage.
+La possibilité d'acheminer les paiements via des nœuds en échange de frais offre au réseau un avantage d'évolutivité important — les nœuds qui ne sont pas directement connectés peuvent toujours effectuer des transactions — mais cela se fait au prix de l'exposition d'une ressource publique qui doit être protégée contre les attaques DoS.
+
+Lorsqu'un nœud Lightning transfère un paiement en votre nom, il utilise les données et la bande passante de paiement pour mettre à jour sa transaction d'engagement, et le montant du paiement est réservé dans le solde de son canal jusqu'à ce qu'il soit réglé ou qu'il ait échoué.
+Dans les paiements réussis, cela est acceptable car le nœud finit par recevoir le paiement de ses frais.
+Les échecs de paiement n'entraînent pas de frais dans le protocole actuel.
+Cela permet aux nœuds d'acheminer sans frais les paiements échoués via n'importe quel canal.
+C'est idéal pour les utilisateurs légitimes, qui ne voudraient pas payer pour les tentatives infructueuses, mais cela permet également aux attaquants de consommer sans frais les ressources des nœuds, tout comme les transactions à faible coût sur Bitcoin qui ne finissent jamais par payer des frais de minage.
+
+Au moment de la rédaction, une discussion est https://lists.linuxfoundation.org/pipermail/lightning-dev/2020-June/002734.html[en cours] sur la liste de diffusion lightning-dev pour savoir comment résoudre au mieux ce problème.
+
+===== Attaques DoS connues
+
+((("denial-of-service (DoS) attacks","known DoS attacks")))Il existe deux attaques DoS connues sur les canaux LN publics qui rendent un canal cible, ou un ensemble de canaux cibles, inutilisables.
+Les deux attaques impliquent d'acheminer les paiements via un canal public, puis de les retenir jusqu'à leur expiration, maximisant ainsi la durée de l'attaque.
+L'exigence d'échec des paiements pour ne pas payer les frais est assez simple à respecter car les nœuds malveillants peuvent simplement rediriger les paiements vers eux-mêmes.
+En l'absence de frais pour les paiements échoués, le seul coût pour l'attaquant est le coût sur la chaîne de l'ouverture d'un canal pour envoyer ces paiements, ce qui peut être insignifiant dans les environnements avec des frais bas.(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc10")))(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc9")))
+
+==== Le blocage de l'engagement
+
+((("breaches of privacy","commitment jamming")))((("commitment jamming")))Les nœuds Lightning mettent à jour leur état partagé à l'aide de transactions d'engagement asymétriques, sur lesquelles des HTLC sont ajoutés et supprimés pour faciliter les paiements.
+Chaque partie est limitée à un total de https://github.com/lightningnetwork/lightning-rfc/blob/c053ce7afb4cbf88615877a0d5fc7b8dbe2b9ba0/02-peer-protocol.md#the-open_channel-message[483] HTLC dans la transaction d'engagement simultanément.
+Une attaque de blocage de canal permet à un attaquant de rendre un canal inutilisable en acheminant 483 paiements via le canal cible et en les retenant jusqu'à leur expiration.
+
+Il convient de noter que cette limite a été choisie dans la spécification pour garantir que tous les HTLC puissent être traités dans une https://github.com/lightningnetwork/lightning-rfc/blob/master/05-onchain.md#penalty-transaction-weight-calculation[transaction de pénalité unique].
+Bien que cette limite puisse être augmentée, les transactions sont toujours limitées par la taille du bloc, de sorte que le nombre d'emplacements disponibles restera probablement limité.
+
+==== Verrouillage de la liquidité d'un canal
+
+((("breaches of privacy","channel liquidity lockup")))((("channel liquidity lockup")))Une attaque de verrouillage de la liquidité du canal est comparable à une attaque de blocage de canal en ce sens qu'elle achemine les paiements via un canal et les retient afin que le canal soit inutilisable.
+Plutôt que de verrouiller des emplacements sur l'engagement du canal, cette attaque achemine de grands HTLC via un canal cible, consommant toute la bande passante disponible du canal.
+L'engagement de capital de cette attaque est supérieur à l'attaque de blocage d'engagement car le nœud attaquant a besoin de plus de fonds pour acheminer les paiements échoués via la cible.(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc3")))
+
+=== Désanonymisation inter-couches
+
+((("breaches of privacy","cross-layer de-anonymization", id="ix_16_security_privacy_ln-asciidoc11", range="startofrange")))((("cross-layer de-anonymization", id="ix_16_security_privacy_ln-asciidoc12", range="startofrange")))((("security and privacy","cross-layer de-anonymization", id="ix_16_security_privacy_ln-asciidoc13", range="startofrange")))Les réseaux informatiques sont souvent conçus en couches.
+La superposition de couches permet de séparer les préoccupations et rend l'ensemble du système gérable.
+Personne ne pourrait concevoir un site Web s'il fallait comprendre toute la pile TCP/IP jusqu'au codage physique des bits dans une fibre optique.
+Chaque couche est censée fournir la fonctionnalité à la couche supérieure de manière propre.
+Idéalement, la couche supérieure devrait percevoir une couche inférieure comme une boîte noire.
+En réalité, cependant, les implémentations ne sont pas idéales et les détails _fuient_ dans la couche supérieure.
+C'est le problème des abstractions qui fuient.
+
+Dans le cadre de Lightning, le protocole LN s'appuie sur le protocole Bitcoin et le réseau P2P du  LN.
+Jusqu'à présent, nous n'avons considéré que les garanties de confidentialité offertes par le Lightning Network de manière isolée.
+Cependant, la création et la fermeture des canaux de paiement sont intrinsèquement effectuées sur la blockchain Bitcoin.
+Par conséquent, pour une analyse complète des dispositions de confidentialité du Lightning Network, il faut tenir compte de chaque couche de la pile technologique avec laquelle les utilisateurs peuvent interagir.
+Plus précisément, un adversaire désanonymisant peut utiliser et utilisera des données hors chaîne et sur la chaîne pour regrouper ou lier des nœuds LN aux adresses Bitcoin correspondantes.
+
+Les attaquants qui tentent de désanonymiser les utilisateurs de LN peuvent avoir différents objectifs, dans un contexte multicouche :
+
+  * Regrouper en cluster des adresses Bitcoin détenues par le même utilisateur (couche 1). Nous appelons celles-ci des entités Bitcoin.
+  * Regrouper en cluster des nœuds LN appartenant au même utilisateur (couche 2).
+  * Relier sans ambiguïté les ensembles de nœuds LN aux ensembles d'entités Bitcoin qui les contrôlent.
+
+Il existe plusieurs heuristiques et modèles d'utilisation qui permettent à un adversaire de regrouper en cluster des adresses Bitcoin et des nœuds LN appartenant aux mêmes utilisateurs LN.
+De plus, ces clusters peuvent être liés entre les couches à l'aide d'autres puissantes heuristiques de liaison entre les couches.
+Le dernier type d'heuristique, les techniques de liaison inter-couches, met l'accent sur la nécessité d'une vision holistique de la confidentialité. Plus précisément, nous devons considérer la confidentialité dans le contexte des deux couches ensemble.
+
+
+==== Mise en cluster d'entités Bitcoin sur la chaîne
+((("Bitcoin entities","entity clustering")))((("cross-layer de-anonymization","on-chain Bitcoin entity clustering")))((("on-chain Bitcoin entity clustering")))Les interactions blockchain-Lightning Network sont reflétées en permanence dans le graphe d'entités Bitcoin.
+Même si un canal est fermé, un attaquant peut observer quelle adresse a financé le canal et où les fonds sont dépensés après sa fermeture.
+Pour cette analyse, considérons quatre entités distinctes.
+L'ouverture d'un canal provoque un flux monétaire d'une _entité source_ vers une _entité de financement_ ; la fermeture d'un canal provoque un flux d'une _entité de règlement_ vers une _entité de destination_.
+
+Début 2021, https://arxiv.org/pdf/2007.00764.pdf[Romiti et al.] ont identifié quatre heuristiques permettant la mise en cluster de ces entités.
+Deux d'entre elles capturent certains comportements de financement qui fuient et deux décrivent des comportements de règlement qui fuient.
+
+Heuristique en étoile (financement):: Si un composant contient une entité source qui transfère des fonds à une ou plusieurs entités de financement, ces entités de financement sont probablement contrôlées par le même utilisateur.
+Heuristique de serpent (financement):: Si un composant contient une entité source qui transfère des fonds d'une ou plusieurs entités, qui sont elles-mêmes utilisées comme entités source et de financement, alors toutes ces entités sont probablement contrôlées par le même utilisateur.
+Heuristique de collecteur (règlement):: Si un composant contient une entité de destination qui reçoit des fonds d'une ou plusieurs entités de règlement, ces entités de règlement sont probablement contrôlées par le même utilisateur.
+Heuristique de proxy (règlement):: Si un composant contient une entité de destination qui reçoit des fonds d'une ou plusieurs entités, qui sont elles-mêmes utilisées comme entités de règlement et de destination, alors ces entités sont probablement contrôlées par le même utilisateur.
+
+Il convient de souligner que ces heuristiques peuvent produire des faux positifs.
+Par exemple, si les transactions de plusieurs utilisateurs non liés sont combinées dans une transaction CoinJoin, alors l'heuristique en étoile ou de proxy peuvent produire des faux positifs.
+Cela peut se produire si les utilisateurs financent un canal de paiement à partir d'une transaction CoinJoin.
+Une autre source potentielle de faux positifs pourrait être qu'une entité puisse représenter plusieurs utilisateurs si les adresses groupées sont contrôlées par un service (par exemple, échange) ou pour le nom de leurs utilisateurs (porte-monnaie dépositaire).
+Cependant, ces faux positifs peuvent être efficacement filtrés.
+
+===== Contre-mesures
+Si les résultats des transactions de financement ne sont pas réutilisés pour ouvrir d'autres canaux, l'heuristique de serpent ne fonctionne pas.
+Si les utilisateurs s'abstiennent de financer des canaux à partir d'une seule source externe et évitent de collecter des fonds dans une seule entité de destination externe, les autres heuristiques ne donneraient aucun résultat significatif.
+
+==== Mise en cluster de nœuds Lightning hors chaîne
+((("cross-layer de-anonymization","off-chain Lightning node clustering")))((("Lightning node clustering")))((("off-chain Lightning node clustering")))Les nœuds LN annoncent des alias, par exemple, _LNBig.com_.
+Les alias peuvent améliorer la convivialité du système.
+Cependant, les utilisateurs ont tendance à utiliser des alias similaires pour leurs propres nœuds différents.
+Par exemple, _LNBig.com Billing_ appartient probablement au même utilisateur que le nœud avec l'alias _LNBig.com_.
+Compte tenu de cette observation, on peut regrouper les nœuds LN en s'appuyant sur leur alias de nœud.
+Plus précisément, on regroupe les nœuds LN en une seule adresse si leurs alias sont similaires par rapport à une métrique de similarité de chaîne de caractères.
+
+Une autre méthode pour regrouper les nœuds LN consiste à s'appuyer sur leurs adresses IP ou Tor.
+Si les mêmes adresses IP ou Tor correspondent à différents nœuds LN, ces nœuds sont probablement contrôlés par le même utilisateur.
+
+===== Contre-mesures
+Pour plus de confidentialité, les alias doivent être suffisamment différents les uns des autres.
+Alors que l'annonce publique des adresses IP peut être inévitable pour les nœuds qui souhaitent avoir des canaux entrants sur le Lightning Network, la possibilité d'établir des liens entre les nœuds d'un même utilisateur peut être mitigée si les clients de chaque nœud sont hébergés chez des fournisseurs de services différents et ont donc des adresses IP différentes.
+
+==== Liaison entre les couches : nœuds Lightning et entités Bitcoin
+((("Bitcoin entities","cross-layer linking to Lightning nodes")))((("breaches of privacy","cross-layer linking: Lightning nodes and Bitcoin entities")))((("cross-layer de-anonymization","cross-layer linking: Lightning nodes and Bitcoin entities")))((("Lightning node operation","cross-layer linking to Bitcoin entities")))L'association de nœuds LN à des entités Bitcoin est une violation grave de la confidentialité qui est exacerbée par le fait que la plupart des nœuds LN exposent publiquement leurs adresses IP.
+Typiquement, une adresse IP peut être considérée comme un identifiant unique d'un utilisateur.
+Deux modèles de comportement largement observés révèlent des liaisons entre les nœuds LN et les entités Bitcoin :
+
+Réutilisation des pièces:: Chaque fois que les utilisateurs ferment les canaux de paiement, ils récupèrent leurs pièces ("coins" en anglais) correspondantes. Cependant, de nombreux utilisateurs réutilisent ces pièces pour ouvrir un nouveau canal.
+Ces pièces peuvent effectivement être liées à un nœud LN commun.
+
+Réutilisation d'entité:: En règle générale, les utilisateurs financent leurs canaux de paiement à partir d'adresses Bitcoin correspondant à la même entité Bitcoin.
+
+Ces algorithmes de liaison entre les couches pourraient être déjoués si les utilisateurs possédaient plusieurs adresses non mises en cluster ou utilisent plusieurs porte-monnaie pour interagir avec le Lightning Network.
+
+La désanonymisation possible des entités Bitcoin illustre à quel point il est important de prendre en compte la confidentialité des deux couches simultanément au lieu d'une à la fois.(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc13")))(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc12")))(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc11")))
+
+//TODO from author:  maybe here we should/could include the corresponding figures from the Romiti et al. paper. it would greatly improve and help the understanding of the section
+
+=== Graphe Lightning
+
+((("Lightning graph", id="ix_16_security_privacy_ln-asciidoc14", range="startofrange")))((("security and privacy","Lightning graph", id="ix_16_security_privacy_ln-asciidoc15", range="startofrange")))Le Lightning Network, comme son nom l'indique, est un réseau pair-à-pair de canaux de paiement.
+Par conséquent, bon nombre de ses propriétés (confidentialité, robustesse, connectivité, efficacité du routage) sont influencées et caractérisées par sa nature de réseau.
+
+Dans cette section, nous discutons et analysons le Lightning Network du point de vue de la science des réseaux.
+Nous sommes particulièrement intéressés par la compréhension du graphe des canaux LN, sa robustesse, sa connectivité et d'autres caractéristiques importantes.
+
+==== À quoi ressemble le graphe Lightning en réalité ?
+((("Lightning graph","reality versus theoretical appearance of", id="ix_16_security_privacy_ln-asciidoc16", range="startofrange")))On aurait pu s'attendre à ce que le Lightning Network soit un graphe aléatoire, où les arêtes sont formées au hasard entre les nœuds.
+Si tel était le cas, la distribution des degrés du Lightning Network suivrait une distribution normale gaussienne.
+En particulier, la plupart des nœuds auraient approximativement le même degré, et nous ne nous attendrions pas à des nœuds avec des degrés extraordinairement grands.
+En effet, la distribution normale diminue de manière exponentielle pour les valeurs en dehors de l'intervalle autour de la valeur moyenne de la distribution.
+La représentation d'un graphe aléatoire (comme nous l'avons vu dans <<lngraph>>) ressemble à une topologie de réseau maillé.
+Il semble décentralisé et non hiérarchique : chaque nœud semble avoir une importance égale.
+De plus, les graphes aléatoires ont un grand diamètre.
+En particulier, le routage dans de tels graphes est difficile car le chemin le plus court entre deux nœuds est modérément long.
+
+Or, le graphe du LN est tout à fait différent.
+
+===== Le graphe Lightning aujourd'hui
+Lightning est un réseau financier.
+Ainsi, la croissance et la formation du réseau sont également influencées par des incitations économiques.
+Chaque fois qu'un nœud rejoint le Lightning Network, il peut vouloir maximiser sa connectivité avec d'autres nœuds afin d'augmenter son efficacité de routage. Ce phénomène est appelé attachement préférentiel.
+Ces incitations économiques se traduisent par un réseau fondamentalement différent d'un graphe aléatoire.
+
+Sur la base d'instantanés de canaux annoncés publiquement, la distribution des degrés du Lightning Network suit une fonction de loi de puissance.
+Dans un tel graphe, la grande majorité des nœuds ont très peu de connexions à d'autres nœuds, tandis que seulement une poignée de nœuds ont de nombreuses connexions.
+À un niveau élevé, cette topologie de graphe ressemble à une étoile : le réseau a un cœur bien connecté et une périphérie faiblement connectée.
+Les réseaux avec distribution de degrés en loi de puissance sont également appelés réseaux invariants d'échelle ("scale-free" en anglais).
+Cette topologie est avantageuse pour acheminer efficacement les paiements mais sujette à certaines attaques basées sur la topologie.
+
+===== Attaques basées sur la topologie
+
+((("Lightning graph","topology-based attacks")))((("topology-based attacks")))Un adversaire peut vouloir perturber le Lightning Network et peut décider que son objectif est de démanteler l'ensemble du réseau en de nombreux composants plus petits, rendant le routage des paiements pratiquement impossible dans l'ensemble du réseau.
+Un objectif moins ambitieux, mais toujours malveillant et grave, pourrait consister à ne faire tomber que certains nœuds du réseau.
+Une telle perturbation peut se produire au niveau du nœud ou au niveau de l'arête.
+
+Supposons qu'un adversaire puisse détruire n'importe quel nœud du Lightning Network.
+Par exemple, il peut les attaquer avec une attaque par déni de service distribué (DDoS) ou les rendre non opérationnels par n'importe quel moyen.
+Il s'avère que si l'adversaire choisit des nœuds au hasard, alors les réseaux invariants d'échelle comme le Lightning Network sont robustes contre les attaques de suppression de nœuds.
+En effet, un nœud aléatoire se trouve à la périphérie avec un petit nombre de connexions, jouant ainsi un rôle négligeable dans la connectivité du réseau.
+Cependant, si l'adversaire est plus prudent, il peut cibler les nœuds les mieux connectés.
+Sans surprise, le Lightning Network et d'autres réseaux invariants d'échelle ne sont _pas_ robustes contre les attaques ciblées de suppression de nœuds.
+
+En revanche, l'adversaire pourrait être plus furtif.
+Plusieurs attaques basées sur la topologie ciblent un seul nœud ou un seul canal de paiement.
+Par exemple, un adversaire pourrait vouloir épuiser délibérément la capacité d'un certain canal de paiement.
+Plus généralement, un adversaire peut épuiser toute la capacité sortante d'un nœud pour le faire tomber du marché du routage.
+Cela pourrait être facilement obtenu en acheminant les paiements via le nœud victime avec des montants équivalant à la capacité sortante de chaque canal de paiement.
+Après avoir terminé cette soi-disant attaque d'isolement de nœud, la victime ne peut plus envoyer ou acheminer des paiements à moins qu'elle ne reçoive un paiement ou rééquilibre ses canaux.
+
+En conclusion, même par conception, il est possible de supprimer des arêtes et des nœuds du Lightning Network routable.
+Cependant, selon le vecteur d'attaque utilisé, l'adversaire peut avoir à fournir plus ou moins de ressources pour mener à bien l'attaque.
+
+
+===== La temporalité du Lightning Network
+
+((("Lightning graph","temporality of Lightning Network and")))((("temporality of Lightning Network")))Le Lightning Network est un réseau sans autorisation qui change dynamiquement.
+Les nœuds peuvent librement rejoindre ou quitter le réseau, ils peuvent ouvrir et créer des canaux de paiement à tout moment.
+Par conséquent, un seul instantané statique du graphe LN est trompeur. Nous devons tenir compte de la temporalité et de la nature en constante évolution du réseau. Pour l'instant, le graphe LN augmente en termes de nombre de nœuds et de canaux de paiement.
+Son diamètre effectif diminue également ; c'est-à-dire que les nœuds se rapprochent les uns des autres, comme nous pouvons le voir dans <<temporal_ln>>.
+
+[[temporal_ln]]
+.La croissance constante du Lightning Network en nœuds, canaux et capacité verrouillée (en septembre 2021)
+image::images/mtln_1602.png["La croissance constante du Lightning Network en nœuds, canaux et capacité verrouillée (en septembre 2021)"]
+
+Dans les réseaux sociaux, le comportement de fermeture en triangle est courant.
+Plus précisément, dans un graphe où les nœuds représentent des personnes et les amitiés sont représentées comme des arêtes, on s'attend quelque peu à ce que des triangles apparaissent dans le graphe.
+Un triangle, dans ce cas, représente des amitiés par paires entre trois personnes.
+Par exemple, si Alice connaît Bob et que Bob connaît Charlie, il est probable qu'à un moment donné, Bob présentera Alice à Charlie.
+Cependant, ce comportement serait étrange dans le Lightning Network.
+Les nœuds ne sont tout simplement pas incités à fermer des triangles car ils auraient pu simplement acheminer les paiements au lieu d'ouvrir un nouveau canal de paiement.
+Étonnamment, la fermeture en triangle est une pratique courante sur le Lightning Network.
+Le nombre de triangles augmentait régulièrement avant la mise en œuvre des paiements en plusieurs parties.
+Ceci est contre-intuitif et surprenant étant donné que les nœuds auraient pu simplement acheminer les paiements par les deux côtés du triangle au lieu d'ouvrir le troisième canal.
+Cela peut signifier que les inefficacités de routage ont incité les utilisateurs à fermer les triangles et à ne pas se rabattre sur le routage.
+Espérons que les paiements en plusieurs parties contribueront à accroître l'efficacité du routage des paiements(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc16"))).(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc15")))(((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc14")))
+
+=== Centralisation dans le Lightning Network
+
+((("betweenness centrality")))((("central point dominance")))((("centralization, Lightning Network and")))((("security and privacy","centralization in Lightning Network")))Une métrique courante pour évaluer la centralité d'un nœud dans un graphe est sa _centralité intermédiaire_. La dominance du point central est une métrique dérivée de la centralité intermédiaire, utilisée pour évaluer la centralité d'un réseau.
+Pour une définition précise de la dominance du point central, le lecteur est renvoyé à https://doi.org/10.2307/3033543[Travaux de Freeman].
+
+Plus la dominance du point central d'un réseau est grande, plus le réseau est centralisé.
+Nous pouvons observer que le Lightning Network a une plus grande dominance de point central (c'est-à-dire qu'il est plus centralisé) qu'un graphe aléatoire (graphe Erdős–Rényi) ou un graphe invariant d'échelle (graphe Barabási–Albert) de taille égale.
+
+En général, notre compréhension de la nature dynamique du graphe des canaux LN est plutôt limitée.
+Il est fructueux d'analyser comment les changements de protocole comme les paiements en plusieurs parties peuvent affecter les dynamiques du Lightning Network.
+Il serait profitable d'explorer la nature temporelle du graphe LN plus en profondeur.
+
+=== Incitations économiques et structure de graphe
+
+((("Lightning graph","economic incentives and graph structure")))((("security and privacy","economic incentives and graph structure")))Le graphe LN se forme spontanément et les nœuds se connectent les uns aux autres en fonction de leurs intérêts mutuels.
+En conséquence, les incitations stimulent le développement du graphe.
+Examinons quelques-unes des incitations pertinentes :
+
+  * Incitations rationnelles :
+    - Les nœuds établissent des canaux pour envoyer, recevoir et acheminer les paiements (gagner des frais).
+    - Qu'est-ce qui rend un canal plus susceptible d'être établi entre deux nœuds qui agissent rationnellement ?
+  * Incitations altruistes :
+    - Les nœuds établissent des canaux "pour le bien du réseau".
+    - Bien que nous ne devrions pas baser nos hypothèses de sécurité sur l'altruisme, dans une certaine mesure, le comportement altruiste fait avancer Bitcoin (accepter les connexions entrantes, servir des blocs).
+    - Quel rôle cela joue-t-il dans Lightning ?
+
+Dans les premiers stades du Lightning Network, de nombreux opérateurs de nœuds ont affirmé que les frais de routage gagnés ne compensent pas les coûts d'opportunité résultant du blocage des liquidités. Cela indiquerait que l'exploitation d'un nœud peut être motivée principalement par des incitations altruistes "pour le bien du réseau".
+Cela pourrait changer à l'avenir si le Lightning Network a un trafic beaucoup plus important ou si un marché pour les frais de routage émerge.
+D'autre part, si un nœud souhaite optimiser ses frais de routage, il minimisera les longueurs moyennes des chemins les plus courts vers tous les autres nœuds.
+En d'autres termes, un nœud à la recherche de profit essaiera de se situer au _centre_ du graphe des canaux ou proche pass:[<span class="keep-together">de celui-ci</span>].
+
+=== Conseils pratiques aux utilisateurs pour protéger leur confidentialité
+
+((("security and privacy","practical advice for users to protect privacy")))Nous en sommes encore aux premiers stades du Lightning Network.
+Bon nombre des préoccupations énumérées dans ce chapitre seront probablement traitées à mesure qu'il grandira et se développera.
+En attendant, vous pouvez prendre certaines mesures pour protéger votre nœud contre les utilisateurs malveillants ; quelque chose d'aussi simple que la mise à jour des paramètres par défaut avec lesquels votre nœud s'exécute peut grandement contribuer à renforcer votre nœud.
+
+=== Canaux non annoncés
+
+((("payment channel","unannounced channels")))((("security and privacy","unannounced channels")))((("unannounced channels")))Si vous avez l'intention d'utiliser le Lightning Network pour envoyer et recevoir des fonds entre les nœuds et les porte-monnaie que vous contrôlez, et n'avez aucun intérêt à acheminer les paiements des autres utilisateurs, il n'est pas nécessaire d'annoncer vos canaux au reste du réseau.
+Vous pouvez ouvrir un canal entre, par exemple, votre ordinateur de bureau exécutant un nœud complet et votre téléphone mobile exécutant un porte-monnaie Lightning, et simplement renoncer à l'annonce de canal discutée dans <<ch03_How_Lightning_Works>>.
+Ceux-ci sont parfois appelés canaux "privées" ; cependant, il est plus correct de les désigner comme des canaux "non annoncés" car ils ne sont pas strictement privés.
+
+Les canaux non annoncés ne seront pas connus du reste du réseau et ne seront normalement pas utilisés pour acheminer les paiements des autres utilisateurs.
+Ils peuvent toujours être utilisés pour acheminer les paiements si d'autres nœuds sont informés à leur sujet ; par exemple, une facture peut contenir des indications de routage suggérant un chemin avec un canal non annoncé.
+Cependant, en supposant que vous n'ayez ouvert qu'un canal non annoncé avec vous-même, vous gagnez une certaine confidentialité.
+Puisque vous n'exposez pas votre canal sur le réseau, vous réduisez le risque d'attaque par déni de service sur votre nœud.
+Vous pourrez également gérer plus facilement la capacité de ce canal, puisqu'il ne servira qu'à recevoir ou envoyer directement vers votre nœud.
+
+L'ouverture d'un canal non annoncé avec une partie connue avec laquelle vous effectuez fréquemment des transactions présente également des avantages.
+Par exemple, si Alice et Bob jouent fréquemment au poker avec des bitcoins, ils pourraient ouvrir un canal pour envoyer leurs gains dans les deux sens.
+Dans des conditions normales, ce canal ne sera pas utilisé pour acheminer les paiements d'autres utilisateurs ou pour percevoir des frais.
+Et puisque le canal ne sera pas connu du reste du réseau, aucun paiement entre Alice et Bob ne peut être déduit en suivant les changements dans la capacité de routage du canal.
+Cela confère une certaine intimité à Alice et Bob ; cependant, si l'un d'eux décide de faire connaître le canal aux autres utilisateurs, par exemple en l'incluant dans les conseils de routage d'une facture, cette confidentialité est perdue.
+
+Il convient également de noter que pour ouvrir un canal non annoncé, une transaction publique doit être effectuée sur la blockchain Bitcoin.
+Il est donc possible de déduire l'existence et la taille du canal si une partie malveillante surveille la blockchain pour les transactions d'ouverture de canal et tente de les faire correspondre aux canaux du réseau.
+De plus, lorsque le canal sera fermé, le solde final du canal sera rendu public une fois qu'il sera engagé sur la blockchain Bitcoin.
+Cependant, comme les transactions d'ouverture et d'engagement sont pseudonymes, il ne sera pas simple de les relier à Alice ou à Bob.
+De plus, la mise à jour Taproot de 2021 rend difficile la distinction entre les transactions d'ouverture et de fermeture de canal et d'autres types spécifiques de transactions Bitcoin.
+Par conséquent, bien que les canaux non annoncés ne soient pas complètement privés, ils offrent certains avantages en matière de confidentialité lorsqu'ils sont utilisés avec précaution.
+
+[[routing_considerations]]
+=== Considérations de routage
+
+((("denial-of-service (DoS) attacks","protecting against")))((("routing","security/privacy considerations")))((("security and privacy","routing considerations")))Comme indiqué dans <<denial_of_service>>, les nœuds qui ouvrent des canaux publics s'exposent au risque d'une série d'attaques sur leurs canaux.
+Bien que des moyens de mitigation soient en cours d'élaboration au niveau du protocole, il existe de nombreuses mesures qu'un nœud peut prendre pour se protéger contre les attaques par déni de service sur ses canaux publics :
+
+Taille de HTLC minimale:: Lorsque le canal est ouvert, votre nœud peut définir la taille de HTLC minimale qu'il acceptera.
+En fixant une valeur plus élevée, vous vous assurez que chacun de vos slots de canaux disponibles ne peut pas être occupé par un très petit paiement.
+Limitation de cadence:: De nombreuses implémentations de nœuds permettent aux nœuds d'accepter ou de rejeter dynamiquement les HTLC qui sont transmis via votre nœud.
+Voici quelques lignes directrices utiles pour un limiteur de cadence personnalisé :
++
+** Limiter le nombre d'emplacements d'engagement qu'un seul pair peut consommer
+** Surveiller les taux d'échec provenant d'un seul pair et limiter la cadence si leurs échecs augmentent soudainement
+Canaux de l'ombre:: Les nœuds qui souhaitent ouvrir de grands canaux vers une seule cible peuvent à la place ouvrir un seul canal public vers la cible et le supporter ensuite avec d'autres canaux privés appelés pass:[<a href='https://anchor.fm/tales-from-the-crypt/episodes/197-Joost-Jager-ekghn6'>shadow channels</a>] ("shadow channels" en anglais). Ces canaux peuvent toujours être utilisés pour le routage mais ne sont pas annoncés aux attaquants potentiels.
+
+==== Accepter des canaux
+((("routing","accepting channels")))À l'heure actuelle, les nœuds Lightning ont du mal à amorcer la liquidité entrante. Alors qu'il y existe des
+solutions payantes pour acquérir des liquidités entrantes, comme les services d'échange, les marchés de canaux et les services d'ouverture de canaux payants à partir de hubs connus, de nombreux nœuds accepteront volontiers toute demande d'ouverture de canal d'apparence légitime pour augmenter leur liquidité entrante.
+
+En revenant au contexte de Bitcoin, cela peut être comparé à la façon dont Bitcoin Core traite différemment ses connexions entrantes et sortantes par crainte que le nœud ne soit éclipsé.
+Si un nœud ouvre une connexion entrante vers votre nœud Bitcoin, vous n'avez aucun moyen de savoir si l'initiateur vous a sélectionné au hasard ou cible spécifiquement votre nœud avec des intentions malveillantes.
+Vos connexions sortantes n'ont pas besoin d'être traitées avec une telle suspicion car soit le nœud a été sélectionné au hasard parmi un groupe de nombreux pairs potentiels, soit vous vous êtes intentionnellement connecté manuellement au pair.
+
+La même chose peut être dite dans Lightning.
+Lorsque vous ouvrez un canal, cela se fait intentionnellement, mais lorsqu'une partie distante ouvre un canal vers votre nœud, vous n'avez aucun moyen de savoir si ce canal sera utilisé pour attaquer votre nœud ou non.
+Comme le notent plusieurs articles, le coût relativement faible de la création d'un nœud et de l'ouverture de canaux vers des cibles sont des facteurs importants qui facilitent les attaques.
+Si vous acceptez les canaux entrants, il est prudent de placer certaines restrictions sur les nœuds à partir desquels vous acceptez les canaux entrants.
+De nombreuses implémentations exposent des hooks d'acceptation de canal qui vous permettent d'adapter vos politiques d'acceptation de canal à vos préférences.
+
+La question de l'acceptation et du rejet des canaux est philosophique.
+Que se passe-t-il si nous nous retrouvons avec un Lightning Network où les nouveaux nœuds ne peuvent pas participer car ils ne peuvent ouvrir aucun canal ?
+Notre suggestion n'est pas de définir une liste exclusive de "méga-hubs" à partir desquels vous accepterez des canaux, mais plutôt d'accepter des canaux d'une manière qui correspond à votre préférence en matière de risques.
+
+Certaines stratégies potentielles sont :
+
+Aucun risque:: N'acceptez aucun canal entrant.
+Risque faible:: Acceptez les canaux d'un ensemble connu de nœuds avec lesquels vous avez déjà ouvert des canaux avec succès.
+Risque moyen:: N'acceptez que les canaux des nœuds qui sont présents dans le graphe depuis plus longtemps et qui ont des canaux de longue durée.
+Risque plus élevé:: Acceptez tous les canaux entrants et mettez en œuvre les mesures de mitigation décrites dans <<routing_considerations>>.
+
+=== Conclusion
+En résumé, la confidentialité et la sécurité sont des sujets nuancés et complexes, et bien que de nombreux chercheurs et développeurs recherchent des améliorations pour l'évolution du réseau, il est important que tous ceux qui participent au réseau comprennent ce qu'ils peuvent faire pour protéger leur propre confidentialité et accroître la sécurité au niveau d'un nœud individuel.
+
+=== Références et lectures complémentaires
+
+Dans ce chapitre, nous avons utilisé de nombreuses références issues de recherches en cours sur la sécurité de Lightning. Vous pouvez trouver ces articles et documents utiles répertoriés par sujet dans les listes suivantes.
+
+===== Confidentialité et attaques par sondage
+
+* Jordi Herrera-Joancomartí et al. https://eprint.iacr.org/2019/328["On the Difficulty of Hiding the Balance of Lightning Network Channels"]. _Asia CCS '19 : Actes de la conférence ACM Asia 2019 sur la sécurité informatique et des communications_ (juillet 2019) : 602–612.
+* Utz Nisslmueller et al. "Toward Active and Passive Confidentiality Attacks on Cryptocurrency Off-Chain Networks." Prépublication arXiv, https://arxiv.org/abs/2003.00003[] (2020).
+* Sergei Tikhomirov et al. "Probing Channel Balances in the Lightning Network." Prépublication arXiv, https://arxiv.org/abs/2004.00333[] (2020).
+* George Kappos et al. "An Empirical Analysis of Privacy in the Lightning Network." Prépublication arXiv, https://arxiv.org/abs/2003.12470[] (2021).
+* https://github.com/LN-Zap/zap-desktop/blob/v0.7.2-beta/services/grpc/router.methods.js[Code source Zap avec la fonction de sondage].
+
+===== Attaques de congestion
+
+* Ayelet Mizrahi and Aviv Zohar. "Congestion Attacks in Payment Channel Networks." Prépublication arXiv, https://arxiv.org/abs/2002.06564[] (2020).
+
+===== Considérations de routage
+
+* Marty Bent, entretien avec Joost Jager, _Tales from the Crypt_, podcast audio, 2 octobre 2020, https://anchor.fm/tales-from-the-crypt/episodes/197-Joost-Jager-ekghn6[]. (((range="endofrange", startref="ix_16_security_privacy_ln-asciidoc0")))
+
+

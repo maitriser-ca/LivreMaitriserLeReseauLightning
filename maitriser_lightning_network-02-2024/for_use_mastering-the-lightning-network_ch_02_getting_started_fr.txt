@@ -1,0 +1,456 @@
+[[getting-started]]
+== Mise en route
+
+
+((("Lightning Network (generally)","example", id="ix_02_getting_started-asciidoc0", range="startofrange")))Dans ce chapitre, nous commencerons là où la plupart des gens commencent lorsqu'ils rencontrent le Lightning Network pour la première fois &#x2014; choisir un logiciel pour participer à l'économie LN. Nous examinerons les choix de deux utilisateurs qui représentent un cas d'utilisation courant pour le Lightning Network et apprendrons par l'exemple. Alice, cliente d'un café, utilisera un porte-monnaie Lightning sur son appareil mobile pour acheter du café au Café de Bob. Bob, un commerçant, utilisera un nœud Lightning et un porte-monnaie pour exécuter un système de point de vente dans son café, afin qu'il puisse accepter les paiements par le Lightning Network.
+
+=== Premier porte-monnaie Lightning d'Alice
+
+((("Lightning Network (generally)","Lightning wallet")))((("Lightning wallet")))Alice est une utilisatrice de Bitcoin de longue date. Nous avons rencontré Alice pour la première fois dans le chapitre 1 de _Maîtriser Bitcoin_, note de bas de page : [Andreas M. Antonopoulos, _Maîtriser Bitcoin_, 2e édition, https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch01.asciidoc[Chapitre 1] (O 'Reilly)] lorsqu'elle a acheté une tasse de café au Café de Bob en utilisant une transaction Bitcoin. Si vous n'êtes pas encore familiarisé avec le fonctionnement des transactions Bitcoin ou si vous avez besoin d'un rappel, veuillez lire _Maîtriser Bitcoin_ ou le résumé dans <<bitcoin_fundamentals_review>>.
+
+Alice a récemment appris que le Café de Bob venait de commencer à accepter les paiements LN ! Alice est impatiente d'apprendre et d'expérimenter avec le Lightning Network ; elle veut être l'une des premières clientes LN de Bob. Pour ce faire, Alice doit d'abord sélectionner un porte-monnaie Lightning qui répond à ses besoins.
+
+Alice ne souhaite pas confier la garde de ses bitcoins à des tiers. Elle en a suffisamment appris sur la cryptomonnaie pour savoir comment utiliser un porte-monnaie. Elle souhaite également un porte-monnaie mobile afin de pouvoir l'utiliser pour de petits paiements en déplacement, elle choisit donc le porte-monnaie _Eclair_, un porte-monnaie Lightning mobile non dépositaire populaire. Apprenons-en plus sur comment et pourquoi elle a fait ces choix.
+
+=== Nœuds Lightning
+
+((("Lightning node operation")))Le Lightning Network est accessible via des applications logicielles qui peuvent parler le protocole LN. Un _nœud Lightning Network_ (nœud LN ou simplement nœud) est une application logicielle qui présente trois caractéristiques importantes. Premièrement, les nœuds Lightning sont des porte-monnaie, ils envoient et reçoivent donc des paiements sur le Lightning Network ainsi que sur le réseau Bitcoin. Deuxièmement, les nœuds doivent communiquer de pair-à-pair avec les autres nœuds Lightning créant le réseau. Enfin, les nœuds Lightning ont également besoin d'accéder à la blockchain Bitcoin (ou à d'autres blockchains pour d'autres cryptomonnaies) pour sécuriser les fonds utilisés pour les paiements.
+
+Les utilisateurs ont le plus haut degré de contrôle en exécutant leur propre nœud Bitcoin et nœud Lightning. Cependant, ((("simplified payment verification (SPV)")))((("SPV (simplified payment verification)")))les nœuds Lightning peuvent également utiliser un client Bitcoin léger, communément appelé vérification simplifiée des paiements (SPV), pour interagir avec la blockchain Bitcoin.
+
+[[ln_explorer]]
+=== Explorateurs Lightning
+
+((("Lightning explorers")))Les explorateurs LN sont des outils utiles pour afficher les statistiques des nœuds, des canaux et de la capacité du réseau.
+
+En voici une liste non exhaustive :
+
+* https://1ml.com[Explorateur Lightning 1ML]
+* https://explorer.acinq.co[Explorateur Lightning d'ACINQ], avec une visualisation sophistiquée
+* https://amboss.space[Explorateur Amboss Space Lightning], avec des métriques communautaires et des pass:[<span class="keep-together">visualisations</span>] intuitives.
+* https://ln.bigsun.xyz[Explorateur  Lightning de Fiatjaf] avec de nombreux diagrammes
+* https://hashxp.org/lightning/node[Explorateur Lightning hashXP]
+
+[TIP]
+====
+Notez que lorsque vous utilisez des explorateurs Lightning, tout comme avec les autres explorateurs de blocs, la confidentialité peut être un problème.
+Si les utilisateurs sont négligents, le site Web peut suivre leurs adresses IP et collecter des enregistrements de leur comportement (par exemple, les nœuds qui intéressent les utilisateurs).
+
+En outre, il convient de noter qu'en l'absence de consensus mondial sur le graphe Lightning actuel ou sur l'état actuel d'une politique de canaux existante, les utilisateurs ne doivent jamais compter sur les explorateurs Lightning pour récupérer les informations les plus récentes.
+De plus, à mesure que les utilisateurs ouvrent, ferment et mettent à jour des canaux, le graphe change et les explorateurs Lightning individuels peuvent ne pas être à jour.
+Utilisez les explorateurs Lightning pour visualiser le réseau ou recueillir des informations, mais pas en tant que source faisant autorité sur ce qui se passe sur le Lightning Network.
+Pour avoir une vue faisant autorité sur le Lightning Network, exécutez votre propre nœud Lightning qui créera un graphe des canaux et collectera diverses statistiques, que vous pourrez afficher avec une interface Web.
+====
+
+=== Porte-monnaie Lightning
+
+((("Lightning wallet","basics", id="ix_02_getting_started-asciidoc1", range="startofrange")))Le terme _porte-monnaie Lightning_ est quelque peu ambigu car il peut décrire une large variété de composants combinés à une interface utilisateur. Les composants les plus courants d'un logiciel de porte-monnaie Lightning incluent :
+
+* Un magasin de clés ("keystore" en anglais) contenant des secrets, tels que des clés privées
+* Un nœud LN (nœud Lightning) qui communique sur le réseau pair-à-pair, comme décrit précédemment
+* Un nœud Bitcoin qui stocke les données de la blockchain et communique avec d'autres nœuds Bitcoin
+* Une "carte" de base de données des nœuds et des canaux qui sont annoncés sur le Lightning Network
+* Un gestionnaire de canaux qui peut ouvrir et fermer des canaux LN
+* Un système de rapprochement qui peut trouver un chemin de canaux connectés de la source du paiement à la destination du paiement
+
+Un porte-monnaie Lightning peut contenir toutes ces fonctions, agissant comme un porte-monnaie "complet", sans dépendre de services tiers. Ou un ou plusieurs de ces composants peuvent s'appuyer (partiellement ou entièrement) sur des services tiers qui négocient ces fonctions.
+
+Une distinction _clé_ (jeu de mots) est de savoir si la fonction de magasin de clés est interne ou externalisée. Dans les blockchains, le contrôle des clés détermine la détention des fonds, comme le rappelle la phrase "vos clés, vos pièces ; pas vos clés, pas vos pièces". ((("custodial wallet")))Tout porte-monnaie qui sous-traite la gestion des clés est appelé un porte-monnaie _dépositaire_ parce qu'un tiers agissant en tant que dépositaire a le contrôle des fonds de l'utilisateur, et non de l'utilisateur. ((("noncustodial wallet")))Un porte-monnaie _non-dépositaire_ ou ((("self-custody wallet")))_auto-dépositaire_, par comparaison, est un porte-monnaie dans lequel le magasin de clés fait partie du porte-monnaie et les clés sont contrôlées directement par l'utilisateur. Le terme porte-monnaie non-dépositaire implique simplement que le magasin de clés est local et sous le contrôle de l'utilisateur. Cependant, un ou plusieurs des autres composants du porte-monnaie peuvent ou non être externalisés et s'appuyer sur des tiers de confiance.
+
+Les blockchains, en particulier les blockchains ouvertes comme Bitcoin, tentent de minimiser ou d'éliminer la confiance envers les tiers et de responsabiliser les utilisateurs. ((("trustless systems","blockchains as")))Ceci est souvent appelé un modèle "sans confiance" ("trustless" en anglais), bien que "confiance minimisée" ("trust minimized" en anglais) soit une meilleure expression. Dans de tels systèmes, l'utilisateur fait confiance aux règles du logiciel, et non à des tiers. Par conséquent, la question du contrôle des clés est une considération principale lors du choix d'un porte-monnaie Lightning.
+
+Tous les autres composants d'un porte-monnaie Lightning apportent des considérations de confiance similaires. Si tous les composants sont sous le contrôle de l'utilisateur, le degré de confiance envers les tiers est minimisé, apportant un maximum de pouvoir à l'utilisateur. Bien sûr, cela entraîne un compromis direct, car ce pouvoir s'accompagne de la responsabilité correspondante de gérer des logiciels complexes.
+
+Chaque utilisateur doit tenir compte de ses propres compétences techniques avant de décider du type de porte-monnaie Lightning à utiliser. Ceux qui ont de solides compétences techniques devraient utiliser un porte-monnaie Lightning qui place tous les composants sous le contrôle direct de l'utilisateur. Ceux qui ont moins de compétences techniques, mais qui souhaitent contrôler leurs fonds, devraient choisir un porte-monnaie Lightning non dépositaire.
+Souvent, la confiance dans ces cas est liée à la confidentialité.
+Si les utilisateurs décident de sous-traiter certaines fonctionnalités à un tiers, ils renoncent généralement à une certaine confidentialité car le tiers apprendra certaines informations à leur sujet.
+
+Enfin, ceux qui recherchent la simplicité et la commodité, même au détriment du contrôle et de la sécurité, peuvent choisir un porte-monnaie Lightning dépositaire. C'est l'option la moins difficile techniquement, mais elle _sape le modèle de confiance de la cryptomonnaie_ et ne devrait donc être considérée que comme un tremplin vers plus de contrôle et d'autonomie.
+
+Il existe de nombreuses façons de caractériser ou de catégoriser les porte-monnaie.
+Les questions les plus importantes à poser sur un porte-monnaie spécifique sont :
+
+. Ce porte-monnaie Lightning a-t-il un nœud Lightning complet ou utilise-t-il un nœud Lightning tiers ?
+. Ce porte-monnaie Lightning a-t-il un nœud Bitcoin complet ou utilise-t-il un nœud Bitcoin tiers ?
+. Ce porte-monnaie Lightning stocke-t-il ses propres clés sous le contrôle de l'utilisateur (auto-dépôt) ou les clés sont-elles détenues par un dépositaire tiers ?
+
+[TIP]
+====
+Si un porte-monnaie Lightning utilise un nœud Lightning tiers, c'est ce nœud Lightning tiers qui décide comment communiquer avec Bitcoin. Par conséquent, l'utilisation d'un nœud Lightning tiers implique que vous utilisez également un nœud Bitcoin tiers. Ce n'est que lorsque le porte-monnaie Lightning utilise son propre nœud Lightning que le choix entre un nœud Bitcoin complet et un nœud Bitcoin tiers existe.
+====
+
+Au plus haut niveau d'abstraction, les questions 1 et 3 sont les plus élémentaires.
+De ces deux questions, nous pouvons déduire quatre catégories possibles.
+Nous pouvons placer ces quatre catégories dans un quadrant, comme on le voit dans <<lnwallet-categories>>.
+Mais rappelez-vous que ce n'est qu'une des façons de classer les porte-monnaie Lightning.
+
+[[lnwallet-categories]]
+.Quadrant des porte-monnaie Lightning
+[options="header"]
+|===
+|                        | *Nœud Lightning complet*      | *Nœud Lightning tiers*
+| *Auto-dépositaire*         | Q1 : Compétences techniques élevées, faible confiance dans les tiers, absence totale de permission | Q2 : Compétences techniques inférieures à la moyenne, confiance en des tiers inférieure à la moyenne, nécessite certaines permissions
+| *Dépositaire*            | Q3 : Compétences techniques supérieures à la moyenne, confiance en des tiers supérieure à la moyenne, nécessite quelques permissions | Q4 : Faibles compétences techniques, grande confiance dans les tiers, absence de permission ("permissionless" en anglais)
+|===
+
+Le quadrant 3 (Q3), où un nœud Lightning complet est utilisé, mais les clés sont détenues par un dépositaire, n'est actuellement pas courant.
+Les futurs porte-monnaie de ce quadrant peuvent laisser un utilisateur se soucier des aspects opérationnels de son nœud, mais déléguer ensuite l'accès aux clés à un tiers qui utilise principalement le cold storage.
+
+Les porte-monnaie Lightning peuvent être installés sur une variété d'appareils, y compris les ordinateurs portables, les serveurs et les appareils mobiles. Pour exécuter un nœud Lightning complet, vous devrez utiliser un serveur ou un ordinateur de bureau, car les appareils mobiles et les ordinateurs portables ne sont généralement pas assez puissants en termes de capacité, de traitement, d'autonomie de la batterie et de connectivité.
+
+La catégorie des nœuds Lightning tiers peut à nouveau être subdivisée :
+
+Poids léger::
+ Cela signifie que le porte-monnaie n'exploite pas de nœud Lightning et doit donc obtenir des informations sur le Lightning Network via Internet à partir du nœud Lightning de quelqu'un d'autre.
+Aucun::
+ Cela signifie que non seulement le nœud Lightning est exploité par un tiers, mais que la majeure partie du porte-monnaie est exploitée par un tiers dans le cloud. Il s'agit d'un porte-monnaie dépositaire pour lequel quelqu'un d'autre contrôle la détention des fonds.
+
+Ces sous-catégories sont utilisées dans <<lnwallet-examples>>.
+
+[role="pagebreak-before"]
+Quelques autres termes nécessitant une explication dans <<lnwallet-examples>> qui sont dans la colonne "Nœud Bitcoin" :
+
+Neutrino::
+ Ce porte-monnaie n'exploite pas de nœud Bitcoin. Au lieu de cela, un nœud Bitcoin exploité par quelqu'un d'autre (un tiers) est accessible via le protocole Neutrino.
+Electrum::
+ Ce porte-monnaie n'exploite pas de nœud Bitcoin. Au lieu de cela, un nœud Bitcoin exploité par quelqu'un d'autre (un tiers) est accessible via le protocole Electrum.
+Bitcoin Core::
+ Il s'agit d'une implémentation d'un nœud Bitcoin.
+btcd::
+ C'est une autre implémentation d'un nœud Bitcoin.
+
+Dans <<lnwallet-examples>>, nous voyons quelques exemples d'applications de nœud et de porte-monnaie Lightning actuellement populaires pour différents types d'appareils. La liste est d'abord triée par type d'appareil, puis par ordre alphabétique.
+
+[[lnwallet-examples]]
+.Exemples de porte-monnaie Lightning populaires
+[options="header"]
+|===
+| Application    | Appareil  | Nœud Lightning | Noeud Bitcoin          | Magasin de clés
+| Blue Wallet    | Mobile  | Aucun        | Aucun                  | Dépositaire
+| Breez Wallet   | Mobile  | Nœud complet   | Neutrino              | Auto-dépositaire
+| Eclair Mobile  | Mobile  | Poids léger | Electrum              | Auto-dépositaire
+| lntxbot        | Mobile  | Aucun        | Aucun                  | Dépositaire
+| Muun | Mobile  | Poids léger | Neutrino              | Auto-dépositaire
+| Phoenix Wallet | Mobile  | Poids léger | Electrum              | Auto-dépositaire
+| Zeus           | Mobile  | Nœud complet   | Bitcoin Core/btcd     | Auto-dépositaire
+| Electrum       | Ordinateur de bureau | Nœud complet   | Bitcoin Core/Electrum | Auto-dépositaire
+| Zap Desktop    | Ordinateur de bureau | Nœud complet   | Neutrino              | Auto-dépositaire
+| c-lightning    | Serveur  | Nœud complet   | Bitcoin Core          | Auto-dépositaire
+| Eclair Server  | Serveur  | Nœud complet   | Bitcoin Core/Electrum | Auto-dépositaire
+| lnd            | Serveur  | Nœud complet   | Bitcoin Core/btcd     | Auto-dépositaire
+|===
+
+[[testnet-bitcoin]]
+==== Testnet Bitcoin
+
+((("Lightning wallet","testnet bitcoin and")))((("testnet bitcoin (tBTC)")))Le système Bitcoin offre une chaîne alternative à des fins de test appelée _testnet_, à la différence de la chaîne Bitcoin "normale", appelée _mainnet_. Sur le testnet, la devise est le _bitcoin testnet_ (_tBTC_), qui est une copie sans valeur de bitcoin utilisée exclusivement pour les tests. Chaque fonction de Bitcoin est reproduite exactement, mais l'argent ne vaut rien, donc vous n'avez littéralement rien à perdre !
+
+Certains porte-monnaie Lightning peuvent également fonctionner sur le testnet, ce qui vous permet d'effectuer des paiements Lightning avec des bitcoins testnet, sans risquer des fonds réels. C'est un excellent moyen d'expérimenter Lightning en toute sécurité. Eclair Mobile, qu'Alice utilise dans ce chapitre, est un exemple de porte-monnaie Lightning prenant en charge le fonctionnement du testnet.
+
+Vous pouvez obtenir du tBTC pour jouer avec un _robinet à bitcoin testnet_, qui donne du tBTC gratuit sur demande. Voici quelques robinets pour le testnet :
+
+++++
+<ul class="simplelist">
+<li><a href="https://coinfaucet.eu/en/btc-testnet/"><em>https://coinfaucet.eu/en/btc-testnet</em></a></li>
+<li><a href="https://testnet-faucet.mempool.co/"><em>https://testnet-faucet.mempool.co</em></a></li>
+<li><a href="https://bitcoinfaucet.uo1.net/"><em>https://bitcoinfaucet.uo1.net</em></a></li>
+<li><a href="https://testnet.help/en/btcfaucet/testnet"><em>https://testnet.help/en/btcfaucet/testnet</em></a></li>
+</ul>
+++++
+
+Tous les exemples de ce livre peuvent être reproduits exactement sur le testnet avec tBTC, vous pouvez donc suivre si vous le souhaitez sans risquer de l'argent réel.(((range="endofrange", startref="ix_02_getting_started-asciidoc1")))
+
+=== Équilibre entre complexité et contrôle
+
+((("Lightning wallet","balancing complexity and control")))Les porte-monnaie Lightning doivent trouver un équilibre délicat entre complexité et contrôle laissé à l'utilisateur. Ceux qui donnent à l'utilisateur le plus de contrôle sur ses fonds, le plus haut degré de confidentialité et la plus grande indépendance vis-à-vis des services tiers sont nécessairement plus complexes et difficiles à exploiter. Au fur et à mesure que la technologie progresse, certains de ces compromis deviendront moins difficiles et les utilisateurs pourront peut-être obtenir plus de contrôle sans plus de complexité. Cependant, pour l'instant, différentes entreprises et projets explorent différentes positions le long de ce spectre de complexité de contrôle, dans l'espoir de trouver le "sweet spot" pour les utilisateurs qu'ils ciblent.
+
+Lors de la sélection d'un porte-monnaie, gardez à l'esprit que même si vous ne voyez pas ces compromis, ils existent toujours. Par exemple, de nombreux porte-monnaie tenteront de supprimer le fardeau de la gestion des canaux de leurs utilisateurs. Pour ce faire, ils introduisent des _nœuds hub_ (concentrateurs) centraux auxquels tous leurs porte-monnaie se connectent automatiquement. Bien que ce compromis simplifie l'interface utilisateur et l'expérience utilisateur, il introduit un point de défaillance unique ("SPoF" en anglais) car ces nœuds hub deviennent indispensables au fonctionnement du porte-monnaie. De plus, s'appuyer sur un "hub" comme celui-ci peut réduire la confidentialité de l'utilisateur puisque le hub connaît l'expéditeur et potentiellement (s'il construit l'itinéraire de paiement au nom de l'utilisateur) également le destinataire de chaque paiement effectué par le porte-monnaie de l'utilisateur.
+
+Dans la section suivante, nous reviendrons à notre premier utilisateur et passerons en revue sa première configuration de porte-monnaie Lightning. Elle a choisi un porte-monnaie plus sophistiqué que les porte-monnaie de dépositaires plus faciles. Cela nous permet de montrer une partie de la complexité sous-jacente et de présenter certains des rouages d'un porte-monnaie avancé. Vous constaterez peut-être que votre premier porte-monnaie idéal est orienté vers la facilité d'utilisation, acceptant certains des compromis en matière de contrôle et de confidentialité. Ou peut-être êtes-vous plutôt un utilisateur expérimenté et souhaitez-vous exécuter vos propres nœuds Lightning et Bitcoin dans le cadre de votre solution de porte-monnaie.
+
+=== Téléchargement et installation d'un porte-monnaie Lightning
+
+((("Lightning wallet","downloading/installing")))Lors de la recherche d'un nouveau porte-monnaie de cryptomonnaies, vous devez faire très attention à sélectionner une source sécurisée pour le logiciel.
+
+Malheureusement, de nombreuses fausses applications de porte-monnaie voleront votre argent, et certaines d'entre elles se retrouvent même sur des sites de logiciels réputés et soi-disant contrôlés comme les magasins d'applications Apple et Google. Que vous installiez votre premier ou votre dixième porte-monnaie, faites toujours preuve d'une extrême prudence. Une application malveillante peut non seulement voler l'argent que vous lui confiez, mais elle peut également être en mesure de voler des clés et des mots de passe d'autres applications en compromettant le système d'exploitation de votre appareil mobile.
+
+((("Eclair wallet, downloading/installing")))Alice utilise un appareil Android et utilisera le Google Play Store pour télécharger et installer le porte-monnaie Eclair. En effectuant une recherche sur Google Play, elle trouve une entrée pour "Eclair Mobile", comme indiqué dans <<eclair-playstore>>.
+
+[[eclair-playstore]]
+.Eclair Mobile dans le Google Play Store
+image::images/mtln_0201.png["Eclair Mobile dans le Google Play Store"]
+
+
+[TIP]
+====
+Il est possible d'expérimenter et de tester tous les logiciels de type Bitcoin sans risque (à part la perte de temps) en utilisant des bitcoins testnet. Vous pouvez également télécharger le porte-monnaie Eclair testnet pour essayer Lightning (sur le testnet) en vous rendant sur le Google Play Store.
+====
+
+Alice remarque quelques éléments différents sur cette page qui l'aident à déterminer qu'il s'agit très probablement du bon porte-monnaie "Eclair Mobile" qu'elle recherche. Tout d'abord, l'organisation ACINQfootnote:[ACINQ : développeurs du porte-monnaie Lightning Eclair Mobile.] est répertoriée comme le développeur de ce porte-monnaie mobile, ce qu'Alice sait, d'après ses recherches, être le bon développeur. Deuxièmement, le porte-monnaie a été installé "plus de 10 000" fois et compte plus de 320 avis positifs. Il est peu probable qu'il s'agisse d'une application malveillante qui s'est introduite dans le Google Play Store. Dans un troisième temps, elle se rend sur le https://acinq.co[site d'ACINQ]. Elle vérifie que la page Web est sécurisée en vérifiant que l'adresse commence par https, ou préfixée par un cadenas dans certains navigateurs. Sur le site Web, elle se rend dans la section Téléchargement ou recherche le lien vers Google App Store. Elle trouve le lien et clique dessus. Elle compare que ce lien l'amène à la même application dans le Google App Store. Satisfaite de ces résultats, Alice installe l'application Eclair sur son appareil mobile.
+
+[WARNING]
+====
+Faites toujours très attention lorsque vous installez un logiciel sur n'importe quel appareil. Il existe de nombreux faux porte-monnaie de cryptomonnaies qui non seulement voleront votre argent, mais pourraient également compromettre toutes les autres applications de votre appareil.
+====
+
+=== Créer un nouveau porte-monnaie
+
+((("Lightning wallet","creating a new wallet", id="ix_02_getting_started-asciidoc2", range="startofrange")))Lorsqu'Alice ouvre l'application Eclair Mobile pour la première fois, elle a le choix de "Créer un nouveau porte-monnaie" ou "Importer un porte-monnaie existant". Alice va créer un nouveau porte-monnaie, mais discutons d'abord de la raison pour laquelle ces options sont présentées ici et de ce que cela signifie d'importer un porte-monnaie existant.
+
+==== Responsabilité avec la détention de clés
+
+((("keys","Lightning wallet and")))((("Lightning wallet","responsibility with key custody")))Comme nous l'avons mentionné au début de cette section, Eclair est un porte-monnaie _non-dépositaire_, ce qui signifie que Alice a la garde exclusive des clés utilisées pour contrôler ses bitcoins. Cela signifie également qu'Alice est responsable de la protection et de la sauvegarde de ces clés. Si Alice perd les clés, personne ne peut l'aider à récupérer ses bitcoins, et ils seront perdus à jamais.
+
+[WARNING]
+====
+Avec le porte-monnaie Eclair Mobile, Alice a la détention et le contrôle des clés et, par conséquent, l'entière responsabilité de garder les clés en sécurité et sauvegardées. Si elle perd les clés, elle perd les bitcoins, et personne ne peut l'aider à se remettre de cette perte !
+====
+
+==== Mots Mnémoniques
+
+((("Lightning wallet","mnemonic phrase")))((("mnemonic phrase")))((("seed (mnemonic) phrase")))Semblable à la plupart des porte-monnaie Bitcoin, Eclair Mobile fournit une _phrase mnémonique_ (également parfois appelée "graine" ou "phrase de graine" ou même "seed" en anglais) pour qu'Alice la sauvegarde. La phrase mnémonique se compose de 24 mots anglais, sélectionnés au hasard par le logiciel et utilisés comme base pour les clés générées par le porte-monnaie. Alice peut utiliser la phrase mnémonique pour restaurer toutes les transactions et tous les fonds du porte-monnaie Eclair Mobile en cas de perte d'un appareil mobile, d'un bogue logiciel ou d'une corruption de la mémoire.
+
+[TIP]
+====
+Le terme correct pour ces mots de sauvegarde est "phrase mnémonique". Nous évitons d'utiliser le terme "graine" pour désigner une phrase mnémotechnique car même si son utilisation est courante, elle est incorrecte.
+====
+
+Lorsqu'Alice choisit de créer un nouveau porte-monnaie, elle voit un écran avec sa phrase mnémonique, qui ressemble à la capture d'écran dans <<eclair-mnemonic>>.
+
+[[eclair-mnemonic]]
+.Nouvelle phrase mnémonique du porte-monnaie
+image::images/mtln_0202.png["Nouvelle phrase mnémonique du porte-monnaie"]
+
+Dans <<eclair-mnemonic>>, nous avons délibérément obscurci une partie de la phrase mnémonique pour empêcher les lecteurs de ce livre de réutiliser ce mnémonique.
+
+[[mnemonic-storage]]
+==== Stocker le mnémonique en toute sécurité
+
+((("Lightning wallet","mnemonic phrase storage")))Alice doit faire attention à stocker la phrase mnémonique de manière à empêcher le vol mais également à éviter toute perte accidentelle. La méthode recommandée pour équilibrer correctement ces risques est d'écrire deux copies de la phrase mnémonique sur papier, avec chacun des mots numérotés &#x2014; l'ordre compte.
+
+Une fois qu'Alice a enregistré la phrase mnémonique, après avoir pressé sur "OK GOT IT" sur son écran, un quiz lui sera présenté pour s'assurer qu'elle a correctement enregistré la mnémonique. Le quiz demandera trois ou quatre des mots au hasard. Alice ne s'attend pas à un quiz, mais comme elle a correctement enregistré le mnémonique, elle réussit sans aucune difficulté.
+
+Une fois qu'Alice a enregistré la phrase mnémonique et réussi le test, elle doit stocker chaque copie dans un endroit sécurisé séparé, comme un tiroir de bureau verrouillé ou un coffre-fort ignifuge.
+
+[WARNING]
+====
+N'essayez jamais un système de sécurité "bricolage" qui s'écarte de quelque manière que ce soit des recommandations de meilleures pratiques pour <<mnemonic-storage>>. Ne découpez pas votre mnémonique en deux, ne faites pas de captures d'écran, ne le stockez pas sur des clés USB ou stockage cloud, ne l'encryptez pas et n'essayez aucune autre méthode non standard. Sinon vous augmenterez les risques d'une perte permanente. De nombreuses personnes ont perdu des fonds, non pas à cause d'un vol, mais parce qu'elles ont essayé une solution non standard sans avoir l'expertise pour équilibrer les risques encourus. Cette recommandations des meilleures pratiques est soigneusement étudiée par des experts et convient à la grande majorité des utilisateurs.
+====
+
+Après qu'Alice a initialisé son porte-monnaie Eclair Mobile, elle verra un bref tutoriel qui met en évidence les différents éléments de l'interface utilisateur. Nous ne reproduirons pas le tutoriel ici, mais nous explorerons tous ces éléments en suivant la tentative d'Alice d'acheter une tasse de café !(((range="endofrange", startref="ix_02_getting_started-asciidoc2")))
+
+=== Chargement de Bitcoin sur le porte-monnaie
+
+((("bitcoin (currency)","loading onto Lightning wallet", id="ix_02_getting_started-asciidoc3", range="startofrange")))((("Lightning wallet","loading bitcoin onto", id="ix_02_getting_started-asciidoc4", range="startofrange")))Alice a maintenant un porte-monnaie Lightning. Mais il est vide ! Elle est maintenant confrontée à l'un des aspects les plus difficiles de cette expérience : elle doit trouver un moyen d'acquérir des bitcoins et de les charger sur son porte-monnaie Eclair.
+
+[TIP]
+====
+Si Alice a déjà des bitcoins dans un autre porte-monnaie, elle peut choisir d'envoyer ces bitcoins vers son porte-monnaie Eclair au lieu d'acquérir de nouveaux bitcoins à charger sur son nouveau porte-monnaie.
+====
+
+[[acquiring-bitcoin]]
+==== Acquisition des bitcoins
+
+((("bitcoin (currency)","acquiring for Lightning wallet")))((("Lightning wallet","acquiring bitcoin for")))Alice peut acquérir des bitcoins de plusieurs manières :
+
+* Elle peut échanger une partie de sa monnaie nationale (par exemple, USD) sur un échange de cryptomonnaies.
+* Elle peut en acheter par l’intermédiaire d'un ami ou d'une connaissance lors d'une rencontre Bitcoin, en échange d'espèces.
+* Elle peut trouver un _guichet automatique Bitcoin_ dans sa région, qui agit comme un distributeur automatique, vendant des bitcoins contre des espèces.
+[role="pagebreak-before"]
+* Elle peut proposer ses compétences ou un produit qu'elle vend et accepter le paiement en bitcoin.
+* Elle peut demander à son employeur ou à ses clients de la payer en bitcoin.
+
+Toutes ces méthodes présentent des degrés de difficulté variables et nombre d'entre elles impliquent le paiement de frais. Certains exigeront également qu'Alice fournisse des documents d'identification pour se conformer aux réglementations bancaires locales. Cependant, avec toutes ces méthodes, Alice pourra recevoir des bitcoins.
+
+==== Recevoir des bitcoins
+
+((("bitcoin (currency)","receiving for Lightning wallet", id="ix_02_getting_started-asciidoc5", range="startofrange")))((("Bitcoin ATM", id="ix_02_getting_started-asciidoc6", range="startofrange")))((("Lightning wallet","receiving bitcoin", id="ix_02_getting_started-asciidoc7", range="startofrange")))Supposons qu'Alice ait trouvé un guichet automatique Bitcoin local et ait décidé d'acheter quelques bitcoins en échange d'argent. Un exemple de guichet automatique Bitcoin, construit par la société Lamassu, est présenté dans <<bitcoin-atm>>. Ces guichets automatiques Bitcoin acceptent la monnaie nationale (en espèces) via un guichet automatique et envoient des bitcoins à une adresse Bitcoin numérisée à partir du porte-monnaie d'un utilisateur à l'aide d'une caméra intégrée.
+
+[[bitcoin-atm]]
+.Un guichet automatique Bitcoin de Lamassu
+image::images/mtln_0203.png["Un guichet automatique Bitcoin de Lamassu"]
+
+Pour recevoir les bitcoins dans son porte-monnaie Eclair Lightning, Alice devra présenter une adresse Bitcoin du porte-monnaie Eclair Lightning au guichet automatique. Le guichet automatique peut alors envoyer les bitcoins nouvellement acquis d'Alice à cette adresse Bitcoin.
+
+Pour voir une adresse Bitcoin sur le porte-monnaie Eclair, Alice doit glisser vers la colonne de gauche intitulée YOUR BITCOIN ADDRESS (voir <<eclair-receive>>), où elle verra un code-barres carré (appelé _QR code_) et une chaîne de lettres et de chiffres en dessous.
+
+Le code QR contient la même chaîne de lettres et de chiffres que celle indiquée en dessous, dans un format facile à scanner. De cette façon, Alice n'a pas à taper l'adresse Bitcoin. Dans la capture d'écran (<<eclair-receive>>), nous avons délibérément brouillé les deux, pour empêcher les lecteurs d'envoyer par inadvertance des bitcoins à cette adresse.
+
+[[eclair-receive]]
+.L'adresse bitcoin d'Alice telle qu'affichée dans Eclair
+image::images/mtln_0204.png["Code QR de l'adresse bitcoin d'Eclair"]
+
+[NOTE]
+====
+Les adresses Bitcoin et les codes QR contiennent des informations de détection d'erreur qui empêchent toute erreur de frappe ou de numérisation qui pourraient produire une "mauvaise" adresse Bitcoin. S'il y a une erreur dans l'adresse, tout porte-monnaie Bitcoin remarquera l'erreur et refusera d'accepter l'adresse Bitcoin comme valide.
+====
+
+[role="pagebreak-before"]
+Alice peut apporter son appareil mobile au guichet automatique et le montrer à la caméra intégrée, comme indiqué dans <<bitcoin-atm-receive>>. Après avoir inséré de l'argent dans la fente, elle recevra des bitcoins dans Eclair !
+
+[[bitcoin-atm-receive]]
+.Le guichet automatique Bitcoin scanne le code QR
+image::images/mtln_0205.png["Le guichet automatique Bitcoin scanne le code QR"]
+
+Alice verra la transaction du guichet automatique dans l'onglet TRANSACTION HISTORY du porte-monnaie Eclair. Bien qu'Eclair détecte la transaction bitcoin en quelques secondes, il faudra environ une heure pour que la transaction bitcoin soit "confirmée" sur la blockchain Bitcoin. Comme vous pouvez le voir dans <<eclair-tx1>>, le porte-monnaie Eclair d'Alice affiche "6+ conf" sous la transaction, indiquant que la transaction a reçu le minimum requis de six confirmations, et que ses fonds sont maintenant prêts à être utilisés.
+
+[TIP]
+====
+Le nombre de confirmations sur une transaction est le nombre de blocs minés depuis (et y compris) le bloc qui contenait cette transaction. Six confirmations est la meilleure pratique, mais différents porte-monnaie Lightning peuvent considérer qu'un canal est ouvert après n'importe quel nombre de confirmations. Certains porte-monnaie augmentent même le nombre de confirmations attendues en fonction de la valeur monétaire du canal.
+====
+
+Bien que dans cet exemple, Alice ait utilisé un guichet automatique pour acquérir ses premiers bitcoins, les mêmes concepts de base s'appliqueraient même si elle utilisait l'une des autres méthodes de <<acquiring-bitcoin>>. Par exemple, si Alice voulait vendre un produit ou fournir un service professionnel en échange de bitcoins, ses clients pourraient scanner l'adresse Bitcoin avec leur porte-monnaie et la payer en bitcoins.
+
+[[eclair-tx1]]
+.Alice reçoit des bitcoins
+image::images/mtln_0206.png["Transaction Bitcoin reçue"]
+
+De même, si elle facturait un client pour un service offert sur Internet, Alice pourrait envoyer un e-mail ou un message instantané avec l'adresse Bitcoin ou le code QR à son client, et ils pourraient coller ou scanner les informations dans un porte-monnaie Bitcoin pour la payer.
+
+Alice pourrait même imprimer le code QR et l'apposer sur un panneau et l'afficher publiquement pour recevoir des conseils. Par exemple, elle pourrait avoir un code QR apposé sur sa guitare et recevoir des pourboires tout en se produisant dans la rue !footnote:[Il est généralement déconseillé de réutiliser la même adresse Bitcoin pour plusieurs paiements car toutes les transactions Bitcoin sont publiques.
+Une personne curieuse passant par-là pourrait scanner le code QR d'Alice et voir combien de pourboires Alice a déjà reçus à cette adresse sur la blockchain Bitcoin.
+Heureusement, le Lightning Network propose des solutions plus privées à cela, abordées plus loin dans le livre !]
+
+Enfin, si Alice achetait du bitcoin à partir d'un échange de cryptomonnaies, elle pourrait (et devrait) "retirer" les bitcoins en collant son adresse Bitcoin sur le site Web de l'échange. L'échange enverra alors les bitcoins directement à son adresse(((range="endofrange", startref="ix_02_getting_started-asciidoc7")))(((range="endofrange", startref="ix_02_getting_started-asciidoc6")))(((range="endofrange", startref="ix_02_getting_started-asciidoc5"))).(((range="endofrange", startref="ix_02_getting_started-asciidoc4")))(((range="endofrange", startref="ix_02_getting_started-asciidoc3")))
+
+=== De Bitcoin au Lightning Network
+
+((("Lightning wallet","bridging of Bitcoin and Lightning networks", id="ix_02_getting_started-asciidoc8", range="startofrange")))Le bitcoin d'Alice est maintenant contrôlé par son porte-monnaie Eclair et a été enregistré sur la blockchain Bitcoin. À ce stade, les bitcoins d'Alice sont _sur la chaîne_, ce qui signifie que la transaction a été diffusée sur l'ensemble du réseau Bitcoin, vérifiée par tous les nœuds Bitcoin, et _minée_ (enregistrée) sur la blockchain Bitcoin.
+
+Jusqu'à présent, le porte-monnaie Eclair Mobile ne s'est comporté que comme un porte-monnaie Bitcoin et Alice n'a pas utilisé les fonctionnalités Lightning Network d'Eclair. Comme c'est le cas avec de nombreux porte-monnaie Lightning, Eclair relie Bitcoin et le Lightning Network en agissant à la fois comme un porte-monnaie Bitcoin et un porte-monnaie Lightning.
+
+Maintenant, Alice est prête à commencer à utiliser le Lightning Network en retirant ses bitcoins de la chaîne pour profiter des paiements rapides, bon marché et privés offerts par le Lightning Network.
+
+==== Canaux du Lightning Network
+
+((("Lightning Network channels","basics", id="ix_02_getting_started-asciidoc9", range="startofrange")))((("Lightning Network channels","opening a channel", id="ix_02_getting_started-asciidoc10", range="startofrange")))((("Lightning wallet","LN channels and", id="ix_02_getting_started-asciidoc11", range="startofrange")))En glissant vers la droite, Alice accède à la section LIGHTNING CHANNELS d'Eclair. Ici, elle peut gérer les canaux qui connecteront son porte-monnaie au Lightning Network.
+
+Passons en revue la définition d'un canal LN à ce stade, pour clarifier un peu les choses. Premièrement, le mot "canal" est une métaphore d'une _relation financière_ entre le porte-monnaie Lightning d'Alice et un autre porte-monnaie Lightning. Nous l'appelons un canal car c'est un moyen pour le porte-monnaie d'Alice et cet autre porte-monnaie d'échanger de nombreux paiements entre eux sur le Lightning Network (hors chaîne) sans engager de transactions dans la blockchain Bitcoin (sur la chaîne).
+
+((("channel peer")))Le porte-monnaie ou _nœud_ avec lequel Alice ouvre un canal s'appelle son _pair de canal_. Une fois "ouvert", un canal peut être utilisé pour envoyer de nombreux paiements dans les deux sens entre le porte-monnaie d'Alice et son pair de canal.
+
+De plus, le pair de canal d'Alice peut _transférer_ les paiements via d'autres canaux plus loin dans le Lightning Network. De cette façon, Alice peut _router_ un paiement vers n'importe quel porte-monnaie (par exemple, le porte-monnaie Lightning de Bob) tant que le porte-monnaie d'Alice peut trouver un _chemin_ viable en sautant de canal en canal, jusqu'au porte-monnaie de Bob.
+
+[TIP]
+====
+Tous les pairs de canal ne sont pas de _bons_ pairs pour le routage des paiements. Des pairs bien connectés pourront acheminer les paiements sur des chemins plus courts vers la destination, augmentant ainsi les chances de succès. Les pairs de canal disposant de fonds suffisants pourront acheminer des paiements plus importants.
+====
+
+En d'autres termes, Alice a besoin d'un ou plusieurs canaux qui la connectent à un ou plusieurs autres nœuds du Lightning Network. Elle n'a pas besoin d'un canal pour connecter son porte-monnaie directement au Café de Bob afin d'envoyer un paiement à Bob, bien qu'elle puisse également choisir d'ouvrir un canal direct. N'importe quel nœud du Lightning Network peut être utilisé pour le premier canal d'Alice. Plus un nœud est bien connecté, plus Alice peut atteindre de personnes. Dans cet exemple, puisque nous voulons également démontrer le routage des paiements, Alice n'ouvrira pas de canal directement vers le porte-monnaie de Bob. Au lieu de cela, Alice ouvrira un canal vers un nœud bien connecté, puis utilisera plus tard ce nœud pour transférer son paiement, en le faisant passer par tous les autres nœuds nécessaires pour atteindre Bob.
+
+Au début, il n'y a pas de canaux ouverts, donc comme nous le voyons dans <<eclair-channels>>, l'onglet LIGHTNING CHANNELS affiche une liste vide. Si vous remarquez, dans le coin inférieur droit, il y a un symbole plus (+), qui est un bouton pour ouvrir un nouveau canal.
+
+[[eclair-channels]]
+.Onglet LIGHTNING CHANNELS
+image::images/mtln_0207.png["Onglet LIGHTNING CHANNELS"]
+
+[role="pagebreak-before"]
+Alice appuie sur le symbole plus et se voit présenter quatre manières possibles d'ouvrir un canal :
+
+* Coller un URI de nœud
+* Scanner un URI de nœud
+* Nœud aléatoire
+* Nœud d'ACINQ
+
+Un "URI de nœud" est un Identifiant de Ressource Universel ("Universal Resource Identifier" ou "URI" en anglais) qui identifie un nœud Lightning spécifique. Alice peut soit coller un tel URI à partir de son presse-papiers, soit scanner un code QR contenant les mêmes informations. Un exemple d'URI de nœud est illustré sous forme de code QR dans <<node-URI-QR>> puis sous forme de chaîne de caractères.
+
+[[node-URI-QR]]
+.URI de nœud sous forme de code QR
+image::images/mtln_0208.png["Code QR de l'URI d'un nœud Lightning",width=120]
+
+[[node-URI-example]]
+.URI de nœud
+----
+0237fefbe8626bf888de0cad8c73630e32746a22a2c4faa91c1d9877a3826e1174@1.ln.aantonop.com:9735
+----
+
+Bien qu'Alice puisse sélectionner un nœud Lightning spécifique ou utiliser l'option "Nœud aléatoire" pour que le porte-monnaie Eclair sélectionne un nœud au hasard, elle sélectionnera l'option Nœud d'ACINQ pour se connecter à l'un des nœuds Lightning bien connectés d'ACINQ.
+
+Le choix du nœud ACINQ réduira légèrement la confidentialité d'Alice, car il donnera à ACINQ la possibilité de voir toutes les transactions d'Alice. Cela créera également un point de défaillance unique, car Alice n'aura qu'un seul canal, et si le nœud ACINQ n'est pas disponible, Alice ne pourra pas effectuer de paiements. Pour garder les choses simples au début, nous accepterons ces compromis. Dans les chapitres suivants, nous apprendrons progressivement à gagner en autonomie et à faire moins de compromis !
+
+Alice sélectionne le nœud d'ACINQ et est prête à ouvrir son premier canal sur le Lightning Network.(((range="endofrange", startref="ix_02_getting_started-asciidoc11")))(((range="endofrange", startref="ix_02_getting_started-asciidoc10")))(((range="endofrange", startref="ix_02_getting_started-asciidoc9")))
+
+==== Ouvrir un canal Lightning
+
+((("Lightning wallet","opening a Lightning channel", id="ix_02_getting_started-asciidoc12", range="startofrange")))Lorsqu'Alice sélectionne un nœud pour ouvrir un nouveau canal, on lui demande de sélectionner la quantité de bitcoins qu'elle souhaite allouer à ce canal. Dans les chapitres suivants, nous discuterons des implications de ces choix, mais pour l'instant, Alice allouera la quasi-totalité de ses fonds au canal. Puisqu'elle devra payer des frais de transaction pour ouvrir le canal, elle sélectionnera un montant légèrement inférieur à son solde total.footnote:[Le porte-monnaie Eclair ne propose pas d'option permettant de calculer automatiquement les frais nécessaires et d'allouer le montant maximum de fonds à un canal, Alice doit donc faire le calcul elle-même.]
+
+Alice alloue 0,018 BTC de son total de 0,020 BTC sur son canal et accepte le taux de frais par défaut, comme indiqué dans <<eclair-open-channel>>.
+
+[[eclair-open-channel]]
+.Ouverture d'un canal Lightning
+image::images/mtln_0209.png["Ouvrir un canal Lightning"]
+
+Une fois qu'elle a cliqué sur OUVRIR, son porte-monnaie construit la transaction Bitcoin spéciale qui ((("funding transaction"))) ouvre un canal Lightning, connu sous le nom de _transaction de financement_. La transaction de financement sur la chaîne est envoyée au réseau Bitcoin pour confirmation.
+
+Alice doit maintenant attendre à nouveau (voir <<eclair-channel-waiting>>) pour que la transaction soit enregistrée sur la blockchain Bitcoin. Comme pour la transaction Bitcoin initiale qu'elle a utilisée pour acquérir ses bitcoins, elle doit attendre six confirmations ou plus (environ une heure).
+
+[[eclair-channel-waiting]]
+.En attente de la transaction de financement pour ouvrir le canal
+image::images/mtln_0210.png["En attente de la transaction de financement pour ouvrir le canal"]
+
+Une fois la transaction de financement confirmée, le canal d'Alice vers le nœud d'ACINQ est ouvert, financé et prêt, comme indiqué dans <<eclair-channel-open>>.
+
+[[eclair-channel-open]]
+.Le canal est ouvert
+image::images/mtln_0211.png["Le canal est ouvert"]
+
+[TIP]
+====
+Avez-vous remarqué que le montant du canal semble avoir changé ? Ce n'est pas le cas : le canal contient 0,018 BTC, mais entre les captures d'écran, le taux de change du BTC a changé, de sorte que la valeur en USD est différente. Vous pouvez choisir d'afficher les soldes en BTC ou en USD, mais gardez à l'esprit que les valeurs en USD sont calculées en temps réel et changeront (((range="endofrange", startref="ix_02_getting_started-asciidoc12")))!(((range="endofrange", startref="ix_02_getting_started-asciidoc8")))
+====
+
+=== Acheter une tasse de café en utilisant le Lightning Network
+
+((("Lightning Network (generally)","example: buying a cup of coffee", id="ix_02_getting_started-asciidoc13", range="startofrange")))((("Lightning wallet","example: buying a cup of coffee", id="ix_02_getting_started-asciidoc14", range="startofrange")))Alice a maintenant tout préparé pour commencer à utiliser le Lightning Network. Comme vous pouvez le voir, cela a pris un peu de travail et un peu de temps pour attendre les confirmations. Cependant, les actions suivantes sont maintenant rapides et faciles. Le Lightning Network permet des paiements sans avoir à attendre les confirmations, car les fonds sont réglés en quelques secondes.
+
+Alice attrape son appareil mobile et court au Café de Bob dans son quartier. Elle est ravie d'essayer son nouveau porte-monnaie Lightning et de l'utiliser pour acheter quelque chose !
+
+==== Le Café de Bob
+
+Bob dispose d'une application de point de vente ("Point of Sale" ou "PoS" en anglais) simple à l'usage pour tout client qui souhaite payer avec des bitcoins sur le Lightning Network. Comme nous le verrons dans le chapitre suivant, Bob utilise la plateforme open source populaire _BTCPay Server_ qui contient tous les composants nécessaires pour une solution de commerce électronique ou de vente au détail, tels que :
+
+* Un nœud Bitcoin utilisant le logiciel Bitcoin Core
+* Un nœud Lightning utilisant le logiciel c-lightning
+* Une simple application PoS pour une tablette
+
+BTCPay Server simplifie l'installation de tous les logiciels nécessaires, le téléchargement des photos et des prix des produits et le lancement rapide d'une boutique.
+
+Sur le comptoir du Café de Bob, il y a une tablette montrant ce que vous voyez dans <<bob-cafe-posapp>>.
+
+[[bob-cafe-posapp]]
+.L'application de Point de Vente de Bob
+image::images/mtln_0212.png["L'application de Point de Vente de Bob"]
+
+==== Une facture Lightning
+
+((("Lightning invoices", id="ix_02_getting_started-asciidoc15", range="startofrange")))((("Lightning wallet","invoices", id="ix_02_getting_started-asciidoc16", range="startofrange")))Alice sélectionne l'option Café Latte à l'écran et se voit présenter une _facture Lightning_ (également connue sous le nom de "demande de paiement"), comme indiqué dans <<bob-cafe-invoice>>.
+
+[[bob-cafe-invoice]]
+.Facture Lightning pour le latte d'Alice
+image::images/mtln_0213.png["Facture Lightning de BTCPay Server"]
+
+[role="pagebreak-before"]
+Pour payer la facture, Alice ouvre son porte-monnaie Eclair et sélectionne le bouton Envoyer (qui ressemble à une flèche vers le haut) sous l'onglet TRANSACTION HISTORY, comme indiqué dans <<alice-send-start>>.
+
+[[alice-send-start]]
+.Alice sélectionnant Envoyer
+image::images/mtln_0214.png["Transaction Lightning envoyée",width=300]
+
+[TIP]
+====
+Le terme "demande de paiement" peut faire référence à une demande de paiement Bitcoin ou à une facture Lightning, et les termes "facture" et "demande de paiement" sont souvent utilisés de manière interchangeable. Le terme technique correct est "facture Lightning", quelle que soit la manière dont elle est nommée dans le porte-monnaie.
+====
+
+Alice sélectionne l'option "scan a payment request" (Scanner une demande de paiement), scanne le QR code affiché sur l'écran de la tablette (voir <<bob-cafe-invoice>>), et est invitée à confirmer son paiement, comme illustré dans <<alice-send-detail>>.
+
+Alice appuie sur PAY (Payer), et une seconde plus tard, la tablette de Bob affiche un paiement réussi. Alice a terminé son premier paiement LN ! C'était rapide, peu coûteux et facile. Maintenant, elle peut profiter de son latte qui a été acheté en bitcoin via un système de paiement rapide, bon marché et décentralisé. Dès à présent, Alice peut simplement sélectionner un article sur l'écran de la tablette de Bob, scanner le code QR avec son téléphone portable, cliquer sur PAY et se faire servir un café, le tout en quelques secondes et le tout sans transaction sur la chaîne.
+
+[[alice-send-detail]]
+.La confirmation d'envoi d'Alice
+image::images/mtln_0215.png["La confirmation d'envoi de la transaction Lightning",width=300]
+
+Les paiements Lightning sont également plus avantageux pour Bob. Il est convaincu qu'il sera payé pour le latte d'Alice sans attendre une confirmation sur la chaîne. À l'avenir, chaque fois qu'Alice aura envie de boire un café au Café de Bob, elle pourra choisir de payer en bitcoin sur le réseau Bitcoin ou le Lightning Network. Lequel pensez-vous qu'elle choisira (((range="endofrange", startref="ix_02_getting_started-asciidoc16")))(((range="endofrange", startref="ix_02_getting_started-asciidoc15")))?(((range="endofrange", startref="ix_02_getting_started-asciidoc14")))(((range="endofrange", startref="ix_02_getting_started-asciidoc13")))
+
+=== Conclusion
+
+Dans ce chapitre, nous avons suivi Alice alors qu'elle téléchargeait et installait son premier porte-monnaie Lightning, acquérait et transférait des bitcoins, ouvrait son premier canal Lightning et achetait une tasse de café en effectuant son premier paiement sur le Lightning Network.(((range="endofrange", startref="ix_02_getting_started-asciidoc0"))) Dans les chapitres suivants, nous verrons "dans les coulisses" comment fonctionne chaque composant du Lightning Network et comment le paiement d'Alice a atteint le Café de Bob.

@@ -1,0 +1,111 @@
+[appendix]
+[[appendix_docker]]
+== Installation et utilisation de base de Docker
+
+((("Docker","basic installation and use", id="ix_appendix_docker_basics-asciidoc0", range="startofrange")))Ce livre contient un certain nombre d'exemples qui s'exécutent dans des conteneurs Docker pour la standardisation sur différents systèmes d'exploitation.
+
+Cette section vous aidera à installer Docker et à vous familiariser avec certaines des commandes Docker les plus couramment utilisées, afin que vous puissiez exécuter les exemples en conteneurs de ce livre.
+
+
+=== Installer Docker
+
+((("Docker","installing")))Avant de commencer, vous devez installer le système de conteneur Docker sur votre ordinateur. Docker est un système ouvert distribué gratuitement en tant que _Community Edition_ pour de nombreux systèmes d'exploitation différents, notamment Windows, macOS et Linux. Les versions Windows et Macintosh sont appelées _Docker Desktop_ et se composent d'une application de bureau avec une interface graphique et d'outils de ligne de commande. La version Linux s'appelle _Docker Engine_ et comprend un démon serveur et des outils de ligne de commande. Nous utiliserons les outils de ligne de commande, qui sont identiques sur toutes les plateformes.
+
+Lancez-vous dans l'installation de Docker pour votre système d'exploitation en suivant les instructions pour "Get Docker" sur le https://docs.docker.com/get-docker[site Web de Docker].
+
+Sélectionnez votre système d'exploitation dans la liste et suivez les instructions d'installation.
+
+[TIP]
+====
+Si vous installez sur Linux, suivez les instructions de post-installation pour vous assurer que vous pouvez exécuter Docker en tant qu'un utilisateur normal au lieu de l'utilisateur root. Sinon, vous devrez préfixer toutes les commandes +docker+ avec +sudo+, en les exécutant en tant que root comme : +sudo docker+.
+====
+
+Une fois Docker installé, vous pouvez tester votre installation en exécutant le conteneur de démonstration +hello-world+ comme ceci :
+
+[[docker-hello-world]]
+----
+$ docker run hello-world
+
+Hello from Docker!
+Ce message indique que votre installation semble fonctionner correctement.
+
+[...]
+----
+
+=== Commandes Docker de base
+
+((("Docker","basic commands")))Dans cette annexe, nous utilisons Docker passablement. Nous utiliserons les commandes et arguments Docker suivants.
+
+==== Construire un conteneur
+
+++++
+<pre data-type="programlisting">docker build [-t <em>tag</em>] [<em>directory</em>]</pre>
+++++
+
+((("Docker","building a container")))((("Docker containers","building a container")))++__tag__++ est la façon dont nous identifions le conteneur que nous construisons, et ++__directory__ ++ est l'endroit où se trouvent le contexte du conteneur (dossiers et fichiers) et le fichier de définition (+Dockerfile+).
+
+==== Exécution d'un conteneur
+
+++++
+<pre data-type="programlisting">docker run -it [--network <em>netname</em>] [--name <em>cname</em>] <em>tag</em></pre>
+++++
+
+((("Docker containers","running a container")))++__netname__++ est le nom d'un réseau Docker, ++__cname__++ est le nom que nous choisissons pour cette instance de conteneur, et ++__tag__++ est la balise de nom que nous avons donnée au conteneur lorsque nous l'avons construit.
+
+==== Exécuter une commande dans un conteneur
+
+++++
+<pre data-type="programlisting">docker exec <em>cname command</em></pre>
+++++
+
+((("Docker containers","executing a command in a container")))++__cname__++ est le nom que nous avons donné au conteneur dans la commande +run+, et ++__command__++ est un exécutable ou un script que nous voulons exécuter à l'intérieur du conteneur.
+
+==== Arrêter et démarrer un conteneur
+
+((("Docker containers","stopping/starting a container")))Dans la plupart des cas, si nous exécutons un conteneur en modes _interactif_ ou _terminal_, c'est-à-dire avec les options +i+ et +t+ (combinés comme +-it+) définies, le conteneur peut être arrêté en appuyant simplement sur Ctrl-C ou en quittant le shell avec +exit+ ou Ctrl-D. Si un conteneur ne se termine pas, vous pouvez l'arrêter depuis un autre terminal comme ceci :
+
+++++
+<pre data-type="programlisting">docker stop <em>cname</em></pre>
+++++
+
+Pour reprendre un conteneur déjà existant, utilisez la commande `start` comme ceci :
+
+++++
+<pre data-type="programlisting">docker start <em>cname</em></pre>
+++++
+
+==== Suppression d'un conteneur par nom
+
+((("Docker containers","deleting a container by name")))Si vous nommez un conteneur au lieu de laisser Docker le nommer au hasard, vous ne pouvez pas réutiliser ce nom tant que le conteneur n'est pas supprimé. Docker renverra une erreur comme celle-ci :
+
+----
+docker: Error response from daemon: Conflict. The container name "/bitcoind" is already in use...
+----
+
+Pour résoudre ce problème, supprimez l'instance existante du conteneur :
+
+++++
+<pre data-type="programlisting">docker rm <em>cname</em></pre>
+++++
+
+++__cname__++ est le nom attribué au conteneur (+bitcoind+ dans l'exemple de message d'erreur).
+
+==== Lister les conteneurs en cours d'exécution
+
+----
+docker ps
+----
+
+((("Docker containers","list running containers")))Cette commande affiche les conteneurs en cours d'exécution et leurs noms.
+
+==== Listing des images Docker
+
+----
+docker image ls
+----
+
+((("Docker containers","list Docker images")))Cette commande affiche les images Docker qui ont été créées ou téléchargées sur votre ordinateur.
+
+=== Conclusion
+
+Ces commandes Docker de base suffiront à vous lancer et vous permettront d'exécuter tous les exemples de ce livre.(((range="endofrange", startref="ix_appendix_docker_basics-asciidoc0")))

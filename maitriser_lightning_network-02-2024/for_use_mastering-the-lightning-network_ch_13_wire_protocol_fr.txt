@@ -1,0 +1,411 @@
+[[wire_protocol]]
+== Protocole filaire : tramage et extensibilité
+
+((("wire protocol", id="ix_13_wire_protocol-asciidoc0", range="startofrange")))Dans ce chapitre, nous plongeons dans le protocole filaire du Lightning Network
+et couvrent également tous les différents leviers d'extensibilité qui ont été intégrés dans
+le protocole. À la fin de ce chapitre, un lecteur ambitieux devrait être en mesure
+d'écrire leur propre parseur de protocole filaire pour le Lightning Network. En plus
+d'être capable d'écrire un parseur de protocole filaire personnalisé, un lecteur de ce chapitre
+acquerra une compréhension approfondie des différents mécanismes de mise à niveau
+qui ont été intégrés au protocole.
+
+=== Couche de messagerie dans la suite de protocoles Lightning
+
+((("Lightning Network Protocol","messaging layer")))((("wire protocol","messaging layer in the Lightning Protocol Suite")))La couche de messagerie, qui est détaillée dans ce chapitre, se compose de "Framing and message format" (tramage et format de message), encodage "Type-Length-Value" (Type-Longueur-Valeur) et "Feature bits" (bits de fonctionnalités). Ces composants sont mis en évidence par un contour épais dans la suite de protocoles, illustrée dans <<LN_protocol_wire_message_highlight>>.
+
+[[LN_protocol_wire_message_highlight]]
+.Couche de messagerie dans la suite de protocoles Lightning
+image::images/mtln_1301.png["Couche de messagerie dans la suite de protocoles Lightning"]
+
+=== Le tramage du fil
+
+((("wire framing", id="ix_13_wire_protocol-asciidoc1", range="startofrange")))((("wire protocol","wire framing", id="ix_13_wire_protocol-asciidoc2", range="startofrange")))Nous commençons par décrire la structure de haut niveau du _tramage_ ("framing" en anglais) sur le fil
+au sein du protocole. Lorsque nous parlons de tramage, nous entendons la façon dont les octets sont
+empaquetés sur le fil pour _encoder_ un message de protocole particulier. Sans connaissance
+du système de tramage utilisé dans le protocole, une chaîne d'octets sur le fil
+ressemblerait à une série d'octets aléatoires car aucune structure n'a été imposée. En appliquant
+un tramage approprié pour décoder ces octets sur le fil, nous pourrons extraire
+une structure et enfin analyser cette structure en messages de protocole dans notre
+langue de haut niveau.
+
+Il est important de noter que le Lightning Network est un protocole _encrypté de
+de bout-en-bout_, et le tramage de fil est lui-même encapsulé dans une
+couche de transport des messages _cryptés_. Comme on le voit dans <<encrypted_message_transport>>, le Lightning
+Network utilise une variante personnalisée du Noise Protocol pour gérer
+l'encryptage du transport. Dans ce chapitre, chaque fois que nous donnons un exemple de tramage du fil,
+nous supposons que la couche de cryptage a déjà été retirée (lors du
+décodage), ou que nous n'avons pas encore encrypté l'ensemble d'octets avant de les envoyer
+sur le fil (encodage).
+
+==== Tramage du fil de haut niveau
+
+((("wire framing","high-level schema")))Cela étant précisé, nous sommes prêts à décrire le schéma de haut niveau utilisé pour
+encoder les messages sur le fil :
+
+  * Les messages sur le fil commencent par un champ de type _2 octets_, suivi d'une
+charge utile de message.
+  * La charge utile de message elle-même peut atteindre une taille de 65 Ko.
+  * Tous les entiers sont encodés en big-endian (ordre de réseau)
+  * N'importe quel octet qui suit un message défini peut être ignoré en toute sécurité.
+
+Oui, c'est tout. Comme le protocole repose sur une couche de cryptage de protocole
+de transport _encapsulant_, nous n'avons pas besoin d'une longueur explicite pour chaque type de message. En effet,
+l'encryptage du transport s'effectue au niveau du _message_, de sorte que
+lorsque nous sommes prêts à décoder le message suivant, nous connaissons déjà le nombre total
+d'octets du message lui-même. En utilisant 2 octets pour le type de message
+(encodés en big-endian), le protocole peut avoir jusqu'à 2^16 – 1 ou
+65 535 messages distincts. Comme nous savons que tous les messages doivent être inférieurs à
+65 Ko, cela simplifie notre parsage car nous pouvons utiliser un tampon de _taille fixe_ et
+maintenir de fortes limites sur la quantité totale de mémoire nécessaire pour décomposer un
+message filaire entrant.
+
+Le dernier point permet un degré de _rétrocompatibilité_ car les nouveaux nœuds sont capables de fournir des informations dans des messages sur le fil que les nœuds plus anciens
+(qui peuvent ne pas les comprendre) peuvent ignorer en toute sécurité. Comme on le verra par la suite, cette
+fonctionnalité combinée à un format d'extensibilité de messages filaires très flexible, permet au protocole d'atteindre également la compatibilité _ascendante_.
+
+==== Encodage de type
+
+((("wire framing","type encoding")))Avec ce contexte de haut niveau, nous commençons maintenant à la couche la
+plus primitive : parsage de types primitifs. En plus d'encoder des entiers, le protocole
+Lightning permet également l'encodage d'un vaste éventail de types, y compris des tranches d'octets à longueur variable, des clés publiques de courbe elliptique, des adresses Bitcoin et
+des signatures. Lorsque nous décrivons la _structure_ des messages filaires plus loin dans ce
+chapitre, nous nous référons au type de haut niveau (le type abstrait) plutôt qu'à la
+représentation de bas niveau dudit type. Dans cette section, nous épluchons cette
+couche d'abstraction pour s'assurer que notre futur parseur de fil est capable de correctement
+encoder/décoder n'importe lequel des types de haut niveau.
+
+Dans <<message_types>>, nous mappons le nom d'un type de message donné à la
+routine de haut niveau utilisée pour coder/décoder ce type.
+
+[[message_types]]
+.Types de messages de haut niveau
+[options="header"]
+|===
+| Type de haut niveau | Tramage | Commentaire
+| `node_alias` | Une tranche d'octets de longueur fixe de 32 octets      | Lors du décodage, rejeter si le contenu n'est pas une chaîne UTF-8 valide
+| `channel_id` | Une tranche d'octets de longueur fixe de 32 octets qui mappe un point de sortie à une valeur de 32 octets     | Étant donné un point de sortie, on peut le convertir en un `channel_id` en prenant le TxID du point de sortie et en effectuant une opération binaire XOR avec l'index (interprété comme les 2 octets inférieurs)
+| `short_chan_id` | Un entier 64 bits non signé (`uint64`) | Composé de la hauteur de bloc (24 bits), de l'index de transaction (24 bits) et de l'index de sortie (16 bits) regroupés sur 8 octets
+| `milli_satoshi` | Un entier de 64 bits non signé (`uint64`) | Représente un 1000ème d'un satoshi
+| `satoshi` | Un entier de 64 bits non signé (`uint64`) | L'unité de base de Bitcoin
+| `pubkey`  | Une clé publique secp256k1 encodée au format _compressé_, occupant 33 octets | Occupe une longueur fixe de 33 octets sur le fil
+| `sig`     | Une signature ECDSA de la courbe elliptique secp256k1 | Encodé sous la forme d'une tranche d'octets _fixe_ de 64 octets, compressée sous la forme `R \|\| S`
+| `uint8`   | Un entier de 8 bits  |
+| `uint16`  | Un entier de 16 bits  |
+| `uint64`  | Un entier de 64 bits  |
+| `[]byte`  | Une tranche d'octets de longueur variable | Préfixé d'un entier 16 bits indiquant la longueur des octets
+| `color_rgb` | Encodage couleur RVB | Encodé comme une série d'entiers de 8 bits
+| `net_addr` | L'encodage d'une adresse réseau | Encodé avec un préfixe de 1 octet qui indique le type d'adresse, suivi du corps de l'adresse
+|===
+
+Dans la section suivante, nous décrivons la structure de chaque message filaire,
+y compris le type de préfixe du message ainsi que le contenu du corps de
+son message.(((range="endofrange", startref="ix_13_wire_protocol-asciidoc2")))(((range="endofrange", startref="ix_13_wire_protocol-asciidoc1")))
+
+[[tlv_message_extensions]]
+=== Extensions de message Type-Longueur-Valeur
+
+((("Type-Length-Value (TLV) message extensions","message extensions in wire protocol")))((("wire protocol","TLV message extensions")))Plus tôt dans ce chapitre, nous avons mentionné que les messages peuvent atteindre une taille de 65 Ko,
+et si lors du parsage d'un message, il reste des octets supplémentaires, alors ces octets
+sont à ignorer. À première vue, cette exigence peut sembler
+quelque peu arbitraire ; cependant, cette exigence permet une évolution désynchronisée découplée du protocole
+Lightning. Nous en discuterons davantage vers la fin du chapitre. Mais d'abord, nous portons notre attention sur ce à quoi ces "octets supplémentaires" à
+la fin d'un message peuvent être utilisés.
+
+==== Le format de message Protocol Buffers
+
+((("Protocol Buffers (Protobuf) message serialization format")))((("Type-Length-Value (TLV) message extensions","Protocol Buffers message format")))Le format de sérialisation des messages Protocol Buffers (Protobuf) a commencé comme un
+format interne utilisé par Google et s'est développé pour devenir l'un des formats de sérialisation
+de messages les plus populaires utilisés par les développeurs du monde entier. Le format Protobuf
+décrit comment un message (généralement une sorte de structure de données liée à une API)
+est encodé sur le fil et décodé à l'autre extrémité. Il existe plusieurs
+"compilateurs Protobuf" dans des dizaines de langages qui agissent comme un pont permettant
+à n'importe quel langage d'encoder un Protobuf qui pourra être décodé par un décodeur conforme
+dans un autre langage. Cette compatibilité inter-langues des structures de données permet
+un large éventail d'innovations, car il est possible de transmettre des structures et même
+des structures de données typées à travers les frontières de langage et d'abstraction.
+
+Les Protobufs sont également connus pour leur flexibilité en ce qui concerne
+la manière dont ils gèrent les changements dans la structure des messages sous-jacents. Tant que le schéma
+de numérotation des champs est respecté, il est possible pour un nouvel écrit de
+Protobufs d'inclure dans un Protobuf des informations qui peuvent être inconnues
+des anciens lecteurs. Lorsque l'ancien lecteur rencontre le nouveau format sérialisé, s'il
+y a des types/champs qu'il ne comprend pas, il les _ignore_ tout simplement.
+Cela permet aux anciens et aux nouveaux clients de coexister, car tous les clients peuvent
+analyser une partie du nouveau format de message.
+
+==== Compatibilité ascendante et descendante
+
+((("Protocol Buffers (Protobuf) message serialization format")))((("Type-Length-Value (TLV) message extensions","forward/backward compatibility")))Les Protobufs sont extrêmement populaires parmi les développeurs car ils intègrent
+une compatibilité ascendante et descendante. La plupart des développeurs sont
+probablement familiarisés avec le concept de compatibilité descendante. En termes simples,
+ce principe stipule que toute modification apportée à un format de message ou à une API doit être
+effectuée de manière à ne pas interrompre la prise en charge des clients plus anciens. Dans les exemples précédents d'extensibilité de Protobuf, la compatibilité descendante est assurée en
+veillant à ce que les nouveaux ajouts au format Protobuf ne cassent pas les parties connues
+des anciens lecteurs. La compatibilité ascendante, quant à elle, est tout aussi importante
+pour les mises à jour désynchronisées, mais elle est moins connue. Pour qu'une modification
+soit compatible de manière ascendante, les clients doivent simplement ignorer les informations
+qu'ils ne comprennent pas. On peut dire que le mécanisme de soft fork pour à mettre à jour
+le système de consensus de Bitcoin fournit une compatibilité ascendante et descendante : les
+clients qui ne font pas la mise à jour peuvent toujours utiliser Bitcoin, et s'ils rencontrent des
+transactions qu'ils ne comprennent pas, ils les ignorent tout simplement, car leurs fonds
+n'utilisent pas ces nouvelles fonctionnalités.
+
+[[tlv]]
+=== Format Type-Longueur-Valeur
+
+((("Type-Length-Value (TLV) format", id="ix_13_wire_protocol-asciidoc3", range="startofrange")))((("Type-Length-Value (TLV) format","wire protocol and", id="ix_13_wire_protocol-asciidoc4", range="startofrange")))((("wire protocol","TLV format", id="ix_13_wire_protocol-asciidoc5", range="startofrange")))Pour pouvoir pour mettre à niveau les messages avec une compatibilité à la fois ascendante et descendante
+en plus des bits de fonctionnalités (nous y reviendrons plus tard), le Lightning Network utilise un format de sérialisation de message personnalisé appelé simplement Type-Longueur-Valeur, TLV en abrégé. Le format a été inspiré par le format Protobuf largement utilisé
+et emprunte de nombreux concepts en simplifiant considérablement
+l'implémentation ainsi que le logiciel qui interagit avec le parsage des messages. Un
+lecteur curieux pourrait demander, "pourquoi ne pas simplement utiliser Protobufs ?" En réponse, le
+développeur de Lightning répondrait que nous sommes en mesure d'avoir le meilleur de
+l'extensibilité de Protobufs tout en ayant l'avantage d'une plus petite
+implémentation et donc plus petite surface d'attaque. La version 3.15.6, le compilateur Protobuf
+fait plus de 656 671 lignes de code. En comparaison,
+l'implémentation LND du format de messages TLV ne pèse que 2,3k lignes de code
+(tests inclus).
+
+Avec ce contexte nécessaire expliqué, nous sommes maintenant prêts à décrire le
+format TLV en détails. On dit qu'une extension de message TLV est un flux
+pass:[<span class="keep-together">d'enregistrements TLV</span>] individuels. Un seul enregistrement TLV comporte trois éléments : le type
+d'enregistrement, la longueur de l'enregistrement, et enfin la valeur opaque de
+l'enregistrement :
+
+`type`:: Un entier représentant le nom de l'enregistrement en cours d'encodage
+`length`:: La longueur de l'enregistrement
+`value`:: La valeur opaque de l'enregistrement
+
+Le `type` et la `longueur` sont encodés à l'aide d'un entier de taille variable inspiré par l'entier de taille variable (varint) utilisé dans le protocole P2P de Bitcoin, appelé `BigSize` pour faire court.
+
+==== Encodage d'entiers BigSize
+
+((("BigSize integer encoding")))((("Type-Length-Value (TLV) format","BigSize integer encoding")))Dans sa forme la plus complète, un entier `BigSize`
+peut représenter une valeur jusqu'à 64 bits. Contrairement au format varint
+de Bitcoin, le format `BigSize` encode des entiers en utilisant une orientation d'octets
+big-endian.
+
+Le varint `BigSize` a deux composants : le discriminant et le corps. Dans le
+contexte de l'entier `BigSize`, le discriminant communique au décodeur
+la taille de l'entier de taille variable qui suit. Rappelez-vous que ce qui est unique à propos des
+entiers de taille variable est qu'ils permettent à un parseur d'utiliser moins d'octets pour encoder
+les entiers plus petits que les plus grands, économisant de l'espace. L'encodage d'un entier `BigSize`
+suit l'une des quatre options suivantes :
+
+1. Si la valeur est inférieure à `0xfd` (`253`) : alors le discriminant n'est pas vraiment utilisé et l'encodage est simplement l'entier lui-même. Cela nous permet d'encoder de très petits entiers sans surcharge supplémentaire.
+
+2. Si la valeur est inférieure ou égale à `0xffff` (`65535`) : le discriminant est codé comme `0xfd`, ce qui indique que la valeur qui suit est supérieure à `0xfd`, mais inférieure à `0xffff`. Le nombre est ensuite codé sous la forme d'un entier de 16 bits. Y compris le discriminant, nous pouvons coder une valeur supérieure à 253, mais inférieure à 65 535 en utilisant 3 octets.
+
+3. Si la valeur est inférieure à `0xffffffff` (`4294967295`) : Le discriminant est codé comme `0xfe`. Le corps est encodé à l'aide d'un entier 32 bits, y compris le discriminant, et nous pouvons encoder une valeur inférieure à "4 294 967 295" en utilisant 5 octets.
+
+4. Sinon, nous encodons simplement la valeur sous la forme d'un entier de 64 bits de taille normale.
+
+
+==== Contraintes d'encodage TLV
+
+((("Type-Length-Value (TLV) format","encoding constraints")))Dans le contexte d'un message TLV, les types d'enregistrement inférieurs à `2^16` sont dits _réservés_ pour une utilisation future. Les types au-delà de cette
+plage doivent être utilisés pour les extensions de message "personnalisées" utilisées par les protocoles d'application de niveau supérieur.
+
+La `value` d'un enregistrement dépend du `type`. En d'autres termes, elle peut prendre n'importe quelle forme car les parseurs tenteront de l'interpréter en fonction du contexte du type.
+
+==== Encodage canonique TLV
+
+Un problème avec le format Protobuf est que les encodages du même message peuvent
+produire un ensemble d'octets entièrement différent lorsqu'il est encodé par deux
+versions du compilateur. De telles instances d'un codage non canonique ne sont pas
+acceptable dans le contexte de Lightning, car de nombreux messages contiennent une
+signature du digest du message. S'il est possible qu'un message soit encodé
+de deux manières différentes, alors il serait possible de casser l'authentification de
+d'une signature par inadvertance en réencodant un message en utilisant un ensemble d'octets
+ légèrement différent sur le fil.
+
+Pour s'assurer que tous les messages codés sont canoniques, les éléments de
+de contraintes suivants sont définis lors de l'encodage :
+
+  * Tous les enregistrements d'un flux de TLV doivent être encodés dans un ordre
+ strictement croissant.
+
+  * Tous les enregistrements doivent encoder au minimum les champs `type` et `length` (longueur). En d'autres termes, la plus petite représentation `BigSize` d'un entier doit être utilisée à tout moment.
+
+  * Chaque `type` ne peut apparaître qu'une seule fois dans un flux TLV donné.
+
+En plus de ces contraintes d'encodage, une série d'exigences
+d'interprétation de plus haut niveau est également définie en fonction de _l'arité_ d'un `type` d'entier donné. Nous approfondirons ces détails vers la fin du
+chapitre, lorsque nous décrirons la manière dont le protocole Lightning est mis à niveau en pratique et
+ en théorie.(((range="endofrange", startref="ix_13_wire_protocol-asciidoc5")))(((range="endofrange", startref="ix_13_wire_protocol-asciidoc4")))(((range="endofrange", startref="ix_13_wire_protocol-asciidoc3")))
+
+[[feature_bits]]
+=== Bits de fonctionnalités et extensibilité du protocole
+
+((("feature bits", id="ix_13_wire_protocol-asciidoc6", range="startofrange")))((("wire protocol","feature bits/protocol extensibility", id="ix_13_wire_protocol-asciidoc7", range="startofrange")))Parce que le Lightning Network est un système décentralisé, aucune entité ne peut appliquer de
+changement ou modification de protocole pour tous les utilisateurs du système. Cette
+caractéristique est également observée dans d'autres réseaux décentralisés tels que Bitcoin.
+Cependant, contrairement à Bitcoin, un consensus majoritaire _n'est pas_ nécessaire pour changer un
+sous-ensemble du Lightning Network. Lightning est capable d'évoluer à volonté sans
+une forte exigence de coordination car, contrairement au Bitcoin, il n'y a pas de consensus global requis sur le Lightning Network. En raison de ce fait et des nombreux
+mécanismes de mise à niveau intégrés au Lightning Network, seuls les
+participants qui souhaitent utiliser ces nouvelles fonctionnalités de Lightning Network doivent
+faire une mise à niveau, et ensuite ils peuvent interagir les uns avec les autres.
+
+Dans cette section, nous explorons les différentes manières dont les développeurs et les utilisateurs sont
+capable de concevoir et de déployer de nouvelles fonctionnalités sur le Lightning Network. Les
+concepteurs du Lightning Network original savaient qu'il y avait de nombreuses orientations futures possibles pour le réseau et le protocole sous-jacent. En conséquence, ils se sont assurés de mettre en œuvre plusieurs
+mécanismes d'extensibilité au sein du système, qui peuvent être utilisés pour le mettre à niveau partiellement ou totalement de manière découplée, désynchronisée et
+décentralisé.
+
+==== Bits de fonctionnalités en tant que mécanisme de découverte de mises à niveau
+
+((("feature bits","upgrade discoverability mechanism")))Un lecteur avisé a peut-être remarqué les différents emplacements où les bits de fonctionnalités sont
+inclus dans le protocole Lightning. Un _bit de fonctionnalité_ est un champ de bits qui peut
+être utilisé pour annoncer la compréhension ou l'adhésion à une mise à jour potentielle du protocole
+réseau. Les bits de fonctionnalités sont généralement attribués par paires, ce qui signifie que chaque
+nouvelle fonctionnalité/mise à niveau potentielle définit toujours deux bits dans le champ de bits.
+Un bit signale que la fonctionnalité annoncée est _facultative_, ce qui signifie que le
+nœud connaît la fonctionnalité et peut l'utiliser, mais ne
+la considère pas comme nécessaire pour un fonctionnement normal. L'autre bit signale que la
+fonctionnalité est _requise_, ce qui signifie que le nœud ne continuera pas
+l'opération si un pair potentiel ne comprend pas cette fonctionnalité.
+
+En utilisant ces deux bits (facultatif et obligatoire), nous pouvons construire une simple
+matrice de compatibilité que les nœuds/utilisateurs peuvent consulter pour déterminer si un pair est compatible avec une fonctionnalité souhaitée, comme illustrée dans <<table1302>>.
+
+[[table1302]]
+.Matrice de compatibilité des bits de fonctionnalités
+[options="header"]
+|===
+|Type de bit|Distant facultatif|Distant requis|Distant inconnu
+|Local facultatif|✅|✅|✅
+|Local requis|✅|✅|❌
+|Inconnu local|✅|❌|❌
+|===
+
+À partir de cette matrice de compatibilité simplifiée, nous pouvons voir que tant que l'autre
+partie connaît nos bits de fonctionnalités, alors nous pouvons interagir avec eux en utilisant le
+protocole. Si l'autre partie ne sait même pas à quoi nous faisons référence
+_et_ qu'elle a besoin de la fonctionnalité, alors nous sommes incompatibles avec eux. Au sein du
+réseau, les fonctionnalités optionnelles sont signalées à l'aide d'un _nombre de bits impair_, tandis que
+les caractéristiques requises sont signalées à l'aide d'un _nombre de bits pair_. Par exemple, si un pair signale qu'il connaît une fonctionnalité qui utilise le bit +15+, alors nous savons
+qu'il s'agit d'une fonctionnalité facultative, et nous pouvons interagir avec eux ou répondre à
+leurs messages même si nous ne connaissons pas la fonctionnalité. Si
+en revanche ils ont signalé la fonctionnalité en utilisant le bit +16+, alors nous savons qu'il s'agit d'une
+fonctionnalité requise, et nous ne pouvons pas interagir avec eux à moins que notre nœud comprenne
+aussi cette fonctionnalité.
+
+Les développeurs de Lightning ont trouvé une phrase facile à retenir qui
+encode cette matrice : "it's OK to be odd" (c'est ok d'être étrange/impair, jeu de mot sur le double sens du mot "odd"). Cette règle simple permet un
+riche ensemble d'interactions au sein du protocole, car une simple opération de masquage de bits
+entre deux vecteurs de bits de fonctionnalités permet aux pairs de déterminer si certaines
+interactions sont compatibles les unes avec les autres ou non. En d'autres termes, les bits
+de fonctionnalité sont utilisés comme un mécanisme de découverte de mises à niveau : ils permettent facilement
+aux pairs de comprendre s'ils sont compatibles ou non sur la base des concepts de
+bits de fonctionnalités facultatifs, requis et inconnus.
+
+Les bits de fonctionnalités se trouvent dans les messages `node_announcement`, `channel_announcement` et
+`init` du protocole. Par conséquent, ces trois messages peuvent être
+utilisés pour signaler la connaissance et/ou la compréhension des mises à jour du protocole en vol
+au sein du réseau. Les bits de fonctionnalités trouvés dans le message `node_announcement`
+peuvent permettre à un pair de déterminer si leurs _connexions_ sont compatibles ou
+non. Les bits de fonctionnalités contenus dans les messages `channel_announcement` permettent à un pair
+de déterminer si un type de paiement ou un HTLC donné peut transiter par un pair donné ou
+non. Les bits de fonctionnalités contenus dans le message `init` permettent aux pairs de comprendre s'ils
+peuvent maintenir une connexion, et également quelles fonctionnalités sont négociées pour la
+durée de vie d'une connexion donnée.
+
+==== TLV pour la compatibilité ascendante et descendante
+
+((("feature bits","TLV for forward/backward compatibility")))((("Type-Length-Value (TLV) format","forward/backward compatibility and")))((("wire protocol","TLV for forward/backward compatibility")))Comme nous l'avons appris précédemment dans ce chapitre, les enregistrements TLV peuvent être
+utilisés pour étendre les messages avec une compatible ascendante et descendante.
+Au fil du temps, ces enregistrements ont été utilisés pour étendre les messages existants sans
+rompre le protocole en utilisant la zone "indéfinie" dans un message au-delà
+cet ensemble d'octets connus.
+
+Par exemple, le protocole Lightning original n'avait pas de concept de
+"la plus grand montant de HTLC" qui pourrait traverser un canal comme dicté par une politique
+de routage. Plus tard, le champ `max_htlc` a été ajouté au message
+`channel_update` pour introduire progressivement ce concept au fil du temps. Les pairs qui reçoivent un
+`channel_update` qui définit un tel champ mais ne sait même pas que cette mise à niveau existait
+ne sont pas affectés par le changement, mais voient leurs HTLC rejetés s'ils sont
+au-delà de la limite. Les pairs plus à jour, en revanche, sont capables de parser, de vérifier
+et d'utiliser le nouveau champ.
+
+Ceux qui connaissent le concept de soft forks dans Bitcoin peuvent maintenant voir quelques
+similitudes entre les deux mécanismes. Contrairement aux soft forks de Bitcoin
+au niveau du consensus, les mises à niveau du Lightning Network ne nécessitent pas de consensus
+majoritaire pour être adoptées. Au lieu de cela, au minimum, seuls deux pairs au sein du
+réseau n'ont besoin de comprendre une nouvelle mise à niveau pour commencer à l'utiliser. Généralement, ces deux pairs peuvent être le destinataire et l'expéditeur d'un
+paiement, ou peuvent être des partenaires de canal d'un nouveau canal de paiement.
+
+==== Une taxonomie des mécanismes de mise à niveau
+
+((("Lightning Network (generally)","taxonomy of upgrade mechanisms", id="ix_13_wire_protocol-asciidoc8", range="startofrange")))((("upgrades","taxonomy of upgrade mechanisms", id="ix_13_wire_protocol-asciidoc9", range="startofrange")))((("wire protocol","taxonomy of upgrade mechanisms", id="ix_13_wire_protocol-asciidoc10", range="startofrange")))Plutôt qu'il y ait un mécanisme de mise à niveau unique largement utilisé au sein du
+réseau (comme les soft forks pour Bitcoin), il existe plusieurs mécanismes de mise à niveau possibles au sein du Lightning Network. Dans cette
+section, nous énumérons ces mécanismes de mise à niveau et
+fournissons un exemple concret de leur utilisation dans le passé.
+
+===== Mises à niveau du réseau interne
+
+((("upgrades","internal network")))Nous commençons par le type de mise à niveau qui nécessite le plus de coordination
+au niveau de protocole : les mises à niveau du réseau interne. Une mise à niveau du réseau interne est
+caractérisée par le fait qu'elle nécessite que _chaque nœud_ dans un chemin de paiement potentiel comprenne la nouvelle fonctionnalité. Une telle mise à niveau est similaire à n'importe quelle
+mise à niveau sur Internet qui nécessite des mises à niveau matérielles dans
+la portion de relai central de la mise à niveau. Dans le cadre du Lightning Network, cependant, nous traitons
+avec un logiciel pur, de telles mises à niveau sont donc plus faciles à déployer, mais elles
+nécessitent toutefois beaucoup plus de coordination que tout autre mécanisme de mise à niveau dans le
+réseau.
+
+Un exemple d'une telle mise à niveau au sein du réseau a été l'introduction d'un encodage
+TLV pour les informations de routage codées dans les paquets
+oignon. Le format précédent utilisait un format de message de longueur fixe codé en dur
+pour communiquer des informations telles que le saut suivant.
+Étant donné que ce format était fixe, cela signifiait que les nouvelles mises à niveau au niveau du protocole n'étaient pas possibles. Le passage à un format TLV plus flexible
+signifie qu'après cette mise à jour, toute fonctionnalité
+modifiant le type d'informations communiquées à chaque saut peut être déployée à volonté.
+
+Il convient de mentionner que la mise à niveau de l'oignon TLV était une sorte de mise à niveau "douce"
+du réseau interne, en ce sens que si un paiement n'utilisait pas de nouvelle fonctionnalité au-delà
+du nouvel encodage des informations de routage, alors un paiement pouvait être transmit.
+en utilisant un ensemble mixte de nœuds.
+
+===== Mises à niveau de bout en bout
+
+((("upgrades","end-to-end")))Pour contraster la mise à niveau du réseau interne, dans cette section, nous décrivons les
+mises à niveau du réseau _de bout en bout_. Ce mécanisme de mise à niveau diffère du mécanisme de
+mise à niveau du réseau interne en ce sens qu'il ne nécessite la mise à jour que les "bouts" du paiement, c'est à dire l'expéditeur
+et le destinataire.
+
+Ce type de mise à niveau permet
+pour un large éventail d'innovations sans restriction au sein du réseau. En raison de la
+nature encryptée en oignon des paiements au sein du réseau, ceux qui transmettent les HTLC
+au centre du réseau peuvent même ne pas savoir que de nouvelles fonctionnalités sont en cours
+d'utilisation.
+
+Un exemple de mise à niveau de bout en bout au sein du réseau fut le déploiement des paiements en plusieurs partites (MPP). MPP est une fonctionnalité au niveau du protocole qui permet à
+un paiement unique d'être divisé en plusieurs parties ou chemins, à assembler par le
+destinataire du règlement. Le déploiement de MPP s'est accompagné d'un nouveau
+bit de fonctionnalité au niveau de `node_announcement` qui indique que le destinataire sait
+comment gérer les paiements partiels. En supposant qu'un expéditeur et un destinataire se connaissent
+(éventuellement via une facture BOLT #11), alors ils peuvent utiliser la nouvelle
+fonctionnalité sans autre négociation.
+
+Un autre exemple d'une mise à niveau de bout en bout sont les différents types de
+de paiements _spontanés_ déployés au sein du réseau. Un premier type de
+paiements spontanés appelés _keysend_ fonctionne en plaçant simplement la préimage d'un paiement dans l'oignon encrypté. Dès réception, la destination décrypterait la
+préimage, puis l'utilise pour régler le paiement. Étant donné que l'ensemble du paquet est encrypté de bout en bout, ce type de paiement est sûr, car aucun des nœuds intermédiaires
+n'est capable de d'éplucher complètement l'oignon pour découvrir la préimage de paiement.
+
+==== Mises à jour au niveau de construction de canal
+
+((("wire protocol","channel construction-level updates")))La dernière grande catégorie de mises à jour sont celles qui se produisent au
+niveau de la construction du canal, mais qui ne modifient pas la structure des HTLC largement utilisé au sein du réseau. Lorsque nous parlons de construction de canaux, nous entendons
+par là comment le canal est financé ou créé. Par exemple, le type de canal eltoo
+peut être déployé au sein du réseau à l'aide d'un nouveau bit de  fonctionnalité
+au niveau de `node_announcement` et d'un autre au niveau de `channel_announcement`. Seuls les deux
+pairs aux extrémités des canaux doivent comprendre et annoncer ces nouvelles
+fonctionnalités. Cette paire de canaux peut ensuite être utilisée pour transférer tout type de paiement
+pour autant que le canal le prenne en charge.
+
+Une autre est le format de canal _sorties d'ancrage_ qui permet aux frais d'engagement d'être
+"augmenté" via le mécanisme de gestion des frais Child-Pays-For-Parent (CPFP) de Bitcoin(((range="endofrange", startref="ix_13_wire_protocol-asciidoc10")))(((range="endofrange", startref="ix_13_wire_protocol-asciidoc9")))(((range="endofrange", startref="ix_13_wire_protocol-asciidoc8"))).(((range="endofrange", startref="ix_13_wire_protocol-asciidoc7")))(((range="endofrange", startref="ix_13_wire_protocol-asciidoc6")))
+
+=== Conclusion
+
+Le protocole filaire de Lightning est incroyablement flexible et permet une innovation et une interopérabilité rapides sans consensus strict. C'est l'une des raisons pour lesquelles le Lightning Network connaît un développement beaucoup plus rapide et attire de nombreux développeurs, qui pourraient autrement trouver le style de développement de Bitcoin trop conservateur et lent.(((range="endofrange", startref="ix_13_wire_protocol-asciidoc0")))
