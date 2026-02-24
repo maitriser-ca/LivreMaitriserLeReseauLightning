@@ -3,7 +3,7 @@
 # To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
 
 layout: home
-title: "Maîtriser le Lightning Network"
+title: "Ma&icirc;triser le Lightning Network"
 ---
 
 Le livre **Maîtriser le Lightning Network** (_**Mastering the Lightning Network**_ par O'Reilly Media) tel qu'écrit originalement en anglais par _Andreas M. Antonopoulos_, _Olaoluwa Osuntokun_ et _Rene Pickhardt_ traduit en français (Canada) par _Google Translate API_ et révisé par _Serafim Dos Santos_ avec les termes du [Grand dictionnaire terminologique (GDT)](https://gdt.oqlf.gouv.qc.ca/) de l'[Office qu&eacute;b&eacute;cois de la langue fran&ccedil;aise](https://www.oqlf.gouv.qc.ca/).
