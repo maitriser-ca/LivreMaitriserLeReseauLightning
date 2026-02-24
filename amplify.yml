@@ -7,7 +7,7 @@ frontend:
         - bundle install
     build:
       commands:
-        - bundle exec jekyll build -d ../public
+        - bundle exec jekyll build -d ../public --trace
         - cd ..
         - mkdir -p public/assets
         - cp -R docs/assets/. public/assets/
